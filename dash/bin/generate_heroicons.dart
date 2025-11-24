@@ -1,9 +1,5 @@
 #!/usr/bin/env dart
 
-/// Generates heroicon.dart from the heroicons repository
-///
-/// Usage: dart run bin/generate_heroicons.dart
-
 import 'dart:io';
 
 Future<void> main() async {

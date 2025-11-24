@@ -70,6 +70,7 @@ Dash is a modern, full-featured admin panel framework for Dart, inspired by Fila
 - ✅ **Resource defaults**: Auto-generate labels from model names, reducing boilerplate
 - ✅ **Navigation groups**: Organized sidebar navigation with collapsible groups
 - ✅ **Cleaner resources**: Minimal resource definitions with smart defaults
+- ✅ **Column visibility toggles**: Alpine.js-powered dropdown with client-side persistence per resource
 
 ### Example Resource Before:
 ```dart
@@ -179,7 +180,7 @@ class UserResource extends Resource<User> {
 - [ ] Search functionality
 - [ ] Bulk selection
 - [ ] Bulk actions
-- [ ] Column visibility toggle
+- [x] Column visibility toggle
 - [ ] Responsive table view
 - [ ] Empty state handling
 

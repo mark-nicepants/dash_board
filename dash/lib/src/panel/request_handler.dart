@@ -20,9 +20,7 @@ class RequestHandler {
   /// Returns a Response if the request is handled, or a 404 if not.
   FutureOr<Response> handle(Request request) async {
     final path = request.url.path;
-    final baseSegment = _config.path.startsWith('/')
-        ? _config.path.substring(1)
-        : _config.path;
+    final baseSegment = _config.path.startsWith('/') ? _config.path.substring(1) : _config.path;
 
     // Handle login POST
     if (path == '$baseSegment/login' && request.method == 'POST') {
@@ -57,10 +55,7 @@ class RequestHandler {
     }
 
     // Set session cookie and redirect to dashboard
-    return Response.found(
-      _config.path,
-      headers: {'set-cookie': 'dash_session=$sessionId; Path=/; HttpOnly'},
-    );
+    return Response.found(_config.path, headers: {'set-cookie': 'dash_session=$sessionId; Path=/; HttpOnly'});
   }
 
   /// Handles logout request.

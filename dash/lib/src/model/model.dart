@@ -88,6 +88,10 @@ abstract class Model {
   /// Populates the model from a database map.
   void fromMap(Map<String, dynamic> map);
 
+  /// Returns a list of all database column names for this model.
+  /// This is generated automatically by the @DashModel annotation.
+  List<String> getFields();
+
   // ===== Helper Methods for Subclasses =====
 
   /// Safely casts a value to the specified type.

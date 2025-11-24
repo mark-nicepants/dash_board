@@ -12,4 +12,33 @@ class UserResource extends Resource<User> {
 
   @override
   String? get navigationGroup => 'Administration';
+
+  @override
+  User newModelInstance() => User();
+
+  @override
+  Table<User> table(Table<User> table) {
+    return table
+        .columns([
+          TextColumn.make('id') //
+              .label('ID')
+              .sortable()
+              .width('80px'),
+          TextColumn.make('name') //
+              .searchable()
+              .sortable()
+              .grow(),
+          TextColumn.make('email') //
+              .searchable()
+              .sortable()
+              .grow(),
+          TextColumn.make('created_at') //
+              .dateTime()
+              .label('Joined')
+              .sortable<TextColumn>()
+              .toggleable<TextColumn>(isToggledHiddenByDefault: true),
+        ])
+        .defaultSort('name')
+        .searchPlaceholder('Search users...');
+  }
 }

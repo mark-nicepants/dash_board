@@ -1,6 +1,3 @@
-/// Builder entry point for Dash model code generation.
-library dash.builder;
-
 import 'package:build/build.dart';
 import 'package:source_gen/source_gen.dart';
 

@@ -51,5 +51,18 @@ class PanelConfig {
     if (_id.isEmpty) {
       throw StateError('Panel id cannot be empty');
     }
+
+    // Validate all resource table configurations
+    print('🔍 Validating resource configurations...');
+    for (final resource in _resources) {
+      try {
+        resource.validateTableConfiguration();
+        print('  ✅ ${resource.runtimeType}');
+      } catch (e) {
+        print('  ❌ ${resource.runtimeType}');
+        rethrow;
+      }
+    }
+    print('✅ All resource configurations are valid\n');
   }
 }

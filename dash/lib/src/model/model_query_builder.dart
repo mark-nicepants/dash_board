@@ -95,7 +95,7 @@ class ModelQueryBuilder<T extends Model> {
   Future<int> count([String column = '*']) => _query.count(column);
 
   /// Returns a single value from the query.
-  Future<T?> value<T>(String column) => _query.value<T>(column);
+  Future<V?> value<V>(String column) => _query.value<V>(column);
 
   // Query builder methods that return ModelQueryBuilder for chaining
 

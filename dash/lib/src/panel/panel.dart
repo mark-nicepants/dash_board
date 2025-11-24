@@ -3,7 +3,9 @@ import 'dart:async';
 import '../auth/auth_service.dart';
 import '../database/database_config.dart';
 import '../database/query_builder.dart';
+import '../model/model.dart';
 import '../resource.dart';
+import '../service_locator.dart';
 import 'panel_config.dart';
 import 'panel_server.dart';
 
@@ -101,6 +103,11 @@ class Panel {
     // Connect to database if configured
     if (_config.databaseConfig != null) {
       await _config.databaseConfig!.connect();
+      // Set the static connector on Model class so all models can access it
+      Model.setConnector(_config.databaseConfig!.connector);
+
+      // Setup dependency injection
+      setupServiceLocator(config: _config, connector: _config.databaseConfig!.connector);
     }
 
     return this;

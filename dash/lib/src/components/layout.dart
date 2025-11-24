@@ -53,14 +53,6 @@ class DashLayout extends StatelessComponent {
       ]),
       // Main content
       div(classes: 'dash-main', [
-        // Header
-        header(classes: 'dash-header', [
-          h1([text(title)]),
-          div(classes: 'dash-header-actions', [
-            span([text('Admin User')]),
-          ]),
-        ]),
-        // Content
         main_(classes: 'dash-content', [child]),
       ]),
     ]);

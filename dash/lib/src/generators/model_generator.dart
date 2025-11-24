@@ -74,7 +74,7 @@ class ModelGenerator extends GeneratorForAnnotation<DashModel> {
     buffer.writeln('  @override');
     buffer.writeln('  void setKey(dynamic value) {');
     buffer.writeln('    final self = this as $className;');
-    buffer.writeln('    self.${primaryKeyField.fieldName} = value as ${primaryKeyField.dartType}?;');
+    buffer.writeln('    self.${primaryKeyField.fieldName} = value as ${primaryKeyField.dartType};');
     buffer.writeln('  }');
     buffer.writeln();
 
@@ -125,6 +125,18 @@ class ModelGenerator extends GeneratorForAnnotation<DashModel> {
     final fieldStrings = nonRelationshipFields.map((f) => '${f.fieldName}: \${self.${f.fieldName}}').join(', ');
     buffer.writeln('    return \'$className($fieldStrings)\';');
     buffer.writeln('  }');
+    buffer.writeln();
+
+    // Generate getFields - returns all database column names
+    buffer.writeln('  @override');
+    buffer.writeln('  List<String> getFields() {');
+    buffer.writeln('    return [');
+    for (final field in fields) {
+      if (field.isRelationship) continue; // Skip relationships
+      buffer.writeln('      \'${field.columnName}\',');
+    }
+    buffer.writeln('    ];');
+    buffer.writeln('  }');
 
     buffer.writeln('}');
     buffer.writeln();
@@ -161,17 +173,21 @@ class ModelGenerator extends GeneratorForAnnotation<DashModel> {
       if (field.isStatic || field.isSynthetic) continue;
 
       final annotations = _getFieldAnnotations(field);
-      final columnName = annotations['columnName'] as String? ?? _toSnakeCase(field.name);
-      final isPrimaryKey = annotations['isPrimaryKey'] as bool? ?? field.name == 'id';
+      final rawName = field.name ?? field.displayName; // Analyzer 9 may expose nullable name
+      if (rawName.isEmpty) {
+        continue; // Skip unnamed synthetic fields just in case
+      }
+      final columnName = (annotations['columnName'] as String?) ?? _toSnakeCase(rawName);
+      final isPrimaryKey = (annotations['isPrimaryKey'] as bool?) ?? rawName == 'id';
 
       fields.add(
         _FieldInfo(
-          fieldName: field.name,
+          fieldName: rawName,
           columnName: columnName,
-          dartType: field.type.getDisplayString(withNullability: false),
+          dartType: field.type.getDisplayString(),
           isNullable: field.type.nullabilitySuffix == NullabilitySuffix.question,
           isPrimaryKey: isPrimaryKey,
-          isRelationship: annotations['isRelationship'] as bool? ?? false,
+          isRelationship: (annotations['isRelationship'] as bool?) ?? false,
         ),
       );
     }
@@ -183,23 +199,35 @@ class ModelGenerator extends GeneratorForAnnotation<DashModel> {
   Map<String, dynamic> _getFieldAnnotations(FieldElement field) {
     final result = <String, dynamic>{};
 
-    for (final metadata in field.metadata) {
-      final annotation = metadata.computeConstantValue();
-      if (annotation == null) continue;
-
-      final annotationType = annotation.type;
+    // Analyzer API differences (v9): metadata may not be a plain List; attempt dynamic access.
+    final metaSource = field.metadata; // Analyzer 9: Metadata object with 'annotations' collection.
+    Iterable<dynamic> annotationElements;
+    try {
+      final dynAnnotations = (metaSource as dynamic).annotations;
+      annotationElements = dynAnnotations is Iterable ? dynAnnotations : const <dynamic>[];
+    } catch (_) {
+      annotationElements = const <dynamic>[];
+    }
+    for (final annotationElement in annotationElements) {
+      dynamic constantValue;
+      try {
+        constantValue = (annotationElement as dynamic).computeConstantValue();
+      } catch (_) {
+        continue;
+      }
+      if (constantValue == null) continue;
+      final annotationType = constantValue.type;
       if (annotationType == null) continue;
-
       final typeName = annotationType.getDisplayString(withNullability: false);
 
       if (typeName == 'PrimaryKey') {
         result['isPrimaryKey'] = true;
-        final nameValue = annotation.getField('name');
+        final nameValue = constantValue.getField('name');
         if (nameValue != null && !nameValue.isNull) {
           result['columnName'] = nameValue.toStringValue();
         }
       } else if (typeName == 'Column') {
-        final nameValue = annotation.getField('name');
+        final nameValue = constantValue.getField('name');
         if (nameValue != null && !nameValue.isNull) {
           result['columnName'] = nameValue.toStringValue();
         }
@@ -228,6 +256,7 @@ class ModelGenerator extends GeneratorForAnnotation<DashModel> {
 
   /// Generates deserialization code for a value.
   String _deserializeValue(String columnName, String dartType) {
+    dartType = dartType.replaceAll('?', ''); // Remove nullability for type checks
     if (dartType == 'DateTime') {
       return 'parseDateTime(map[\'$columnName\'])';
     } else if (dartType == 'int') {
@@ -239,7 +268,7 @@ class ModelGenerator extends GeneratorForAnnotation<DashModel> {
     } else if (dartType == 'bool') {
       return 'getFromMap<bool>(map, \'$columnName\')';
     }
-    return 'map[\'$columnName\'] as $dartType?';
+    return 'map[\'$columnName\'] as $dartType';
   }
 }
 

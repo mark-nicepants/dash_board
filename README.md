@@ -7,7 +7,7 @@ DASH (Dart Admin/System Hub) - A modern admin panel framework for Dart, inspired
 This repository is organized as a monorepo:
 
 ```
-dash_lib/
+dash_board/
 ├── dash/           # Core framework package
 ├── dash_example/   # Example application for testing
 └── docs/          # Documentation and planning

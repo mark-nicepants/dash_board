@@ -1,7 +1,7 @@
 import 'package:jaspr/jaspr.dart';
 
-import 'components/heroicon.dart';
 import 'components/pages/resource_index.dart';
+import 'components/partials/heroicon.dart';
 import 'model/model.dart';
 import 'model/model_query_builder.dart';
 import 'table/table.dart';

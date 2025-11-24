@@ -6,12 +6,12 @@ library;
 
 // Auth
 export 'src/auth/auth_service.dart';
-// Components
-export 'src/components/heroicon.dart';
 export 'src/components/layout.dart';
 export 'src/components/pages/dashboard_page.dart';
 export 'src/components/pages/login_page.dart';
 export 'src/components/pages/resource_index.dart';
+// Components
+export 'src/components/partials/heroicon.dart';
 export 'src/components/styles.dart';
 export 'src/database/connectors/sqlite_connector.dart';
 export 'src/database/database_config.dart';

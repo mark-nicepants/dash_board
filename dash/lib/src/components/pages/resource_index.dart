@@ -9,8 +9,8 @@ import '../../table/columns/column.dart';
 import '../../table/columns/icon_column.dart';
 import '../../table/columns/text_column.dart';
 import '../../table/table.dart';
-import '../breadcrumbs.dart';
-import '../page_header.dart';
+import '../partials/breadcrumbs.dart';
+import '../partials/page_header.dart';
 
 /// Resource index page with HTMX-powered interactivity.
 /// Server-side renders the full page, HTMX handles partial updates for search, sort, pagination.

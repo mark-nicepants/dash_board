@@ -65,6 +65,7 @@ class Table<T extends Model> {
   /// Sets the columns for the table.
   Table<T> columns(List<TableColumn> columns) {
     _columns = columns;
+    _searchable = columns.any((column) => column.isSearchable());
     return this;
   }
 

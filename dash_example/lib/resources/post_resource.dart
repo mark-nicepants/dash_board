@@ -23,7 +23,7 @@ class PostResource extends Resource<Post> {
               .width('80px'),
 
           TextColumn.make('title') //
-              .searchable()
+              // .searchable()
               .sortable()
               .grow(),
 

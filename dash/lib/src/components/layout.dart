@@ -1,7 +1,7 @@
 import 'package:jaspr/jaspr.dart';
 
 import '../resource.dart';
-import 'heroicon.dart';
+import 'partials/heroicon.dart';
 
 /// Base layout component for authenticated pages in the admin panel.
 ///

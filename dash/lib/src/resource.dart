@@ -2,9 +2,12 @@ import 'package:jaspr/jaspr.dart';
 
 import 'components/pages/resource_index.dart';
 import 'components/partials/heroicon.dart';
+import 'database/migrations/schema_definition.dart';
 import 'model/model.dart';
+import 'model/model_metadata.dart';
 import 'model/model_query_builder.dart';
 import 'table/table.dart';
+import 'utils/sanitization.dart';
 
 /// Base class for all Dash resources.
 ///
@@ -26,8 +29,8 @@ import 'table/table.dart';
 /// }
 /// ```
 abstract class Resource<T extends Model> {
-  /// The model class associated with this resource.
-  Type get model;
+  /// The model class associated with this resource. Defaults to [T].
+  Type get model => T;
 
   /// The plural label for this resource (e.g., "Users").
   /// Defaults to the model name with an 's' suffix.
@@ -83,14 +86,25 @@ abstract class Resource<T extends Model> {
   }
 
   /// Creates a new instance of the model.
-  /// Must be overridden by subclasses to provide a concrete instance.
-  ///
-  /// Example:
-  /// ```dart
-  /// @override
-  /// User newModelInstance() => User();
-  /// ```
-  T newModelInstance();
+  /// Uses generated metadata when available, otherwise subclasses must override.
+  T newModelInstance() {
+    final metadata = getModelMetadata<T>();
+    if (metadata != null) {
+      return metadata.modelFactory();
+    }
+
+    throw StateError(
+      'No model factory registered for ${T.toString()}. '
+      'Override newModelInstance() in ${runtimeType.toString()} to provide one.',
+    );
+  }
+
+  /// Gets the table schema for this resource's model.
+  /// Defaults to the generated schema when available.
+  TableSchema? schema() {
+    final metadata = getModelMetadata<T>();
+    return metadata?.schema;
+  }
 
   /// Creates a query builder for the model.
   /// Uses the model instance to configure the query.
@@ -150,20 +164,25 @@ abstract class Resource<T extends Model> {
 
     // Apply search across searchable columns
     if (searchQuery != null && searchQuery.isNotEmpty) {
-      final searchableColumns = tableConfig
-          .getColumns()
-          .where((col) => col.isSearchable())
-          .map((col) => col.getName())
-          .toList();
+      // Sanitize the search query to prevent SQL injection via wildcards
+      final sanitized = sanitizeSearchQuery(searchQuery);
 
-      if (searchableColumns.isNotEmpty) {
-        // Build OR conditions for search
-        for (var i = 0; i < searchableColumns.length; i++) {
-          final column = searchableColumns[i];
-          if (i == 0) {
-            q = q.where(column, '%$searchQuery%', 'LIKE');
-          } else {
-            q = q.orWhere(column, '%$searchQuery%', 'LIKE');
+      if (sanitized.isNotEmpty) {
+        final searchableColumns = tableConfig
+            .getColumns()
+            .where((col) => col.isSearchable())
+            .map((col) => col.getName())
+            .toList();
+
+        if (searchableColumns.isNotEmpty) {
+          // Build OR conditions for search
+          for (var i = 0; i < searchableColumns.length; i++) {
+            final column = searchableColumns[i];
+            if (i == 0) {
+              q = q.where(column, '%$sanitized%', 'LIKE');
+            } else {
+              q = q.orWhere(column, '%$sanitized%', 'LIKE');
+            }
           }
         }
       }
@@ -172,7 +191,7 @@ abstract class Resource<T extends Model> {
     // Apply sorting
     final sortCol = sortColumn ?? tableConfig.getDefaultSort();
     final sortDir = sortDirection ?? tableConfig.getDefaultSortDirection();
-    if (sortCol != null) {
+    if (sortCol != null && isValidColumnName(sortCol)) {
       // Verify the column is sortable
       final isSortable = tableConfig.getColumns().any((col) => col.getName() == sortCol && col.isSortable());
       if (isSortable) {
@@ -198,19 +217,24 @@ abstract class Resource<T extends Model> {
 
     // Apply search across searchable columns
     if (searchQuery != null && searchQuery.isNotEmpty) {
-      final searchableColumns = tableConfig
-          .getColumns()
-          .where((col) => col.isSearchable())
-          .map((col) => col.getName())
-          .toList();
+      // Sanitize the search query to prevent SQL injection via wildcards
+      final sanitized = sanitizeSearchQuery(searchQuery);
 
-      if (searchableColumns.isNotEmpty) {
-        for (var i = 0; i < searchableColumns.length; i++) {
-          final column = searchableColumns[i];
-          if (i == 0) {
-            q = q.where(column, '%$searchQuery%', 'LIKE');
-          } else {
-            q = q.orWhere(column, '%$searchQuery%', 'LIKE');
+      if (sanitized.isNotEmpty) {
+        final searchableColumns = tableConfig
+            .getColumns()
+            .where((col) => col.isSearchable())
+            .map((col) => col.getName())
+            .toList();
+
+        if (searchableColumns.isNotEmpty) {
+          for (var i = 0; i < searchableColumns.length; i++) {
+            final column = searchableColumns[i];
+            if (i == 0) {
+              q = q.where(column, '%$sanitized%', 'LIKE');
+            } else {
+              q = q.orWhere(column, '%$sanitized%', 'LIKE');
+            }
           }
         }
       }

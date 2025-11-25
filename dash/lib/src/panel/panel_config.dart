@@ -40,7 +40,12 @@ class PanelConfig {
 
   /// Registers resources with this panel.
   void registerResources(List<Resource> resources) {
-    _resources.addAll(resources);
+    for (final resource in resources) {
+      final alreadyExists = _resources.any((existing) => existing.runtimeType == resource.runtimeType);
+      if (!alreadyExists) {
+        _resources.add(resource);
+      }
+    }
   }
 
   /// Validates the configuration.

@@ -3,6 +3,10 @@ import 'dart:io';
 import 'package:sqlite3/sqlite3.dart';
 
 import '../database_connector.dart';
+import '../migrations/builders/sqlite_migration_builder.dart';
+import '../migrations/inspectors/sqlite_schema_inspector.dart';
+import '../migrations/migration_runner.dart';
+import '../migrations/schema_definition.dart';
 
 /// SQLite database connector implementation.
 ///
@@ -56,10 +60,7 @@ class SqliteConnector implements DatabaseConnector {
   }
 
   @override
-  Future<List<Map<String, dynamic>>> query(
-    String sql, [
-    List<dynamic>? parameters,
-  ]) async {
+  Future<List<Map<String, dynamic>>> query(String sql, [List<dynamic>? parameters]) async {
     _ensureConnected();
 
     final result = _database!.select(sql, parameters ?? []);
@@ -67,10 +68,7 @@ class SqliteConnector implements DatabaseConnector {
   }
 
   @override
-  Future<int> execute(
-    String sql, [
-    List<dynamic>? parameters,
-  ]) async {
+  Future<int> execute(String sql, [List<dynamic>? parameters]) async {
     _ensureConnected();
 
     _database!.execute(sql, parameters ?? []);
@@ -89,7 +87,8 @@ class SqliteConnector implements DatabaseConnector {
     final values = data.values.toList();
     final placeholders = List.filled(columns.length, '?').join(', ');
 
-    final sql = '''
+    final sql =
+        '''
       INSERT INTO $table (${columns.join(', ')})
       VALUES ($placeholders)
     ''';
@@ -99,12 +98,7 @@ class SqliteConnector implements DatabaseConnector {
   }
 
   @override
-  Future<int> update(
-    String table,
-    Map<String, dynamic> data, {
-    String? where,
-    List<dynamic>? whereArgs,
-  }) async {
+  Future<int> update(String table, Map<String, dynamic> data, {String? where, List<dynamic>? whereArgs}) async {
     _ensureConnected();
 
     if (data.isEmpty) {
@@ -129,11 +123,7 @@ class SqliteConnector implements DatabaseConnector {
   }
 
   @override
-  Future<int> delete(
-    String table, {
-    String? where,
-    List<dynamic>? whereArgs,
-  }) async {
+  Future<int> delete(String table, {String? where, List<dynamic>? whereArgs}) async {
     _ensureConnected();
 
     final sql = StringBuffer('DELETE FROM $table');
@@ -194,5 +184,36 @@ class SqliteConnector implements DatabaseConnector {
   Future<void> executeRaw(String sql) async {
     _ensureConnected();
     _database!.execute(sql);
+  }
+
+  @override
+  Future<void> runMigrations(List<dynamic> schemas, {bool verbose = false}) async {
+    _ensureConnected();
+
+    if (schemas.isEmpty) return;
+
+    // Cast to TableSchema list
+    final tableSchemas = schemas.cast<TableSchema>();
+
+    final inspector = SqliteSchemaInspector(_database!);
+    final builder = SqliteMigrationBuilder();
+    final runner = MigrationRunner(connector: this, inspector: inspector, builder: builder);
+
+    final statements = await runner.runMigrations(tableSchemas);
+
+    if (verbose && statements.isNotEmpty) {
+      print('🔄 Executed ${statements.length} migration(s):');
+      for (final statement in statements) {
+        print('  ✓ ${statement.replaceAll('\n', ' ').trim()}');
+      }
+    }
+  }
+
+  /// Creates a schema inspector for this SQLite connection.
+  ///
+  /// This is useful for testing and advanced use cases.
+  SqliteSchemaInspector createSchemaInspector() {
+    _ensureConnected();
+    return SqliteSchemaInspector(_database!);
   }
 }

@@ -160,6 +160,48 @@ class ModelGenerator extends GeneratorForAnnotation<DashModel> {
     buffer.writeln('  static Future<List<$className>> all() async {');
     buffer.writeln('    return query().get();');
     buffer.writeln('  }');
+    buffer.writeln();
+    buffer.writeln('  /// Gets the table schema for automatic migrations.');
+    buffer.writeln('  static TableSchema get schema {');
+    buffer.writeln('    return const TableSchema(');
+    buffer.writeln('      name: \'$tableName\',');
+    buffer.writeln('      columns: [');
+
+    // Generate column definitions
+    for (final field in fields) {
+      if (field.isRelationship) continue; // Skip relationships
+
+      final columnType = _mapDartTypeToColumnType(field.dartType);
+      final isNullable = field.isNullable;
+      final isPrimary = field.isPrimaryKey;
+      final columnName = field.columnName;
+
+      buffer.writeln('        ColumnDefinition(');
+      buffer.writeln('          name: \'$columnName\',');
+      buffer.writeln('          type: ColumnType.$columnType,');
+      if (isPrimary) {
+        buffer.writeln('          isPrimaryKey: true,');
+        buffer.writeln('          autoIncrement: true,');
+      }
+      buffer.writeln('          nullable: $isNullable,');
+      buffer.writeln('        ),');
+    }
+
+    buffer.writeln('      ],');
+    buffer.writeln('    );');
+    buffer.writeln('  }');
+    buffer.writeln();
+    buffer.writeln('  /// Registers this model\'s resource factory and metadata.');
+    buffer.writeln('  static void register(Resource<$className> Function() resourceFactory) {');
+    buffer.writeln('    registerResourceFactory<$className>(resourceFactory);');
+    buffer.writeln();
+    buffer.writeln('    registerModelMetadata<$className>(');
+    buffer.writeln('      ModelMetadata<$className>(');
+    buffer.writeln('        modelFactory: () => $className(),');
+    buffer.writeln('        schema: ${className}Model.schema,');
+    buffer.writeln('      ),');
+    buffer.writeln('    );');
+    buffer.writeln('  }');
     buffer.writeln('}');
 
     return buffer.toString();
@@ -269,6 +311,27 @@ class ModelGenerator extends GeneratorForAnnotation<DashModel> {
       return 'getFromMap<bool>(map, \'$columnName\')';
     }
     return 'map[\'$columnName\'] as $dartType';
+  }
+
+  /// Maps Dart types to ColumnType for schema generation.
+  String _mapDartTypeToColumnType(String dartType) {
+    // Remove nullability
+    dartType = dartType.replaceAll('?', '');
+
+    switch (dartType) {
+      case 'int':
+        return 'integer';
+      case 'String':
+        return 'text';
+      case 'double':
+        return 'real';
+      case 'bool':
+        return 'boolean';
+      case 'DateTime':
+        return 'datetime';
+      default:
+        return 'text'; // Default to text for unknown types
+    }
   }
 }
 

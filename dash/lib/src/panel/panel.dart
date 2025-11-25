@@ -97,6 +97,14 @@ class Panel {
   ///
   /// This initializes the panel configuration and connects to the database.
   Future<Panel> boot() async {
+    // Pull in any globally registered resources if none were provided manually.
+    if (_config.resources.isEmpty) {
+      final registeredResources = buildRegisteredResources();
+      if (registeredResources.isNotEmpty) {
+        _config.registerResources(registeredResources);
+      }
+    }
+
     // Validate configuration
     _config.validate();
 

@@ -1,16 +1,15 @@
+import 'package:dash/src/components/pages/resource_create.dart';
+import 'package:dash/src/components/pages/resource_edit.dart';
+import 'package:dash/src/components/pages/resource_index.dart';
+import 'package:dash/src/components/partials/heroicon.dart';
+import 'package:dash/src/database/migrations/schema_definition.dart';
+import 'package:dash/src/form/form_schema.dart';
+import 'package:dash/src/model/model.dart';
+import 'package:dash/src/model/model_metadata.dart';
+import 'package:dash/src/model/model_query_builder.dart';
+import 'package:dash/src/table/table.dart';
+import 'package:dash/src/utils/sanitization.dart';
 import 'package:jaspr/jaspr.dart';
-
-import 'components/pages/resource_create.dart';
-import 'components/pages/resource_edit.dart';
-import 'components/pages/resource_index.dart';
-import 'components/partials/heroicon.dart';
-import 'database/migrations/schema_definition.dart';
-import 'form/form_schema.dart';
-import 'model/model.dart';
-import 'model/model_metadata.dart';
-import 'model/model_query_builder.dart';
-import 'table/table.dart';
-import 'utils/sanitization.dart';
 
 /// Base class for all Dash resources.
 ///
@@ -144,7 +143,7 @@ abstract class Resource<T extends Model> {
     final instance = newModelInstance();
     return ModelQueryBuilder<T>(
       Model.connector,
-      modelFactory: () => newModelInstance(),
+      modelFactory: newModelInstance,
       modelTable: instance.table,
       modelPrimaryKey: instance.primaryKey,
     );

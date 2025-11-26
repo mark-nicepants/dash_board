@@ -2,5 +2,13 @@ include: package:lints/recommended.yaml
 
 linter:
   rules:
-    - prefer_single_quotes
+    - always_use_package_imports
+    - avoid_void_async
+    - curly_braces_in_flow_control_structures
+    - directives_ordering
     - prefer_const_constructors
+    - prefer_final_locals
+    - prefer_single_quotes
+    - type_annotate_public_apis
+    - unnecessary_lambdas
+    - use_enums

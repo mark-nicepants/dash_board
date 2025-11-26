@@ -1,7 +1,6 @@
+import 'package:dash/src/components/partials/button.dart';
+import 'package:dash/src/components/partials/card.dart';
 import 'package:jaspr/jaspr.dart';
-
-import '../partials/button.dart';
-import '../partials/card.dart';
 
 /// Dashboard home page component.
 class DashboardPage extends StatelessComponent {

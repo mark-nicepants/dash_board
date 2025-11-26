@@ -1,6 +1,5 @@
+import 'package:dash/src/form/fields/field.dart';
 import 'package:dash/src/model/model.dart';
-
-import 'fields/field.dart';
 
 /// A form schema that holds a collection of fields.
 ///

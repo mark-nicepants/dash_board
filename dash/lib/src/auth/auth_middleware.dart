@@ -1,6 +1,5 @@
+import 'package:dash/src/auth/auth_service.dart';
 import 'package:shelf/shelf.dart';
-
-import 'auth_service.dart';
 
 /// Middleware to protect routes that require authentication.
 ///

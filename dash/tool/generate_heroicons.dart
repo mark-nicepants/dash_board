@@ -196,7 +196,7 @@ String _escapePath(String path) {
 
 String _toCamelCase(String name) {
   // Replace special characters and numbers at the start
-  var cleaned = name.replaceAll(RegExp(r'[^a-zA-Z0-9-]'), '').replaceAll(RegExp(r'^[0-9]'), 'icon');
+  final cleaned = name.replaceAll(RegExp(r'[^a-zA-Z0-9-]'), '').replaceAll(RegExp(r'^[0-9]'), 'icon');
 
   final parts = cleaned.split('-');
 

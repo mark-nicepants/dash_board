@@ -1,5 +1,5 @@
-import '../migration_builder.dart';
-import '../schema_definition.dart';
+import 'package:dash/src/database/migrations/migration_builder.dart';
+import 'package:dash/src/database/migrations/schema_definition.dart';
 
 /// SQLite-specific implementation of MigrationBuilder.
 ///

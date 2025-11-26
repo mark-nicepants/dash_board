@@ -1,6 +1,5 @@
+import 'package:dash/src/form/fields/field.dart';
 import 'package:jaspr/jaspr.dart';
-
-import 'field.dart';
 
 /// A checkbox field for boolean values.
 ///

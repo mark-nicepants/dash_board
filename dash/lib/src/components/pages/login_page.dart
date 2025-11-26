@@ -1,6 +1,5 @@
+import 'package:dash/src/components/partials/button.dart';
 import 'package:jaspr/jaspr.dart';
-
-import '../partials/button.dart';
 
 /// Login page component for the admin panel.
 class LoginPage extends StatelessComponent {

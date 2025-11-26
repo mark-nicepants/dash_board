@@ -1,4 +1,4 @@
-import 'schema_definition.dart';
+import 'package:dash/src/database/migrations/schema_definition.dart';
 
 /// Abstract interface for building database migrations.
 ///

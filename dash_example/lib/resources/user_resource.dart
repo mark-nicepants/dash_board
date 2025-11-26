@@ -1,6 +1,5 @@
 import 'package:dash/dash.dart';
-
-import '../models/user.dart';
+import 'package:dash_example/models/user.dart';
 
 /// Resource for managing users in the admin panel.
 class UserResource extends Resource<User> {

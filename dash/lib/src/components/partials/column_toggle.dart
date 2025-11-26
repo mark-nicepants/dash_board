@@ -1,8 +1,7 @@
 import 'dart:convert';
 
+import 'package:dash/src/table/columns/column.dart';
 import 'package:jaspr/jaspr.dart';
-
-import '../../table/columns/column.dart';
 
 /// Column visibility toggle component with Alpine.js-powered interactivity.
 class ColumnToggle extends StatelessComponent {

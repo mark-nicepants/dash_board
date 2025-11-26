@@ -1,9 +1,8 @@
 import 'dart:async';
 
+import 'package:dash/src/auth/auth_service.dart';
+import 'package:dash/src/panel/panel_config.dart';
 import 'package:shelf/shelf.dart';
-
-import '../auth/auth_service.dart';
-import 'panel_config.dart';
 
 /// Handles specific HTTP requests for authentication and special routes.
 ///

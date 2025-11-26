@@ -1,6 +1,6 @@
-import '../database/migrations/schema_definition.dart';
-import '../service_locator.dart';
-import 'model.dart';
+import 'package:dash/src/database/migrations/schema_definition.dart';
+import 'package:dash/src/model/model.dart';
+import 'package:dash/src/service_locator.dart';
 
 /// Metadata describing how to construct a model and its schema.
 class ModelMetadata<T extends Model> {

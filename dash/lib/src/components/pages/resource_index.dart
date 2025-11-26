@@ -1,16 +1,15 @@
+import 'package:dash/src/components/partials/breadcrumbs.dart';
+import 'package:dash/src/components/partials/button.dart';
+import 'package:dash/src/components/partials/column_toggle.dart';
+import 'package:dash/src/components/partials/page_header.dart';
+import 'package:dash/src/model/model.dart';
+import 'package:dash/src/resource.dart';
+import 'package:dash/src/table/columns/boolean_column.dart';
+import 'package:dash/src/table/columns/column.dart';
+import 'package:dash/src/table/columns/icon_column.dart';
+import 'package:dash/src/table/columns/text_column.dart';
+import 'package:dash/src/table/table.dart';
 import 'package:jaspr/jaspr.dart';
-
-import '../../model/model.dart';
-import '../../resource.dart';
-import '../../table/columns/boolean_column.dart';
-import '../../table/columns/column.dart';
-import '../../table/columns/icon_column.dart';
-import '../../table/columns/text_column.dart';
-import '../../table/table.dart';
-import '../partials/breadcrumbs.dart';
-import '../partials/button.dart';
-import '../partials/column_toggle.dart';
-import '../partials/page_header.dart';
 
 /// Resource index page with HTMX-powered interactivity.
 /// Server-side renders the full page, HTMX handles partial updates for search, sort, pagination.

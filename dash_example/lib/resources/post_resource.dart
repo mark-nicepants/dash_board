@@ -1,6 +1,5 @@
 import 'package:dash/dash.dart';
-
-import '../models/post.dart';
+import 'package:dash_example/models/post.dart';
 
 /// Resource for managing blog posts in the admin panel.
 class PostResource extends Resource<Post> {

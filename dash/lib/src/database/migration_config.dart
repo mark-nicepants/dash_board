@@ -1,6 +1,5 @@
+import 'package:dash/src/database/migrations/schema_definition.dart';
 import 'package:dash/src/service_locator.dart';
-
-import 'migrations/schema_definition.dart';
 
 /// Configuration for automatic database migrations.
 ///

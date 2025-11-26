@@ -1,6 +1,6 @@
 import 'package:dash/src/model/model.dart';
 
-import 'columns/column.dart';
+import 'package:dash/src/table/columns/column.dart';
 
 /// Represents a table in the admin panel.
 ///

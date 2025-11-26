@@ -1,4 +1,4 @@
-import 'icon_column.dart';
+import 'package:dash/src/table/columns/icon_column.dart';
 
 /// A column that displays a boolean value as an icon.
 ///

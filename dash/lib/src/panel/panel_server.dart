@@ -1,16 +1,15 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:dash/src/auth/auth_middleware.dart';
+import 'package:dash/src/auth/auth_service.dart';
+import 'package:dash/src/panel/panel_config.dart';
+import 'package:dash/src/panel/panel_router.dart';
+import 'package:dash/src/panel/request_handler.dart';
+import 'package:dash/src/resources/resource_loader.dart';
 import 'package:jaspr/server.dart';
 import 'package:shelf/shelf.dart';
 import 'package:shelf/shelf_io.dart' as shelf_io;
-
-import '../auth/auth_middleware.dart';
-import '../auth/auth_service.dart';
-import '../resources/resource_loader.dart';
-import 'panel_config.dart';
-import 'panel_router.dart';
-import 'request_handler.dart';
 
 /// Manages the HTTP server for the Dash panel.
 ///

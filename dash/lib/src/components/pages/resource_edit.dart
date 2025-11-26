@@ -1,11 +1,10 @@
+import 'package:dash/src/components/partials/breadcrumbs.dart';
+import 'package:dash/src/components/partials/page_header.dart';
+import 'package:dash/src/form/fields/form_renderer.dart';
+import 'package:dash/src/form/form_schema.dart';
+import 'package:dash/src/model/model.dart';
+import 'package:dash/src/resource.dart';
 import 'package:jaspr/jaspr.dart';
-
-import '../../form/fields/form_renderer.dart';
-import '../../form/form_schema.dart';
-import '../../model/model.dart';
-import '../../resource.dart';
-import '../partials/breadcrumbs.dart';
-import '../partials/page_header.dart';
 
 /// Resource edit page that renders the form for editing existing records.
 ///

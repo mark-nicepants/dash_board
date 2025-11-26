@@ -1,10 +1,9 @@
+import 'package:dash/src/database/database_connector.dart';
+import 'package:dash/src/model/model.dart';
+import 'package:dash/src/panel/panel_config.dart';
+import 'package:dash/src/resource.dart';
+import 'package:dash/src/resources/resource_loader.dart';
 import 'package:get_it/get_it.dart';
-
-import 'database/database_connector.dart';
-import 'model/model.dart';
-import 'panel/panel_config.dart';
-import 'resource.dart';
-import 'resources/resource_loader.dart';
 
 /// Global service locator instance.
 final inject = GetIt.instance;

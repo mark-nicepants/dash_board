@@ -3,13 +3,21 @@ include: package:lints/recommended.yaml
 linter:
   rules:
     - always_declare_return_types
+    - always_use_package_imports
     - avoid_empty_else
     - avoid_relative_lib_imports
     - avoid_types_as_parameter_names
+    - avoid_void_async
     - cancel_subscriptions
+    - curly_braces_in_flow_control_structures
+    - directives_ordering
     - prefer_const_constructors
     - prefer_final_fields
+    - prefer_final_locals
     - prefer_single_quotes
     - sort_pub_dependencies
+    - type_annotate_public_apis
+    - unnecessary_lambdas
     - unnecessary_this
+    - use_enums
     - use_super_parameters

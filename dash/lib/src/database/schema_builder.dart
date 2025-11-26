@@ -1,4 +1,4 @@
-import 'migrations/schema_definition.dart';
+import 'package:dash/src/database/migrations/schema_definition.dart';
 
 /// Helper class to build database schemas in a fluent, readable way.
 ///

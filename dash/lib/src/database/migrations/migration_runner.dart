@@ -1,7 +1,7 @@
-import '../database_connector.dart';
-import 'migration_builder.dart';
-import 'schema_definition.dart';
-import 'schema_inspector.dart';
+import 'package:dash/src/database/database_connector.dart';
+import 'package:dash/src/database/migrations/migration_builder.dart';
+import 'package:dash/src/database/migrations/schema_definition.dart';
+import 'package:dash/src/database/migrations/schema_inspector.dart';
 
 /// Orchestrates the execution of database migrations.
 ///

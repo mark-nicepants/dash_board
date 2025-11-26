@@ -1,6 +1,5 @@
 import 'package:dash/dash.dart';
-
-import 'user.dart';
+import 'package:dash_example/models/user.dart';
 
 part 'post.model.g.dart';
 

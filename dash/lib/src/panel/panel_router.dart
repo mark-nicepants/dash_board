@@ -1,10 +1,9 @@
+import 'package:dash/src/components/layout.dart';
+import 'package:dash/src/components/pages/dashboard_page.dart';
+import 'package:dash/src/components/pages/login_page.dart';
+import 'package:dash/src/panel/panel_config.dart';
+import 'package:dash/src/resources/resource_loader.dart';
 import 'package:jaspr/server.dart';
-
-import '../components/layout.dart';
-import '../components/pages/dashboard_page.dart';
-import '../components/pages/login_page.dart';
-import '../resources/resource_loader.dart';
-import 'panel_config.dart';
 
 /// Handles routing and page rendering for the Dash panel.
 ///

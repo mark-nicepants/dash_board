@@ -1,5 +1,5 @@
-import '../database/database_config.dart';
-import '../resource.dart';
+import 'package:dash/src/database/database_config.dart';
+import 'package:dash/src/resource.dart';
 
 /// Configuration for a Dash panel.
 ///

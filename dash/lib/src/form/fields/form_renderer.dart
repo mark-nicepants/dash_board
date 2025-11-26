@@ -1,7 +1,6 @@
+import 'package:dash/src/form/fields/field.dart';
+import 'package:dash/src/form/form_schema.dart';
 import 'package:jaspr/jaspr.dart';
-
-import '../form_schema.dart';
-import 'field.dart';
 
 /// Renders a form schema to Jaspr components.
 ///

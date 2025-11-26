@@ -1,6 +1,5 @@
+import 'package:dash/src/form/fields/field.dart';
 import 'package:jaspr/jaspr.dart';
-
-import 'field.dart';
 
 /// A textarea field for multi-line text input.
 ///

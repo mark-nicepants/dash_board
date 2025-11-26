@@ -1,6 +1,6 @@
 import 'package:dash/src/model/model.dart';
 
-import 'column.dart';
+import 'package:dash/src/table/columns/column.dart';
 
 /// A column that displays text.
 ///

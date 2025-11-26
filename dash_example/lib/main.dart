@@ -1,9 +1,8 @@
 import 'package:dash/dash.dart';
 import 'package:dash_example/models/post.dart';
 import 'package:dash_example/models/user.dart';
-
-import 'resources/post_resource.dart';
-import 'resources/user_resource.dart';
+import 'package:dash_example/resources/post_resource.dart';
+import 'package:dash_example/resources/user_resource.dart';
 
 Future<void> main({String dbDir = 'database'}) async {
   print('🚀 Dash Example Admin Panel\n');

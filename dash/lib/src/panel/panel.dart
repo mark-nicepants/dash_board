@@ -1,14 +1,14 @@
 import 'dart:async';
 
-import '../auth/auth_service.dart';
-import '../database/database_config.dart';
-import '../database/query_builder.dart';
-import '../model/model.dart';
-import '../resource.dart';
-import '../resources/resource_loader.dart';
-import '../service_locator.dart';
-import 'panel_config.dart';
-import 'panel_server.dart';
+import 'package:dash/src/auth/auth_service.dart';
+import 'package:dash/src/database/database_config.dart';
+import 'package:dash/src/database/query_builder.dart';
+import 'package:dash/src/model/model.dart';
+import 'package:dash/src/panel/panel_config.dart';
+import 'package:dash/src/panel/panel_server.dart';
+import 'package:dash/src/resource.dart';
+import 'package:dash/src/resources/resource_loader.dart';
+import 'package:dash/src/service_locator.dart';
 
 /// The main entry point for a Dash admin panel.
 ///

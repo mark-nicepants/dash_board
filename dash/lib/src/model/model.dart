@@ -1,7 +1,7 @@
-import '../database/database_connector.dart';
-import '../validation/validation.dart';
-import 'model_query_builder.dart';
-import 'soft_deletes.dart';
+import 'package:dash/src/database/database_connector.dart';
+import 'package:dash/src/model/model_query_builder.dart';
+import 'package:dash/src/model/soft_deletes.dart';
+import 'package:dash/src/validation/validation.dart';
 
 /// Base class for all Dash models.
 ///

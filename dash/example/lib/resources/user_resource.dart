@@ -50,6 +50,7 @@ class UserResource extends Resource<User> {
           .email()
           .placeholder<TextInput>('user@example.com')
           .required<TextInput>(),
+
       Select.make('role') //
           .label<Select>('User Role')
           .options([

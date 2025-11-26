@@ -127,7 +127,7 @@ abstract final class FormStyles {
   // ============================================
 
   /// Form actions container (buttons row).
-  static const String formActions = 'flex items-center justify-end gap-3 pt-4';
+  static const String formActions = 'flex items-center justify-start gap-3 pt-4 pb-4';
 
   /// Primary submit button.
   static const String buttonPrimary =

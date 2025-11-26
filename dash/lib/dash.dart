@@ -14,6 +14,7 @@ export 'src/components/pages/resource_edit.dart';
 export 'src/components/pages/resource_index.dart';
 // Components
 export 'src/components/partials/heroicon.dart';
+export 'src/components/partials/table/table_components.dart';
 export 'src/database/connectors/sqlite_connector.dart';
 export 'src/database/database_config.dart';
 // Database

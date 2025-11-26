@@ -45,7 +45,7 @@ class ResourceLoader {
     if (resourcesDir == null) {
       throw StateError(
         'Could not find dash resources directory. '
-        'Looked in: resources/, dash/resources/'
+        'Looked in: resources/, dash/resources/',
       );
     }
 

@@ -13,15 +13,47 @@ class ResourceLoader {
       _js = js,
       _useMinified = useMinified;
 
+  /// Finds the resources directory by checking multiple possible locations.
+  /// Returns the path to the resources directory, or null if not found.
+  static Future<String?> _findResourcesDir() async {
+    // Possible locations for the resources directory:
+    // 1. Direct path (when running from dash project root)
+    // 2. Package path (when dash is a dependency)
+    final possiblePaths = [
+      'resources', // Running from dash project root
+      'dash/resources', // dash is a local path dependency
+      '.dart_tool/package_config_packages/dash/resources', // Cached package
+    ];
+
+    for (final path in possiblePaths) {
+      final dir = Directory(path);
+      if (await dir.exists()) {
+        return path;
+      }
+    }
+
+    return null;
+  }
+
   /// Initializes and loads all resources from disk.
   static Future<ResourceLoader> initialize() async {
     final useMinified = Platform.environment['DASH_ENV'] == 'production';
 
     print('🔧 Initializing ResourceLoader (${useMinified ? 'production' : 'development'} mode)...');
 
-    final htmlTemplate = await _loadHtmlTemplate();
-    final css = await _loadCss(useMinified);
-    final js = await _loadAppJs(useMinified);
+    final resourcesDir = await _findResourcesDir();
+    if (resourcesDir == null) {
+      throw StateError(
+        'Could not find dash resources directory. '
+        'Looked in: resources/, dash/resources/'
+      );
+    }
+
+    print('📂 Found resources at: $resourcesDir');
+
+    final htmlTemplate = await _loadHtmlTemplate(resourcesDir);
+    final css = await _loadCss(resourcesDir, useMinified);
+    final js = await _loadAppJs(resourcesDir, useMinified);
 
     print('✅ Resources loaded successfully');
 
@@ -29,14 +61,14 @@ class ResourceLoader {
   }
 
   /// Loads the HTML template.
-  static Future<String> _loadHtmlTemplate() async {
-    final file = File('dash/resources/index.html');
+  static Future<String> _loadHtmlTemplate(String resourcesDir) async {
+    final file = File('$resourcesDir/index.html');
     return await file.readAsString();
   }
 
   /// Loads the main CSS file.
-  static Future<String> _loadCss(bool useMinified) async {
-    final cssPath = useMinified ? 'dash/resources/dist/css/dash.min.css' : 'dash/resources/dist/css/dash.css';
+  static Future<String> _loadCss(String resourcesDir, bool useMinified) async {
+    final cssPath = useMinified ? '$resourcesDir/dist/css/dash.min.css' : '$resourcesDir/dist/css/dash.css';
 
     final file = File(cssPath);
     if (await file.exists()) {
@@ -48,8 +80,8 @@ class ResourceLoader {
   }
 
   /// Loads the main application JavaScript.
-  static Future<String> _loadAppJs(bool useMinified) async {
-    final jsPath = useMinified ? 'dash/resources/dist/js/app.min.js' : 'dash/resources/dist/js/app.js';
+  static Future<String> _loadAppJs(String resourcesDir, bool useMinified) async {
+    final jsPath = useMinified ? '$resourcesDir/dist/js/app.min.js' : '$resourcesDir/dist/js/app.js';
 
     final file = File(jsPath);
     if (await file.exists()) {

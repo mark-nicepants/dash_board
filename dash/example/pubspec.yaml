@@ -8,7 +8,7 @@ environment:
 
 dependencies:
   dash:
-    path: ../dash
+    path: ../
   jaspr: ^0.21.7
   shelf: ^1.4.0
   shelf_router: ^1.1.0

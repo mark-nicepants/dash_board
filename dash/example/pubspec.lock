@@ -164,7 +164,7 @@ packages:
   dash:
     dependency: "direct main"
     description:
-      path: "../dash"
+      path: ".."
       relative: true
     source: path
     version: "0.1.0"

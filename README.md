@@ -9,7 +9,7 @@ This repository is organized as a monorepo:
 ```
 dash_board/
 ├── dash/           # Core framework package
-├── dash_example/   # Example application for testing
+├── dash/example/   # Example application for testing
 └── docs/          # Documentation and planning
 ```
 

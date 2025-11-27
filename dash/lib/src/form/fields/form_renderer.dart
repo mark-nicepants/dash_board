@@ -1,5 +1,7 @@
 import 'package:dash/src/components/partials/forms/form_components.dart';
+import 'package:dash/src/components/partials/forms/form_section.dart';
 import 'package:dash/src/form/fields/field.dart';
+import 'package:dash/src/form/fields/section.dart';
 import 'package:dash/src/form/form_schema.dart';
 import 'package:jaspr/jaspr.dart';
 
@@ -60,32 +62,69 @@ class FormRenderer extends StatelessComponent {
   Component _buildFormContent(BuildContext context) {
     final columns = schema.getColumns();
     final gap = schema.getGap();
+    final components = schema.getComponents();
+
+    // Check if we have sections or just flat fields
+    final hasSections = components.any((c) => c is Section);
+
+    if (hasSections) {
+      // Render sections and standalone fields
+      return div(classes: 'space-y-6', [
+        for (final component in components)
+          if (component is Section)
+            _buildSection(component, context)
+          else if (component is FormField && !component.isHidden())
+            _buildFieldWrapper(component, context, columns),
+        // Form actions
+        _buildFormActions(),
+      ]);
+    }
 
     return div([
       // Form fields grid
       div(classes: 'grid grid-cols-1 ${columns > 1 ? 'md:grid-cols-$columns' : ''} gap-$gap', [
-        for (final field in schema.getFields())
-          if (!field.isHidden()) _buildFieldWrapper(field, context, columns),
+        for (final component in components)
+          if (component is FormField && !component.isHidden()) _buildFieldWrapper(component, context, columns),
       ]),
 
       // Form actions
-      div(classes: FormStyles.formActions, [
-        button(
-          type: ButtonType.submit,
-          classes: FormStyles.buttonPrimary,
-          attributes: schema.isDisabled() ? {'disabled': ''} : null,
-          [text(schema.getSubmitLabel())],
-        ),
-
-        if (schema.shouldShowCancelButton())
-          button(
-            type: ButtonType.button,
-            classes: FormStyles.buttonSecondary,
-            attributes: {'onclick': 'history.back()'},
-            [text(schema.getCancelLabel())],
-          ),
-      ]),
+      _buildFormActions(),
     ]);
+  }
+
+  Component _buildFormActions() {
+    return div(classes: FormStyles.formActions, [
+      button(
+        type: ButtonType.submit,
+        classes: FormStyles.buttonPrimary,
+        attributes: schema.isDisabled() ? {'disabled': ''} : null,
+        [text(schema.getSubmitLabel())],
+      ),
+
+      if (schema.shouldShowCancelButton())
+        button(
+          type: ButtonType.button,
+          classes: FormStyles.buttonSecondary,
+          attributes: {'onclick': 'history.back()'},
+          [text(schema.getCancelLabel())],
+        ),
+    ]);
+  }
+
+  Component _buildSection(Section section, BuildContext context) {
+    final sectionColumns = section.getColumns();
+    final sectionGap = section.getGap();
+
+    // Build the field grid for this section
+    final fieldGrid = div(
+      classes: 'grid grid-cols-1 ${sectionColumns > 1 ? 'md:grid-cols-$sectionColumns' : ''} gap-$sectionGap',
+      [
+        for (final field in section.getFields())
+          if (!field.isHidden()) _buildFieldWrapper(field, context, sectionColumns),
+      ],
+    );
+
+    return FormSection(section: section, children: [fieldGrid]);
   }
 
   Component _buildFieldWrapper(FormField field, BuildContext context, int totalColumns) {

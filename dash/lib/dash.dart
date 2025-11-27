@@ -31,6 +31,7 @@ export 'src/form/fields/checkbox.dart';
 export 'src/form/fields/date_picker.dart';
 export 'src/form/fields/field.dart';
 export 'src/form/fields/form_renderer.dart';
+export 'src/form/fields/section.dart';
 export 'src/form/fields/select.dart';
 export 'src/form/fields/text_input.dart';
 export 'src/form/fields/textarea.dart';

@@ -1,7 +1,12 @@
 import 'package:dash/src/form/fields/field.dart';
+import 'package:dash/src/form/fields/section.dart';
 import 'package:dash/src/model/model.dart';
 
-/// A form schema that holds a collection of fields.
+/// A component that can be placed in a form schema.
+/// This can be either a [FormField] or a [Section].
+typedef FormComponent = Object;
+
+/// A form schema that holds a collection of fields and sections.
 ///
 /// The [FormSchema] is the container for form fields and manages
 /// form state, validation, and rendering configuration.
@@ -26,8 +31,8 @@ import 'package:dash/src/model/model.dart';
 /// }
 /// ```
 class FormSchema<T extends Model> {
-  /// The fields in this form.
-  List<FormField> _fields = [];
+  /// The components in this form (fields and sections).
+  List<FormComponent> _components = [];
 
   /// The number of columns in the form grid.
   int _columns = 1;
@@ -64,18 +69,31 @@ class FormSchema<T extends Model> {
 
   FormSchema();
 
-  /// Sets the fields for this form.
-  FormSchema<T> fields(List<FormField> fields) {
-    _fields = fields;
+  /// Sets the components (fields and sections) for this form.
+  FormSchema<T> fields(List<FormComponent> components) {
+    _components = components;
     return this;
   }
 
-  /// Gets the fields in this form.
-  List<FormField> getFields() => _fields;
+  /// Gets the components in this form.
+  List<FormComponent> getComponents() => _components;
 
-  /// Adds a field to this form.
-  FormSchema<T> field(FormField field) {
-    _fields.add(field);
+  /// Gets all fields from components (flattening sections).
+  List<FormField> getFields() {
+    final fields = <FormField>[];
+    for (final component in _components) {
+      if (component is FormField) {
+        fields.add(component);
+      } else if (component is Section) {
+        fields.addAll(component.getFields());
+      }
+    }
+    return fields;
+  }
+
+  /// Adds a component to this form.
+  FormSchema<T> field(FormComponent component) {
+    _components.add(component);
     return this;
   }
 
@@ -190,7 +208,7 @@ class FormSchema<T extends Model> {
     if (_record == null) return;
 
     final data = _record!.toMap();
-    for (final field in _fields) {
+    for (final field in getFields()) {
       final name = field.getName();
       if (data.containsKey(name)) {
         field.defaultValue(data[name]);
@@ -201,7 +219,7 @@ class FormSchema<T extends Model> {
   /// Collects validation rules from all fields.
   Map<String, List<String>> getValidationRules() {
     final rules = <String, List<String>>{};
-    for (final field in _fields) {
+    for (final field in getFields()) {
       final fieldRules = field.getValidationRules();
       if (fieldRules.isNotEmpty) {
         rules[field.getName()] = fieldRules;
@@ -215,7 +233,7 @@ class FormSchema<T extends Model> {
   Map<String, List<String>> validate(Map<String, dynamic> data) {
     final errors = <String, List<String>>{};
 
-    for (final field in _fields) {
+    for (final field in getFields()) {
       final value = data[field.getName()];
       final fieldErrors = field.validate(value);
       if (fieldErrors.isNotEmpty) {
@@ -235,7 +253,7 @@ class FormSchema<T extends Model> {
     }
 
     // Override with field defaults where applicable
-    for (final field in _fields) {
+    for (final field in getFields()) {
       final defaultVal = field.getDefaultValue();
       if (defaultVal != null && !data.containsKey(field.getName())) {
         data[field.getName()] = defaultVal;

@@ -24,8 +24,10 @@ Set<String> _metadataKeys() {
 /// Gets or creates the metadata map for string-based lookup.
 Map<String, ModelMetadata<Model>> _metadataMap() {
   if (!inject.isRegistered<Map<String, ModelMetadata<Model>>>(instanceName: _modelMetadataMapKey)) {
-    inject.registerSingleton<Map<String, ModelMetadata<Model>>>(<String, ModelMetadata<Model>>{},
-        instanceName: _modelMetadataMapKey);
+    inject.registerSingleton<Map<String, ModelMetadata<Model>>>(
+      <String, ModelMetadata<Model>>{},
+      instanceName: _modelMetadataMapKey,
+    );
   }
   return inject<Map<String, ModelMetadata<Model>>>(instanceName: _modelMetadataMapKey);
 }
@@ -46,10 +48,7 @@ void registerModelMetadata<T extends Model>(ModelMetadata<T> metadata) {
 
   // Also store in the map for string-based lookup
   // We create a new ModelMetadata<Model> that wraps the factory
-  _metadataMap()[typeName] = ModelMetadata<Model>(
-    modelFactory: metadata.modelFactory,
-    schema: metadata.schema,
-  );
+  _metadataMap()[typeName] = ModelMetadata<Model>(modelFactory: metadata.modelFactory, schema: metadata.schema);
 }
 
 /// Retrieves metadata for a model type if available.

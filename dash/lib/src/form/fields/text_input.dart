@@ -1,4 +1,5 @@
 import 'package:dash/src/components/partials/forms/form_components.dart';
+import 'package:dash/src/components/partials/heroicon.dart';
 import 'package:dash/src/form/fields/field.dart';
 import 'package:jaspr/jaspr.dart';
 
@@ -44,10 +45,10 @@ class TextInput extends FormField {
   String? _suffix;
 
   /// Prefix icon.
-  String? _prefixIcon;
+  HeroIcons? _prefixIcon;
 
   /// Suffix icon.
-  String? _suffixIcon;
+  HeroIcons? _suffixIcon;
 
   /// Whether to show a character count.
   bool _showCharacterCount = false;
@@ -166,22 +167,22 @@ class TextInput extends FormField {
   String? getSuffix() => _suffix;
 
   /// Sets a prefix icon.
-  TextInput prefixIcon(String icon) {
+  TextInput prefixIcon(HeroIcons icon) {
     _prefixIcon = icon;
     return this;
   }
 
   /// Gets the prefix icon.
-  String? getPrefixIcon() => _prefixIcon;
+  HeroIcons? getPrefixIcon() => _prefixIcon;
 
   /// Sets a suffix icon.
-  TextInput suffixIcon(String icon) {
+  TextInput suffixIcon(HeroIcons icon) {
     _suffixIcon = icon;
     return this;
   }
 
   /// Gets the suffix icon.
-  String? getSuffixIcon() => _suffixIcon;
+  HeroIcons? getSuffixIcon() => _suffixIcon;
 
   /// Shows a character count.
   TextInput characterCount([bool show = true]) {
@@ -276,8 +277,8 @@ class TextInput extends FormField {
       input: _buildInput(inputId),
       prefixText: _prefix,
       suffixText: _suffix,
-      prefixIcon: _prefixIcon != null ? text(_prefixIcon!) : null,
-      suffixIcon: _suffixIcon != null ? text(_suffixIcon!) : null,
+      prefixIcon: _prefixIcon != null ? Heroicon(_prefixIcon!, size: 20) : null,
+      suffixIcon: _suffixIcon != null ? Heroicon(_suffixIcon!, size: 20) : null,
     );
   }
 

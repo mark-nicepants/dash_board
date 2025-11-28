@@ -9,16 +9,21 @@ Future<void> main({String dbDir = 'database'}) async {
   print('🚀 Dash Example Admin Panel\n');
   print('📁 Database directory: $dbDir\n');
 
-  // Register model resource builders
-  UserModel.register(UserResource.new);
-  PostModel.register(PostResource.new);
+  // Register models and their resource factories
+  User.register(UserResource.new);
+  Post.register(PostResource.new);
 
   // Create and configure the admin panel with automatic migrations
   // Schemas are automatically extracted from resources!
   final panel = Panel()
     ..setId('admin')
     ..setPath('/admin')
-    ..addDevCommands([seedUsersCommand(), seedPostsCommand(), seedAllCommand(), clearDatabaseCommand()])
+    ..addDevCommands([
+      seedUsersCommand(), //
+      seedPostsCommand(),
+      seedAllCommand(),
+      clearDatabaseCommand(),
+    ])
     ..database(
       DatabaseConfig.using(SqliteConnector('$dbDir/app.db'), migrations: MigrationConfig.fromResources(verbose: true)),
     );

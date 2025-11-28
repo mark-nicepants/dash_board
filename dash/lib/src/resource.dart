@@ -411,16 +411,13 @@ abstract class Resource<T extends Model> {
     final requiredRelations = tableConfig.getRequiredRelationships();
     if (requiredRelations.isEmpty) return;
 
-    // Get the first record to inspect its relationship metadata
     final sampleRecord = records.first;
     final relationships = sampleRecord.getRelationships();
 
     for (final relationName in requiredRelations) {
-      // Find the relationship metadata
       final relationMeta = relationships.where((r) => r.name == relationName).firstOrNull;
       if (relationMeta == null) continue;
 
-      // Only handle BelongsTo for now (most common for table display)
       if (relationMeta.type == RelationshipType.belongsTo) {
         await _loadBelongsToRelation(records, relationMeta);
       }

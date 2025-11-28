@@ -1,4 +1,23 @@
+import 'package:dash/src/validation/validation.dart';
 import 'package:jaspr/jaspr.dart';
+
+// Re-export validation rules for convenience
+export 'package:dash/src/validation/validation.dart'
+    show
+        ValidationRule,
+        Required,
+        Email,
+        Url,
+        MinLength,
+        MaxLength,
+        Numeric,
+        Integer,
+        Min,
+        Max,
+        InList,
+        Pattern,
+        Accepted,
+        Confirmed;
 
 /// Base class for all form fields.
 ///
@@ -58,7 +77,7 @@ abstract class FormField {
   String? _extraClasses;
 
   /// Validation rules for this field.
-  final List<FieldValidationRule> _rules = [];
+  final List<ValidationRule> _rules = [];
 
   /// Custom validation messages.
   final Map<String, String> _validationMessages = {};
@@ -146,8 +165,8 @@ abstract class FormField {
   /// Marks the field as required.
   T required<T extends FormField>([bool required = true]) {
     _required = required;
-    if (required && !_rules.any((r) => r is RequiredRule)) {
-      _rules.add(RequiredRule());
+    if (required && !_rules.any((r) => r is Required)) {
+      _rules.add(Required());
     }
     return this as T;
   }
@@ -219,13 +238,13 @@ abstract class FormField {
   String? getExtraClasses() => _extraClasses;
 
   /// Adds a validation rule.
-  T rule<T extends FormField>(FieldValidationRule rule) {
+  T rule<T extends FormField>(ValidationRule rule) {
     _rules.add(rule);
     return this as T;
   }
 
   /// Adds multiple validation rules.
-  T rules<T extends FormField>(List<FieldValidationRule> rules) {
+  T rules<T extends FormField>(List<ValidationRule> rules) {
     _rules.addAll(rules);
     return this as T;
   }
@@ -265,7 +284,7 @@ abstract class FormField {
 
   /// Gets the validation rules as strings for display.
   List<String> getValidationRules() {
-    return _rules.map((r) => r.ruleString).toList();
+    return _rules.map((r) => r.name).toList();
   }
 
   /// Validates the given value.
@@ -277,7 +296,7 @@ abstract class FormField {
       final error = rule.validate(getName(), value);
       if (error != null) {
         // Use custom message if available
-        final customMessage = _validationMessages[rule.ruleString];
+        final customMessage = _validationMessages[rule.name];
         errors.add(customMessage ?? error);
       }
     }
@@ -309,238 +328,5 @@ abstract class FormField {
       return 'col-span-full';
     }
     return 'col-span-$_columnSpan';
-  }
-}
-
-/// Base class for field validation rules.
-abstract class FieldValidationRule {
-  /// A unique string identifier for this rule.
-  String get ruleString;
-
-  /// Validates the value.
-  /// Returns an error message if invalid, null if valid.
-  String? validate(String field, dynamic value);
-}
-
-/// Rule that requires a value to be present.
-class RequiredRule extends FieldValidationRule {
-  @override
-  String get ruleString => 'required';
-
-  @override
-  String? validate(String field, dynamic value) {
-    if (value == null || value == '' || (value is List && value.isEmpty)) {
-      return 'The $field field is required.';
-    }
-    return null;
-  }
-}
-
-/// Rule that validates an email address.
-class EmailRule extends FieldValidationRule {
-  static final _emailRegex = RegExp(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$');
-
-  @override
-  String get ruleString => 'email';
-
-  @override
-  String? validate(String field, dynamic value) {
-    if (value == null || value == '') return null;
-    if (value is! String) return 'The $field must be a string.';
-    if (!_emailRegex.hasMatch(value)) {
-      return 'The $field must be a valid email address.';
-    }
-    return null;
-  }
-}
-
-/// Rule that validates a minimum length.
-class MinLengthRule extends FieldValidationRule {
-  final int min;
-
-  MinLengthRule(this.min);
-
-  @override
-  String get ruleString => 'min:$min';
-
-  @override
-  String? validate(String field, dynamic value) {
-    if (value == null || value == '') return null;
-    final length = value is String ? value.length : value.toString().length;
-    if (length < min) {
-      return 'The $field must be at least $min characters.';
-    }
-    return null;
-  }
-}
-
-/// Rule that validates a maximum length.
-class MaxLengthRule extends FieldValidationRule {
-  final int max;
-
-  MaxLengthRule(this.max);
-
-  @override
-  String get ruleString => 'max:$max';
-
-  @override
-  String? validate(String field, dynamic value) {
-    if (value == null || value == '') return null;
-    final length = value is String ? value.length : value.toString().length;
-    if (length > max) {
-      return 'The $field must not exceed $max characters.';
-    }
-    return null;
-  }
-}
-
-/// Rule that validates a minimum numeric value.
-class MinRule extends FieldValidationRule {
-  final num min;
-
-  MinRule(this.min);
-
-  @override
-  String get ruleString => 'min:$min';
-
-  @override
-  String? validate(String field, dynamic value) {
-    if (value == null || value == '') return null;
-    final numValue = value is num ? value : num.tryParse(value.toString());
-    if (numValue == null) {
-      return 'The $field must be a number.';
-    }
-    if (numValue < min) {
-      return 'The $field must be at least $min.';
-    }
-    return null;
-  }
-}
-
-/// Rule that validates a maximum numeric value.
-class MaxRule extends FieldValidationRule {
-  final num max;
-
-  MaxRule(this.max);
-
-  @override
-  String get ruleString => 'max:$max';
-
-  @override
-  String? validate(String field, dynamic value) {
-    if (value == null || value == '') return null;
-    final numValue = value is num ? value : num.tryParse(value.toString());
-    if (numValue == null) {
-      return 'The $field must be a number.';
-    }
-    if (numValue > max) {
-      return 'The $field must not exceed $max.';
-    }
-    return null;
-  }
-}
-
-/// Rule that validates a regex pattern.
-class RegexRule extends FieldValidationRule {
-  final RegExp pattern;
-  final String? customMessage;
-
-  RegexRule(this.pattern, {this.customMessage});
-
-  @override
-  String get ruleString => 'regex';
-
-  @override
-  String? validate(String field, dynamic value) {
-    if (value == null || value == '') return null;
-    if (value is! String) return 'The $field must be a string.';
-    if (!pattern.hasMatch(value)) {
-      return customMessage ?? 'The $field format is invalid.';
-    }
-    return null;
-  }
-}
-
-/// Rule that validates a URL.
-class UrlRule extends FieldValidationRule {
-  @override
-  String get ruleString => 'url';
-
-  @override
-  String? validate(String field, dynamic value) {
-    if (value == null || value == '') return null;
-    if (value is! String) return 'The $field must be a string.';
-    final uri = Uri.tryParse(value);
-    if (uri == null || !uri.hasScheme || (!uri.isScheme('http') && !uri.isScheme('https'))) {
-      return 'The $field must be a valid URL.';
-    }
-    return null;
-  }
-}
-
-/// Rule that validates a value is in a list.
-class InListRule extends FieldValidationRule {
-  final List<dynamic> values;
-
-  InListRule(this.values);
-
-  @override
-  String get ruleString => 'in:${values.join(',')}';
-
-  @override
-  String? validate(String field, dynamic value) {
-    if (value == null || value == '') return null;
-    if (!values.contains(value)) {
-      return 'The selected $field is invalid.';
-    }
-    return null;
-  }
-}
-
-/// Rule that validates numeric input.
-class NumericRule extends FieldValidationRule {
-  @override
-  String get ruleString => 'numeric';
-
-  @override
-  String? validate(String field, dynamic value) {
-    if (value == null || value == '') return null;
-    if (value is num) return null;
-    if (value is String && num.tryParse(value) != null) return null;
-    return 'The $field must be a number.';
-  }
-}
-
-/// Rule that validates integer input.
-class IntegerRule extends FieldValidationRule {
-  @override
-  String get ruleString => 'integer';
-
-  @override
-  String? validate(String field, dynamic value) {
-    if (value == null || value == '') return null;
-    if (value is int) return null;
-    if (value is String && int.tryParse(value) != null) return null;
-    return 'The $field must be an integer.';
-  }
-}
-
-/// Rule that validates confirmed fields match.
-class ConfirmedRule extends FieldValidationRule {
-  final String confirmationField;
-  final dynamic confirmationValue;
-
-  ConfirmedRule(this.confirmationField, this.confirmationValue);
-
-  @override
-  String get ruleString => 'confirmed';
-
-  @override
-  String? validate(String field, dynamic value) {
-    if (value == null || value == '') return null;
-    if (value != confirmationValue) {
-      return 'The $field confirmation does not match.';
-    }
-    return null;
   }
 }

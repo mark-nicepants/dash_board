@@ -1,7 +1,0 @@
-builders:
-  model_generator:
-    import: "package:dash/builder.dart"
-    builder_factories: ["modelBuilder"]
-    build_extensions: {".dart": [".model.g.dart"]}
-    auto_apply: dependents
-    build_to: source

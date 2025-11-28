@@ -38,6 +38,12 @@ We've successfully integrated Jaspr with Dash and created a working admin panel 
    - Minimal resource definitions (only override what's needed)
    - Icon components support
 
+6. **YAML Schema & Model Generator**
+   - Define models in YAML with IDE autocomplete
+   - Generate Dart model classes automatically
+   - Full validation and relationship support
+   - Run with: `dart run dash:generate schemas lib`
+
 ## Running the Server
 
 ### Using the Run Configuration (VS Code)

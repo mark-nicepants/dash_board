@@ -1,0 +1,40 @@
+# yaml-language-server: $schema=../../schemas/dash-model.schema.json
+
+model: Post
+table: posts
+timestamps: true
+
+fields:
+  id:
+    type: int
+    primaryKey: true
+    autoIncrement: true
+
+  title:
+    type: string
+    required: true
+    min: 1
+    max: 255
+
+  slug:
+    type: string
+    required: true
+    unique: true
+    pattern: "^[a-z0-9-]+$"
+
+  content:
+    type: string
+
+  isPublished:
+    type: bool
+    default: false
+
+  publishedAt:
+    type: datetime
+
+  author:
+    type: int
+    required: true
+    belongsTo: User
+    foreignKey: author_id
+    as: author

@@ -51,7 +51,7 @@ class Checkbox extends FormField {
   /// Requires the checkbox to be accepted/checked.
   Checkbox accepted() {
     _mustBeAccepted = true;
-    rule(AcceptedRule());
+    rule(Accepted());
     return this;
   }
 
@@ -113,19 +113,5 @@ class Checkbox extends FormField {
         if (_uncheckedValue != null) input(type: InputType.hidden, name: getName(), value: _uncheckedValue),
       ],
     );
-  }
-}
-
-/// Rule that requires a checkbox to be accepted.
-class AcceptedRule extends FieldValidationRule {
-  @override
-  String get ruleString => 'accepted';
-
-  @override
-  String? validate(String field, dynamic value) {
-    if (value == true || value == 1 || value == '1' || value == 'on' || value == 'yes') {
-      return null;
-    }
-    return 'The $field must be accepted.';
   }
 }

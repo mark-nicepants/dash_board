@@ -202,6 +202,22 @@ class UserResource extends Resource<User> {
 }
 ```
 
+### 📄 YAML Schema System (NEW)
+- ✅ **JSON Schema Definition**: `dash-model.schema.json` for IDE validation and autocomplete
+- ✅ **YAML Model Schemas**: Declarative model definitions in `.yaml` files
+- ✅ **Schema Parser**: Parses YAML schemas into `ParsedSchema` objects
+- ✅ **Model Generator**: Generates complete Dart model classes from schemas
+- ✅ **CLI Tool**: `dart run dash:generate <schemas_dir> [output_dir]`
+- ✅ **Field Types**: `int`, `string`, `bool`, `double`, `datetime`, `json`, `list`
+- ✅ **Validation Properties**: `required`, `nullable`, `min`, `max`, `pattern`, `format`, `enum`
+- ✅ **Format Validation**: `email`, `url`, `uuid`, `phone`, `slug`
+- ✅ **Relationships**: `belongsTo`, `hasOne`, `hasMany` with custom `foreignKey` and `as`
+- ✅ **Database Properties**: `primaryKey`, `autoIncrement`, `unique`
+- ✅ **Model Config**: `timestamps`, `softDeletes`
+- ✅ **IDE Support**: Full autocomplete and validation in VS Code/Cursor
+
+See [Model Schema & Generator Documentation](./model-schema-generator.md) for full details.
+
 ### Example Model with Annotations:
 ```dart
 @DashModel(table: 'users')

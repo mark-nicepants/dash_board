@@ -1,0 +1,153 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://dash.dev/schema/model.json",
+  "title": "Dash Model Schema",
+  "description": "Schema definition for Dash model YAML files",
+  "type": "object",
+  "required": ["model", "table", "fields"],
+  "additionalProperties": false,
+  "properties": {
+    "model": {
+      "type": "string",
+      "description": "The Dart class name for this model (PascalCase)",
+      "pattern": "^[A-Z][a-zA-Z0-9]*$"
+    },
+    "table": {
+      "type": "string",
+      "description": "The database table name (snake_case)",
+      "pattern": "^[a-z][a-z0-9_]*$"
+    },
+    "timestamps": {
+      "type": "boolean",
+      "description": "Whether to add created_at and updated_at columns",
+      "default": true
+    },
+    "softDeletes": {
+      "type": "boolean",
+      "description": "Whether to enable soft deletes (deleted_at column)",
+      "default": false
+    },
+    "fields": {
+      "type": "object",
+      "description": "Field definitions for the model",
+      "additionalProperties": {
+        "$ref": "#/$defs/field"
+      }
+    }
+  },
+  "$defs": {
+    "field": {
+      "type": "object",
+      "required": ["type"],
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "type": "string",
+          "description": "The field data type",
+          "enum": ["int", "string", "bool", "double", "datetime", "json", "list"]
+        },
+        "primaryKey": {
+          "type": "boolean",
+          "description": "Whether this field is the primary key",
+          "default": false
+        },
+        "autoIncrement": {
+          "type": "boolean",
+          "description": "Whether this field auto-increments (for primary keys)",
+          "default": false
+        },
+        "required": {
+          "type": "boolean",
+          "description": "Whether this field is required (non-nullable)",
+          "default": false
+        },
+        "nullable": {
+          "type": "boolean",
+          "description": "Whether this field can be null",
+          "default": true
+        },
+        "unique": {
+          "type": "boolean",
+          "description": "Whether this field must be unique in the database",
+          "default": false
+        },
+        "default": {
+          "description": "Default value for this field"
+        },
+        "min": {
+          "type": "number",
+          "description": "Minimum value (for numbers) or minimum length (for strings)"
+        },
+        "max": {
+          "type": "number",
+          "description": "Maximum value (for numbers) or maximum length (for strings)"
+        },
+        "format": {
+          "type": "string",
+          "description": "Format validation for string fields",
+          "enum": ["email", "url", "uuid", "phone", "slug"]
+        },
+        "pattern": {
+          "type": "string",
+          "description": "Regex pattern for string validation"
+        },
+        "enum": {
+          "type": "array",
+          "description": "Allowed values for this field",
+          "items": {
+            "type": "string"
+          }
+        },
+        "belongsTo": {
+          "type": "string",
+          "description": "Related model name for belongsTo relationship",
+          "pattern": "^[A-Z][a-zA-Z0-9]*$"
+        },
+        "hasMany": {
+          "type": "string",
+          "description": "Related model name for hasMany relationship",
+          "pattern": "^[A-Z][a-zA-Z0-9]*$"
+        },
+        "hasOne": {
+          "type": "string",
+          "description": "Related model name for hasOne relationship",
+          "pattern": "^[A-Z][a-zA-Z0-9]*$"
+        },
+        "foreignKey": {
+          "type": "string",
+          "description": "Foreign key column name for relationships",
+          "pattern": "^[a-z][a-z0-9_]*$"
+        },
+        "as": {
+          "type": "string",
+          "description": "Custom field name for the relationship in the Dart model",
+          "pattern": "^[a-z][a-zA-Z0-9]*$"
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": { "primaryKey": { "const": true } },
+            "required": ["primaryKey"]
+          },
+          "then": {
+            "properties": {
+              "type": { "enum": ["int", "string"] }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": { "format": {} },
+            "required": ["format"]
+          },
+          "then": {
+            "properties": {
+              "type": { "const": "string" }
+            }
+          }
+        }
+      ]
+    }
+  }
+}

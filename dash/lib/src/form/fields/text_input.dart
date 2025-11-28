@@ -78,7 +78,7 @@ class TextInput extends FormField {
   /// Sets the input type to email and adds email validation.
   TextInput email() {
     _type = InputType.email;
-    rule(EmailRule());
+    rule(Email());
     autocomplete('email');
     return this;
   }
@@ -100,7 +100,7 @@ class TextInput extends FormField {
   /// Sets the input type to URL and adds URL validation.
   TextInput url() {
     _type = InputType.url;
-    rule(UrlRule());
+    rule(Url());
     autocomplete('url');
     return this;
   }
@@ -121,7 +121,7 @@ class TextInput extends FormField {
   /// Sets the minimum length.
   TextInput minLength(int length) {
     _minLength = length;
-    rule(MinLengthRule(length));
+    rule(MinLength(length));
     return this;
   }
 
@@ -131,7 +131,7 @@ class TextInput extends FormField {
   /// Sets the maximum length.
   TextInput maxLength(int length) {
     _maxLength = length;
-    rule(MaxLengthRule(length));
+    rule(MaxLength(length));
     return this;
   }
 
@@ -141,7 +141,7 @@ class TextInput extends FormField {
   /// Sets the pattern for validation.
   TextInput pattern(RegExp pattern, {String? message}) {
     _pattern = pattern;
-    rule(RegexRule(pattern, customMessage: message));
+    rule(Pattern(pattern, message: message));
     return this;
   }
 
@@ -213,13 +213,13 @@ class TextInput extends FormField {
 
   /// Adds numeric validation (numbers only).
   TextInput numeric() {
-    rule(NumericRule());
+    rule(Numeric());
     return this;
   }
 
   /// Adds integer validation.
   TextInput integer() {
-    rule(IntegerRule());
+    rule(Integer());
     return this;
   }
 

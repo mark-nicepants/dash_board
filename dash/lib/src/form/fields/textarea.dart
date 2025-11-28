@@ -83,7 +83,7 @@ class Textarea extends FormField {
   /// Sets the minimum length.
   Textarea minLength(int length) {
     _minLength = length;
-    rule(MinLengthRule(length));
+    rule(MinLength(length));
     return this;
   }
 
@@ -93,7 +93,7 @@ class Textarea extends FormField {
   /// Sets the maximum length.
   Textarea maxLength(int length) {
     _maxLength = length;
-    rule(MaxLengthRule(length));
+    rule(MaxLength(length));
     return this;
   }
 

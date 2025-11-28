@@ -159,7 +159,7 @@ class Select extends FormField {
   /// Adds in-list validation.
   Select validateInList() {
     final validValues = _options.map((o) => o.value).toList();
-    rule(InListRule(validValues));
+    rule(InList(validValues));
     return this;
   }
 

@@ -50,6 +50,9 @@ export 'src/form/fields/textarea.dart';
 export 'src/form/fields/toggle.dart';
 // Forms
 export 'src/form/form_schema.dart';
+// Generators (Schema-based code generation)
+export 'src/generators/schema_model_generator.dart';
+export 'src/generators/schema_parser.dart';
 // Models
 export 'src/model/annotations.dart';
 export 'src/model/model.dart';

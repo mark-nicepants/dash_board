@@ -20,8 +20,9 @@ DevCommand seedUsersCommand() => DevCommand(
       final name = _faker.person.name();
       final email = _faker.internet.email();
       final role = roles[i % roles.length];
+      final password = 'password123'; // In production, hash this!
 
-      final user = User(name: name, email: email, role: role);
+      final user = User(name: name, email: email, password: password, role: role);
       await user.save();
       print('   ✓ Created user: $name ($email)');
     }
@@ -40,21 +41,19 @@ DevCommand seedPostsCommand() => DevCommand(
     print('\n🌱 Seeding $count posts...\n');
 
     // Get existing users to assign as authors
-    final users = await UserModel.all();
+    final users = await User.all();
     if (users.isEmpty) {
       print('   ⚠️  No users found. Run "seed:users" first.\n');
       return;
     }
 
-    final statuses = ['draft', 'published', 'archived'];
-
     for (var i = 0; i < count; i++) {
-      final author = users[i % users.length];
-      final status = statuses[i % statuses.length];
+      final authorUser = users[i % users.length];
       final title = _faker.lorem.sentence();
+      final slug = title.toLowerCase().replaceAll(RegExp(r'[^a-z0-9]+'), '-').replaceAll(RegExp(r'^-|-$'), '');
       final content = _faker.lorem.sentences(5).join(' ');
 
-      final post = Post(title: title, content: content, userId: author.id, status: status);
+      final post = Post(title: title, slug: slug, content: content, author: authorUser.id!, isPublished: i % 2 == 0);
       await post.save();
       print('   ✓ Created post: ${post.title}');
     }
@@ -71,14 +70,14 @@ DevCommand clearDatabaseCommand() => DevCommand(
     print('\n🗑️  Clearing database...\n');
 
     // Delete all posts first (foreign key constraint)
-    final posts = await PostModel.all();
+    final posts = await Post.all();
     for (final post in posts) {
       await post.delete();
     }
     print('   ✓ Deleted ${posts.length} posts');
 
     // Delete all users
-    final users = await UserModel.all();
+    final users = await User.all();
     for (final user in users) {
       await user.delete();
     }

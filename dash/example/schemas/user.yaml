@@ -1,0 +1,41 @@
+# yaml-language-server: $schema=../../schemas/dash-model.schema.json
+
+model: User
+table: users
+timestamps: true
+
+fields:
+  id:
+    type: int
+    primaryKey: true
+    autoIncrement: true
+
+  name:
+    type: string
+    required: true
+    min: 2
+    max: 255
+
+  email:
+    type: string
+    required: true
+    unique: true
+    format: email
+
+  password:
+    type: string
+    required: true
+    min: 8
+
+  role:
+    type: string
+    required: true
+    enum:
+      - admin
+      - user
+      - guest
+    default: user
+
+  isActive:
+    type: bool
+    default: true

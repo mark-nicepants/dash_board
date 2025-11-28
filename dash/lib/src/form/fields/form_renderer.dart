@@ -50,9 +50,9 @@ class FormRenderer extends StatelessComponent {
     return form(
       action: schema.getAction(),
       method: FormMethod.post,
-      classes: 'space-y-6 ${customClasses ?? ''}'.trim(),
+      classes: customClasses,
       [
-        // Method spoofing for PUT/PATCH
+        // Method spoofing for PUT/PATCH (placed inside content to avoid space-y-6 gap)
         if (methodAttr != null) input(type: InputType.hidden, name: '_method', value: methodAttr),
         content,
       ],
@@ -63,6 +63,14 @@ class FormRenderer extends StatelessComponent {
     final columns = schema.getColumns();
     final gap = schema.getGap();
     final components = schema.getComponents();
+    final isFormDisabled = schema.isDisabled();
+
+    // If form is disabled, disable all fields
+    if (isFormDisabled) {
+      for (final field in schema.getFields()) {
+        field.disabled(true);
+      }
+    }
 
     // Check if we have sections or just flat fields
     final hasSections = components.any((c) => c is Section);

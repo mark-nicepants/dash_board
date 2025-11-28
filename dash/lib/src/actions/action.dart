@@ -493,6 +493,39 @@ class Action<T extends Model> {
     );
   }
 
+  /// Renders the action as a header button with record context.
+  ///
+  /// Used on view pages where header actions need to operate on a specific record.
+  /// For example, an "Edit" button that navigates to the edit page for the current record.
+  Component renderAsHeaderActionWithRecord({required T record, required String basePath}) {
+    // URL action - render as link button
+    if (_url != null) {
+      final url = _url!(record, basePath);
+      return Button(
+        label: getLabel(),
+        variant: buttonVariant,
+        size: buttonSize,
+        icon: _icon,
+        iconPosition: _iconPosition,
+        hideLabel: _isLabelHidden,
+        href: url,
+        openInNewTab: _openUrlInNewTab,
+        attributes: {if (_tooltip != null) 'title': _tooltip!, ..._extraAttributes ?? {}},
+      );
+    }
+
+    // Fallback - render as a button
+    return Button(
+      label: getLabel(),
+      variant: buttonVariant,
+      size: buttonSize,
+      icon: _icon,
+      iconPosition: _iconPosition,
+      hideLabel: _isLabelHidden,
+      attributes: {if (_tooltip != null) 'title': _tooltip!, ..._extraAttributes ?? {}},
+    );
+  }
+
   // ============================================================
   // Form Action Rendering
   // ============================================================

@@ -1,9 +1,12 @@
 import 'package:dash/src/actions/action.dart';
+import 'package:dash/src/actions/action_color.dart';
 import 'package:dash/src/actions/prebuilt/cancel_action.dart';
 import 'package:dash/src/actions/prebuilt/create_action.dart';
+import 'package:dash/src/actions/prebuilt/edit_action.dart';
 import 'package:dash/src/actions/prebuilt/save_action.dart';
 import 'package:dash/src/components/pages/resource_form.dart';
 import 'package:dash/src/components/pages/resource_index.dart';
+import 'package:dash/src/components/pages/resource_view.dart';
 import 'package:dash/src/components/partials/heroicon.dart';
 import 'package:dash/src/database/migrations/schema_definition.dart';
 import 'package:dash/src/form/form_schema.dart';
@@ -161,6 +164,54 @@ abstract class Resource<T extends Model> {
   /// ```
   List<Action<T>> formActions(FormOperation operation) {
     return [SaveAction.make<T>(operation: operation), CancelAction.make<T>()];
+  }
+
+  /// Defines the header actions for the view page.
+  ///
+  /// Override this method to customize the actions shown in the view page header.
+  /// By default, shows an "Edit" button.
+  ///
+  /// Example:
+  /// ```dart
+  /// @override
+  /// List<Action<User>> viewHeaderActions() => [
+  ///   EditAction.make(),
+  ///   Action.make<User>('export')
+  ///     .label('Export')
+  ///     .icon(HeroIcons.arrowDownTray)
+  ///     .color(ActionColor.secondary),
+  /// ];
+  /// ```
+  List<Action<T>> viewHeaderActions() {
+    return [EditAction.make<T>()];
+  }
+
+  /// Defines the form actions for view pages (displayed at bottom of view form).
+  ///
+  /// Override this method to customize the actions shown at the bottom of view pages.
+  /// By default, shows an "Edit" button and a "Back" button.
+  ///
+  /// The [recordId] parameter is the ID of the record being viewed,
+  /// used to construct the edit URL.
+  ///
+  /// Example:
+  /// ```dart
+  /// @override
+  /// List<Action<User>> viewFormActions(dynamic recordId) => [
+  ///   Action.make<User>('edit')
+  ///     .label('Edit')
+  ///     .color(ActionColor.primary)
+  ///     .url((_, basePath) => '$basePath/$recordId/edit'),
+  ///   CancelAction.make(),
+  /// ];
+  /// ```
+  List<Action<T>> viewFormActions(dynamic recordId) {
+    return [
+      Action.make<T>(
+        'edit',
+      ).label('Edit $singularLabel').color(ActionColor.primary).url((_, basePath) => '$basePath/$recordId/edit'),
+      CancelAction.make<T>().label('Back'),
+    ];
   }
 
   /// Creates a new instance of the model.
@@ -463,6 +514,11 @@ abstract class Resource<T extends Model> {
   /// Creates a ResourceForm component for editing an existing record.
   Component buildEditPage({required T record, Map<String, List<String>>? errors, Map<String, dynamic>? oldInput}) {
     return ResourceForm<T>(resource: this, record: record, errors: errors, oldInput: oldInput);
+  }
+
+  /// Creates a ResourceView component for viewing an existing record.
+  Component buildViewPage({required T record}) {
+    return ResourceView<T>(resource: this, record: record);
   }
 
   /// Creates a new FormSchema instance for this resource.

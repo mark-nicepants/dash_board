@@ -216,9 +216,10 @@ class PanelRouter {
         orElse: () => throw Exception('Resource not found: $resourceSlug'),
       );
 
-      // Check for create/edit routes
+      // Check for create/edit/view routes
       // /resources/{slug}/create - Create new record
       // /resources/{slug}/{id}/edit - Edit existing record
+      // /resources/{slug}/{id} - View record (when id is numeric or valid ID)
       // /resources/{slug} - Index page
       final hasMoreParts = parts.length > resourceIndex + 2;
       final action = hasMoreParts ? parts[resourceIndex + 2] : null;
@@ -250,6 +251,25 @@ class PanelRouter {
           title: 'Edit ${resource.singularLabel}',
           child: editPage,
         );
+      }
+
+      // View page - /resources/{slug}/{id} (when action looks like an ID and no further path segment)
+      if (action != null && parts.length == resourceIndex + 3) {
+        // Check if action looks like a record ID (numeric or any non-reserved string)
+        final recordId = int.tryParse(action) ?? action;
+        if (recordId != 'create') {
+          final record = await resource.findRecord(recordId);
+
+          if (record != null) {
+            final viewPage = resource.buildViewPage(record: record);
+            return DashLayout(
+              basePath: _config.path,
+              resources: _config.resources,
+              title: resource.singularLabel,
+              child: viewPage,
+            );
+          }
+        }
       }
 
       // Index page - Extract query parameters for filtering, sorting, pagination

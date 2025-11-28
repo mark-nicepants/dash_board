@@ -22,6 +22,7 @@ export 'src/components/pages/dashboard_page.dart';
 export 'src/components/pages/login_page.dart';
 export 'src/components/pages/resource_form.dart';
 export 'src/components/pages/resource_index.dart';
+export 'src/components/pages/resource_view.dart';
 export 'src/components/partials/button.dart';
 export 'src/components/partials/heroicon.dart';
 export 'src/components/partials/table/table_components.dart';

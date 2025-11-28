@@ -22,6 +22,39 @@
 
 ---
 
+## Architecture Overview
+
+### Layered Architecture
+
+Dash follows a layered architecture with clear separation of concerns:
+
+1. **Presentation Layer** - Jaspr components for rendering HTML
+2. **Application Layer** - Panel, Router, and Request handling
+3. **Domain Layer** - Resources, Models, and business logic
+4. **Infrastructure Layer** - Database connectors, storage, and external services
+
+### Core Domain Concepts
+
+- **Panel** - The central orchestrator that configures and runs the admin interface
+- **Resource** - Represents a model/entity with CRUD operations, tied to table and form configurations
+- **Model** - Active Record pattern ORM with fluent query builder
+- **Table** - Declarative configuration for list views with columns and actions
+- **FormSchema** - Declarative configuration for create/edit forms with fields and validation
+- **Action** - Reusable interactive elements for navigation and server-side operations
+
+### Dependency Flow
+
+Panel orchestrates Resources, which use Table, FormSchema, and Actions for UI configuration. Resources depend on Models, which use QueryBuilder to interact with DatabaseConnector. Validation Rules are applied at the form field level.
+
+### Service Locator Pattern
+
+Use GetIt-based dependency injection via `inject<T>()`:
+- Register singletons during `Panel.boot()`
+- Access `PanelConfig`, `DatabaseConnector`, `StorageManager` globally
+- Register resource factories with `registerResourceFactory<Model>()`
+
+---
+
 ## Project Structure
 
 ```
@@ -59,6 +92,8 @@ dash/lib/src/
 | Components | Descriptive | `DashLayout`, `ResourceIndex`, `PageHeader` |
 | Table Columns | `<Type>Column` | `TextColumn`, `BooleanColumn`, `IconColumn` |
 | Form Fields | Descriptive | `TextInput`, `DatePicker`, `Toggle`, `Select` |
+| Actions | `<Verb>Action` | `CreateAction`, `EditAction`, `DeleteAction` |
+| Validation Rules | Descriptive noun | `Required`, `Email`, `MinLength`, `Pattern` |
 
 ### Methods
 | Purpose | Convention | Example |
@@ -67,6 +102,7 @@ dash/lib/src/
 | Boolean checks | `is`/`should`/`has` | `isRequired()`, `shouldAutofocus()`, `hasOptions()` |
 | Fluent setters | Property name | `label()`, `sortable()`, `required()` |
 | Factory methods | `make()` | `TextInput.make('email')` |
+| Build methods | `build` prefix | `buildIndexPage()`, `buildCreatePage()` |
 
 ### Files
 - Use **snake_case** for file names: `text_input.dart`, `query_builder.dart`
@@ -80,90 +116,77 @@ dash/lib/src/
 
 ---
 
+## Component Architecture
+
+### Component Hierarchy
+
+- **Layout Components** - Page wrappers with navigation (`DashLayout`)
+- **Page Components** - Full pages (`ResourceIndex`, `ResourceForm`, `ResourceView`)
+- **Partial Components** - Reusable UI elements (`Button`, `Badge`, `Card`, `PageHeader`)
+- **Form Components** - Input wrappers with styling and validation feedback
+
+### Component Composition
+
+Build complex UIs by composing smaller components:
+- Pages compose layout + partials + form/table renderers
+- Partials are self-contained with their own styling logic
+- Use enums for variants rather than string-based configuration
+
+---
+
 ## Code Patterns
 
 ### 1. Fluent Builder API
 
-All configurable classes use method chaining:
-
-```dart
-// ✅ Correct - fluent configuration
-table.columns([
-  TextColumn.make('name').searchable().sortable().grow(),
-  TextColumn.make('email').searchable(),
-]).defaultSort('name');
-
-form.columns(2).fields([
-  TextInput.make('name').required<TextInput>().minLength(2),
-  Select.make('role').options(roleOptions).required<Select>(),
-]);
-```
+All configurable classes use method chaining. Configure tables and forms by chaining methods like `columns()`, `searchable()`, `sortable()`, `required()`, and `defaultSort()`.
 
 ### 2. Static Factory Methods
 
-Always provide a `make()` factory method for configurable classes:
-
-```dart
-class TextInput extends FormField {
-  TextInput(super.name);
-  
-  /// Factory method - primary way to create instances
-  static TextInput make(String name) => TextInput(name);
-}
-```
+Always provide a `make()` factory method for configurable classes. This is the primary way to create instances and enables the fluent API pattern.
 
 ### 3. Generic Typing for Fluent Methods
 
-Use generic type parameters to preserve type through chaining:
-
-```dart
-// In base class
-T required<T extends FormField>() {
-  _required = true;
-  rule(RequiredRule());
-  return this as T;
-}
-
-// Usage - type is preserved
-TextInput.make('name').required<TextInput>().minLength(2)
-```
+Use generic type parameters in base class methods to preserve the concrete type through method chaining. Return `this as T` to maintain type safety.
 
 ### 4. Jaspr Components
 
-Extend `StatelessComponent` and implement `build()`:
-
-```dart
-class Button extends StatelessComponent {
-  final String label;
-  final ButtonVariant variant;
-  
-  const Button({
-    required this.label, 
-    this.variant = ButtonVariant.primary, 
-    super.key,
-  });
-
-  @override
-  Component build(BuildContext context) {
-    return button(
-      type: ButtonType.button,
-      classes: _getClasses(),
-      [text(label)],
-    );
-  }
-  
-  String _getClasses() => switch (variant) {
-    ButtonVariant.primary => 'px-4 py-2 bg-lime-500 text-white rounded-lg',
-    ButtonVariant.secondary => 'px-4 py-2 bg-gray-700 text-gray-300 rounded-lg',
-  };
-}
-```
+Extend `StatelessComponent` and implement `build()`. Use `const` constructors, pass children as list arguments, and apply Tailwind classes via the `classes` parameter.
 
 **Component Rules:**
 - Use `const` constructors where possible
 - Children go in a list as the last positional argument
 - Use `classes` for Tailwind CSS classes
 - Use `attributes` map for custom HTML attributes (`hx-*`, `x-*`, `data-*`)
+
+### 5. Resource Pattern
+
+Resources bridge models to the admin UI:
+- Override `table()` to configure list view columns, sorting, and actions
+- Override `form()` to configure create/edit fields and validation
+- Override action hooks (`indexHeaderActions`, `formActions`) for custom behaviors
+- Resources own CRUD operations (`getRecords`, `createRecord`, `updateRecord`, `deleteRecord`)
+
+### 6. Model Pattern (Active Record)
+
+Models represent database entities:
+- Extend `Model` base class
+- Implement `table`, `toMap()`, `fromMap()`, `getKey()`, `setKey()`
+- Use static `query()` method for fluent query building
+- Support timestamps, soft deletes, and relationships via mixins
+
+### 7. Validation Pattern
+
+Validation rules are composable classes:
+- Each rule extends `ValidationRule` with `name` and `validate()`
+- Fields collect rules via `.rule()` method or convenience methods (`.required()`, `.email()`)
+- Validation runs through `FormSchema.validate()` returning field → error maps
+
+### 8. Query Builder Pattern
+
+Fluent interface for database operations:
+- Chain methods: `where()`, `orderBy()`, `limit()`, `offset()`
+- Execute with: `get()`, `first()`, `count()`, `insert()`, `update()`, `delete()`
+- `ModelQueryBuilder` wraps base builder to return typed model instances
 
 ---
 
@@ -187,4 +210,4 @@ class Button extends StatelessComponent {
 
 ---
 
-*Last updated: 2025-11-26*
+*Last updated: 2025-11-28*

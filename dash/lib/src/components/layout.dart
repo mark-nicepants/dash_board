@@ -27,8 +27,8 @@ class DashLayout extends StatelessComponent {
     return div(classes: 'flex min-h-screen bg-gray-900', [
       // Sidebar
       aside(classes: 'w-64 bg-gray-800 text-white flex flex-col', [
-        div(classes: 'p-6 border-b border-gray-700', [
-          h2(classes: 'text-2xl font-bold text-indigo-500', [text('DASH')]),
+        div(classes: 'p-6 border-b border-gray-700 flex justify-center', [
+          img(src: '$basePath/assets/img/logo_square.png', alt: 'Dash Logo', classes: 'h-14'),
         ]),
         nav(classes: 'flex-1 py-6', [
           ul(classes: 'space-y-1', [

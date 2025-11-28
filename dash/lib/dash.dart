@@ -38,6 +38,7 @@ export 'src/database/migrations/migration_runner.dart';
 export 'src/database/migrations/schema_definition.dart';
 export 'src/database/migrations/schema_inspector.dart';
 export 'src/database/query_builder.dart';
+export 'src/database/query_log.dart';
 export 'src/database/schema_builder.dart';
 export 'src/form/fields/checkbox.dart';
 export 'src/form/fields/date_picker.dart';

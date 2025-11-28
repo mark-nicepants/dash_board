@@ -2,6 +2,8 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:dash/src/database/query_log.dart';
+
 /// Command handler function type.
 typedef CommandHandler = Future<void> Function(List<String> args);
 
@@ -157,6 +159,69 @@ class DevConsole {
     registerCommand(
       DevCommand(name: 'status', description: 'Show server status', handler: (_) async => _printStatus()),
     );
+
+    // Query log commands
+    registerCommand(
+      DevCommand(
+        name: 'db:log',
+        shortName: 'dl',
+        description: 'Toggle query logging on/off',
+        usage: 'db:log [on|off]',
+        handler: (args) async {
+          if (args.isEmpty) {
+            // Toggle
+            final newState = QueryLog.toggle();
+            print('\n📊 Query logging ${newState ? "enabled" : "disabled"}\n');
+          } else {
+            final arg = args.first.toLowerCase();
+            if (arg == 'on' || arg == 'enable' || arg == '1') {
+              QueryLog.enable();
+              print('\n📊 Query logging enabled\n');
+            } else if (arg == 'off' || arg == 'disable' || arg == '0') {
+              QueryLog.disable();
+              print('\n📊 Query logging disabled\n');
+            } else {
+              print('\n❓ Unknown argument: $arg');
+              print('   Usage: log [on|off]\n');
+            }
+          }
+        },
+      ),
+    );
+
+    registerCommand(
+      DevCommand(
+        name: 'db:queries',
+        description: 'Show logged database queries',
+        usage: 'queries [count]',
+        handler: (args) async {
+          if (QueryLog.entries.isEmpty) {
+            print('\n📊 No queries logged.');
+            print('   Tip: Enable logging with "log on"\n');
+            return;
+          }
+
+          final count = args.isNotEmpty ? int.tryParse(args.first) : null;
+          if (count != null) {
+            _printQueries(QueryLog.last(count));
+          } else {
+            QueryLog.printLog();
+          }
+        },
+      ),
+    );
+
+    registerCommand(
+      DevCommand(
+        name: 'clearlog',
+        description: 'Clear the query log',
+        handler: (_) async {
+          final count = QueryLog.count;
+          QueryLog.clear();
+          print('\n🗑️  Cleared $count query log entries\n');
+        },
+      ),
+    );
   }
 
   Future<void> _handleInput(String input) async {
@@ -230,6 +295,40 @@ class DevConsole {
     print('📊 Server Status:');
     print('');
     print('   (Status will be shown when connected to panel)');
+    print('');
+  }
+
+  void _printQueries(List<QueryLogEntry> entries) {
+    print('');
+    print('📊 Query Log (${entries.length} queries)');
+    print('─' * 60);
+
+    if (entries.isEmpty) {
+      print('  No queries logged.');
+    } else {
+      for (var i = 0; i < entries.length; i++) {
+        final entry = entries[i];
+        print('  ${i + 1}. ${entry.sql}');
+
+        if (entry.parameters != null && entry.parameters!.isNotEmpty) {
+          print('     Parameters: ${entry.parameters}');
+        }
+
+        final meta = <String>[];
+        if (entry.duration != null) {
+          meta.add('${entry.durationMs.toStringAsFixed(2)}ms');
+        }
+        if (entry.rowCount != null) {
+          meta.add('${entry.rowCount} rows');
+        }
+
+        if (meta.isNotEmpty) {
+          print('     ${meta.join(' • ')}');
+        }
+        print('');
+      }
+    }
+
     print('');
   }
 

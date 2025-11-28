@@ -23,11 +23,14 @@ class FormFieldWrapper extends StatelessComponent {
   /// Extra CSS classes to append to the wrapper.
   final String? extraClasses;
 
-  const FormFieldWrapper({required this.children, this.extraClasses, super.key});
+  /// Additional HTML attributes for the wrapper.
+  final Map<String, String>? attributes;
+
+  const FormFieldWrapper({required this.children, this.extraClasses, this.attributes, super.key});
 
   @override
   Component build(BuildContext context) {
-    return div(classes: FormStyles.wrapperClasses(extraClasses), children);
+    return div(classes: FormStyles.wrapperClasses(extraClasses), attributes: attributes, children);
   }
 }
 

@@ -18,7 +18,7 @@ import 'package:sqlite3/sqlite3.dart';
 /// await connector.connect();
 /// final results = await connector.query('SELECT * FROM users');
 /// ```
-class SqliteConnector implements DatabaseConnector {
+class SqliteConnector extends DatabaseConnector {
   final String path;
   Database? _database;
   bool _inTransaction = false;
@@ -59,23 +59,21 @@ class SqliteConnector implements DatabaseConnector {
   }
 
   @override
-  Future<List<Map<String, dynamic>>> query(String sql, [List<dynamic>? parameters]) async {
+  Future<List<Map<String, dynamic>>> queryImpl(String sql, [List<dynamic>? parameters]) async {
     _ensureConnected();
-
     final result = _database!.select(sql, parameters ?? []);
     return result.map((row) => row).toList();
   }
 
   @override
-  Future<int> execute(String sql, [List<dynamic>? parameters]) async {
+  Future<int> executeImpl(String sql, [List<dynamic>? parameters]) async {
     _ensureConnected();
-
     _database!.execute(sql, parameters ?? []);
     return _database!.lastInsertRowId;
   }
 
   @override
-  Future<int> insert(String table, Map<String, dynamic> data) async {
+  Future<int> insertImpl(String table, Map<String, dynamic> data) async {
     _ensureConnected();
 
     if (data.isEmpty) {
@@ -97,7 +95,7 @@ class SqliteConnector implements DatabaseConnector {
   }
 
   @override
-  Future<int> update(String table, Map<String, dynamic> data, {String? where, List<dynamic>? whereArgs}) async {
+  Future<int> updateImpl(String table, Map<String, dynamic> data, {String? where, List<dynamic>? whereArgs}) async {
     _ensureConnected();
 
     if (data.isEmpty) {
@@ -122,7 +120,7 @@ class SqliteConnector implements DatabaseConnector {
   }
 
   @override
-  Future<int> delete(String table, {String? where, List<dynamic>? whereArgs}) async {
+  Future<int> deleteImpl(String table, {String? where, List<dynamic>? whereArgs}) async {
     _ensureConnected();
 
     final sql = StringBuffer('DELETE FROM $table');

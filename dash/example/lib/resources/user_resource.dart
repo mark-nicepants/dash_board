@@ -49,7 +49,11 @@ class UserResource extends Resource<User> {
         .defaultSort('name')
         .searchPlaceholder('Search users...')
         // Row actions - defaults shown for demonstration
-        .actions([ViewAction.make(), EditAction.make(), DeleteAction.make('user')]);
+        .actions([
+          ViewAction.make(), //
+          EditAction.make(),
+          DeleteAction.make('user'),
+        ]);
   }
 
   // Header actions for the index page - override to customize

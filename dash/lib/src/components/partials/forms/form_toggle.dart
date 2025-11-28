@@ -72,15 +72,17 @@ class FormToggle extends StatelessComponent {
     final attrs = <String, String>{
       if (required) 'required': 'true',
       if (disabled) 'disabled': 'true',
-      if (checked) 'checked': '',
       'x-model': 'checked',
+      'x-bind:checked': 'checked',
       ...?attributes,
     };
 
     return label(
       classes: FormStyles.toggleContainer,
-      attributes: {'x-data': '{checked: $checked}'},
+      attributes: {'x-data': '{checked: ${checked ? 'true' : 'false'}}'},
       [
+        // Hidden input for off value (disabled when checkbox is checked)
+        input(type: InputType.hidden, name: name, value: offValue, attributes: {'x-bind:disabled': 'checked'}),
         // Hidden checkbox input
         input(
           type: InputType.checkbox,
@@ -196,7 +198,7 @@ class FormToggleField extends StatelessComponent {
           // Off label
           if (offLabel != null) span(classes: FormStyles.toggleStateLabel, [text(offLabel!)]),
 
-          // Toggle switch
+          // Toggle switch (includes hidden input for off value)
           FormToggle(
             id: id,
             name: name,
@@ -216,9 +218,6 @@ class FormToggleField extends StatelessComponent {
 
       // Helper text
       if (helperText != null) p(classes: FormStyles.helperText, [text(helperText!)]),
-
-      // Hidden input for off value (disabled when checked)
-      input(type: InputType.hidden, name: name, value: offValue, attributes: {'x-bind:disabled': 'checked'}),
     ]);
   }
 }

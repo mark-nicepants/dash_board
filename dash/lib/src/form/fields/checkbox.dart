@@ -213,6 +213,7 @@ class Checkbox extends FormField {
 
     return FormFieldWrapper(
       extraClasses: getExtraClasses(),
+      attributes: _uncheckedValue != null ? {'x-data': '{checked: $isChecked}'} : null,
       children: [
         FormFieldWrapperInline(
           children: [
@@ -226,6 +227,7 @@ class Checkbox extends FormField {
                 required: isRequired(),
                 disabled: isDisabled(),
                 tabindex: getTabindex(),
+                attributes: _uncheckedValue != null ? {'x-model': 'checked'} : null,
               ),
             ),
 
@@ -237,8 +239,14 @@ class Checkbox extends FormField {
         // Helper text
         if (getHelperText() != null) p(classes: '${FormStyles.helperText} ml-7', [text(getHelperText()!)]),
 
-        // Hidden input for unchecked value
-        if (_uncheckedValue != null) input(type: InputType.hidden, name: getName(), value: _uncheckedValue),
+        // Hidden input for unchecked value (disabled when checkbox is checked)
+        if (_uncheckedValue != null)
+          input(
+            type: InputType.hidden,
+            name: getName(),
+            value: _uncheckedValue,
+            attributes: {'x-bind:disabled': 'checked'},
+          ),
       ],
     );
   }

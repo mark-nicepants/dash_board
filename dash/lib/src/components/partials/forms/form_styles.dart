@@ -161,13 +161,13 @@ abstract final class FormStyles {
   // TOGGLE SIZE CLASSES
   // ============================================
 
-  /// Toggle size: small.
+  /// Toggle size: small (w-8 = 32px track, w-3 = 12px knob).
   static const (String, String, String, String) toggleSizeSm = ('w-8', 'h-4', 'w-3 h-3', 'translate-x-4');
 
-  /// Toggle size: medium.
+  /// Toggle size: medium (w-11 = 44px track, w-5 = 20px knob).
   static const (String, String, String, String) toggleSizeMd = ('w-11', 'h-6', 'w-5 h-5', 'translate-x-5');
 
-  /// Toggle size: large.
+  /// Toggle size: large (w-14 = 56px track, w-6 = 24px knob).
   static const (String, String, String, String) toggleSizeLg = ('w-14', 'h-7', 'w-6 h-6', 'translate-x-7');
 
   // ============================================

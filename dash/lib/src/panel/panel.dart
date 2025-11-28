@@ -1,9 +1,11 @@
 import 'dart:async';
 
 import 'package:dash/src/auth/auth_service.dart';
+import 'package:dash/src/auth/authenticatable.dart';
 import 'package:dash/src/database/database_config.dart';
 import 'package:dash/src/database/query_builder.dart';
 import 'package:dash/src/model/model.dart';
+import 'package:dash/src/model/model_metadata.dart';
 import 'package:dash/src/panel/dev_console.dart';
 import 'package:dash/src/panel/panel_config.dart';
 import 'package:dash/src/panel/panel_server.dart';
@@ -28,6 +30,7 @@ import 'package:dash/src/utils/resource_loader.dart';
 ///   ..setId('admin')
 ///   ..setPath('/admin')
 ///   ..database(DatabaseConfig.using(SqliteConnector('app.db')))
+///   ..authModel<User>()  // Register User as the auth model
 ///   ..registerResources([
 ///     UserResource(),
 ///     PostResource(),
@@ -38,12 +41,15 @@ import 'package:dash/src/utils/resource_loader.dart';
 /// ```
 class Panel {
   late final PanelConfig _config;
-  late final AuthService _authService;
+  AuthService<Model>? _authService;
   PanelServer? _server;
+
+  // Auth model configuration
+  Type? _authModelType;
+  UserResolver<Model>? _customUserResolver;
 
   Panel() {
     _config = PanelConfig();
-    _authService = AuthService();
   }
 
   /// The unique identifier for this panel.
@@ -59,7 +65,50 @@ class Panel {
   DatabaseConfig? get databaseConfig => _config.databaseConfig;
 
   /// The authentication service for this panel.
-  AuthService get authService => _authService;
+  ///
+  /// Throws [StateError] if no auth model has been configured.
+  AuthService<Model> get authService {
+    if (_authService == null) {
+      throw StateError('No auth model configured. Call authModel<YourUser>() before accessing authService.');
+    }
+    return _authService!;
+  }
+
+  /// Configures the user model for authentication.
+  ///
+  /// The model type [T] must extend [Model] and implement [Authenticatable].
+  /// This enables database-backed authentication using your own user model.
+  ///
+  /// By default, users are resolved by querying the database using the
+  /// identifier field configured in the model's [Authenticatable] implementation.
+  ///
+  /// Example:
+  /// ```dart
+  /// final panel = Panel()
+  ///   ..authModel<User>()  // User must implement Authenticatable
+  ///   ..database(...)
+  ///   ..registerResources([...]);
+  /// ```
+  ///
+  /// For custom user resolution, provide a [userResolver]:
+  /// ```dart
+  /// panel.authModel<User>(
+  ///   userResolver: (identifier) => User.query()
+  ///     .where('email', '=', identifier)
+  ///     .where('is_active', '=', true)
+  ///     .first(),
+  /// );
+  /// ```
+  Panel authModel<T extends Model>({UserResolver<T>? userResolver}) {
+    _authModelType = T;
+    if (userResolver != null) {
+      _customUserResolver = (identifier) async {
+        final user = await userResolver(identifier);
+        return user;
+      };
+    }
+    return this;
+  }
 
   /// Sets the unique identifier for this panel.
   Panel setId(String id) {
@@ -140,12 +189,65 @@ class Panel {
       // Setup dependency injection
       await setupServiceLocator(config: _config, connector: _config.databaseConfig!.connector);
 
+      // Initialize auth service if auth model is configured
+      if (_authModelType != null) {
+        _initializeAuthService();
+      }
+
       // Create server after DI is set up (PanelRouter needs ResourceLoader from DI)
       final resourceLoader = inject<ResourceLoader>();
-      _server = PanelServer(_config, _authService, resourceLoader);
+      _server = PanelServer(_config, authService, resourceLoader);
     }
 
     return this;
+  }
+
+  /// Initializes the auth service with the configured user model.
+  void _initializeAuthService() {
+    if (_authModelType == null) {
+      throw StateError('No auth model type configured');
+    }
+
+    // Get model metadata to access the factory
+    final metadata = getModelMetadataByName(_authModelType.toString());
+    if (metadata == null) {
+      throw StateError(
+        'Model $_authModelType not registered. '
+        'Make sure to call $_authModelType.register() before Panel.boot().',
+      );
+    }
+
+    // Create user resolver using model's query builder
+    final userResolver = _customUserResolver ?? _createDefaultUserResolver(metadata);
+
+    _authService = AuthService<Model>(userResolver: userResolver, panelId: _config.id);
+  }
+
+  /// Creates a default user resolver that queries by the auth identifier field.
+  UserResolver<Model> _createDefaultUserResolver(ModelMetadata<Model> metadata) {
+    return (String identifier) async {
+      // Create instance to get auth identifier field name
+      final instance = metadata.modelFactory();
+      if (instance is! Authenticatable) {
+        throw StateError('Model ${instance.runtimeType} must implement Authenticatable mixin');
+      }
+      final identifierField = instance.getAuthIdentifierName();
+
+      // Query database for user
+      final connector = _config.databaseConfig!.connector;
+      final results = await connector.query('SELECT * FROM ${instance.table} WHERE $identifierField = ? LIMIT 1', [
+        identifier,
+      ]);
+
+      if (results.isEmpty) {
+        return null;
+      }
+
+      // Create and populate model instance
+      final user = metadata.modelFactory();
+      user.fromMap(results.first);
+      return user;
+    };
   }
 
   /// Shuts down the panel and cleans up resources.

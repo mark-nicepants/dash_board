@@ -563,8 +563,12 @@ abstract class Resource<T extends Model> {
     for (final field in fields) {
       final fieldName = field.getName();
       if (data.containsKey(fieldName)) {
-        final value = data[fieldName];
-        convertedData[fieldName] = _convertFieldValue(field, value);
+        var value = data[fieldName];
+        // First convert the field value to the appropriate type
+        value = _convertFieldValue(field, value);
+        // Then apply any dehydration (e.g., password hashing)
+        value = field.dehydrateValue(value);
+        convertedData[fieldName] = value;
       }
     }
 

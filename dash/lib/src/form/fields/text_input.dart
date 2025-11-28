@@ -1,3 +1,4 @@
+import 'package:dash/src/auth/auth_service.dart';
 import 'package:dash/src/components/partials/forms/form_components.dart';
 import 'package:dash/src/components/partials/heroicon.dart';
 import 'package:dash/src/form/fields/field.dart';
@@ -212,17 +213,39 @@ class TextInput extends FormField {
   }
 
   /// Sets the input type to password.
+  ///
+  /// Automatically hashes the password value using bcrypt when the form is
+  /// submitted (dehydration). This ensures passwords are never stored in
+  /// plain text.
   TextInput password() {
     _type = InputType.password;
     autocomplete('current-password');
+    dehydrate(_hashPassword);
     return this;
   }
 
   /// Sets the input type to new password (for registration/change password).
+  ///
+  /// Automatically hashes the password value using bcrypt when the form is
+  /// submitted (dehydration). This ensures passwords are never stored in
+  /// plain text.
   TextInput newPassword() {
     _type = InputType.password;
     autocomplete('new-password');
+    dehydrate(_hashPassword);
     return this;
+  }
+
+  /// Hashes a password value if it's not empty and not already hashed.
+  dynamic _hashPassword(dynamic value) {
+    if (value == null || value is! String || value.isEmpty) {
+      return value;
+    }
+    // Skip if already a bcrypt hash (starts with $2a$, $2b$, or $2y$)
+    if (value.startsWith(r'$2a$') || value.startsWith(r'$2b$') || value.startsWith(r'$2y$')) {
+      return value;
+    }
+    return AuthService.hashPassword(value);
   }
 
   /// Sets the input type to URL and adds URL validation.

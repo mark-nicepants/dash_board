@@ -3,7 +3,7 @@
 
 import 'package:dash/dash.dart';
 
-class User extends Model {
+class User extends Model with Authenticatable {
   @override
   String get table => 'users';
 
@@ -187,4 +187,26 @@ class User extends Model {
   ];
 
 
+  // ═══════════════════════════════════════════════════════════════════════════
+  // Authenticatable mixin implementation
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  @override
+  String getAuthIdentifier() => email;
+
+  @override
+  String getAuthIdentifierName() => 'email';
+
+  @override
+  String getAuthPassword() => password;
+
+  @override
+  void setAuthPassword(String hash) {
+    password = hash;
+  }
+
+  @override
+  String getDisplayName() => name;
+
+  // Override canAccessPanel(String panelId) to customize access control
 }

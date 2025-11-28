@@ -27,6 +27,36 @@
       "description": "Whether to enable soft deletes (deleted_at column)",
       "default": false
     },
+    "authenticatable": {
+      "oneOf": [
+        {
+          "type": "boolean",
+          "description": "Enable authentication with default field mappings (email, password, name)"
+        },
+        {
+          "type": "object",
+          "description": "Enable authentication with custom field mappings",
+          "additionalProperties": false,
+          "properties": {
+            "identifierField": {
+              "type": "string",
+              "description": "Field name used as login identifier (default: email)",
+              "default": "email"
+            },
+            "passwordField": {
+              "type": "string",
+              "description": "Field name containing password hash (default: password)",
+              "default": "password"
+            },
+            "displayNameField": {
+              "type": "string",
+              "description": "Field name for user display name (default: name)",
+              "default": "name"
+            }
+          }
+        }
+      ]
+    },
     "fields": {
       "type": "object",
       "description": "Field definitions for the model",

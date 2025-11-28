@@ -18,6 +18,7 @@ Future<void> main({String dbDir = 'database'}) async {
   final panel = Panel()
     ..setId('admin')
     ..setPath('/admin')
+    ..authModel<User>()
     ..addDevCommands([
       seedUsersCommand(), //
       seedPostsCommand(),

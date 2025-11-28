@@ -15,7 +15,8 @@ export 'src/actions/prebuilt/edit_action.dart';
 export 'src/actions/prebuilt/save_action.dart';
 export 'src/actions/prebuilt/view_action.dart';
 // Auth
-export 'src/auth/auth_service.dart' show AuthService, DashUser, Session;
+export 'src/auth/auth_service.dart' show AuthService, Session;
+export 'src/auth/authenticatable.dart';
 // Components
 export 'src/components/layout.dart';
 export 'src/components/pages/dashboard_page.dart';

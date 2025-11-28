@@ -55,6 +55,27 @@ class RelationConfig {
   const RelationConfig({required this.type, required this.model, required this.foreignKey, this.name});
 }
 
+/// Configuration for models that can be used for authentication.
+///
+/// When a model has authenticatable config, it will generate the
+/// [Authenticatable] mixin implementation with the specified field mappings.
+class AuthenticatableConfig {
+  /// The field name used as the login identifier (e.g., 'email').
+  final String identifierField;
+
+  /// The field name containing the password hash.
+  final String passwordField;
+
+  /// The field name for the user's display name.
+  final String displayNameField;
+
+  const AuthenticatableConfig({
+    this.identifierField = 'email',
+    this.passwordField = 'password',
+    this.displayNameField = 'name',
+  });
+}
+
 /// Dash model configuration from schema.
 class ModelConfig {
   final String table;
@@ -69,8 +90,9 @@ class ParsedSchema {
   final String modelName;
   final ModelConfig config;
   final List<SchemaField> fields;
+  final AuthenticatableConfig? authenticatable;
 
-  const ParsedSchema({required this.modelName, required this.config, required this.fields});
+  const ParsedSchema({required this.modelName, required this.config, required this.fields, this.authenticatable});
 
   /// Gets the model class name (e.g., "User", "Post").
   String get className => modelName;
@@ -114,6 +136,9 @@ class SchemaParser {
 
     final config = ModelConfig(table: table, timestamps: timestamps, softDeletes: softDeletes);
 
+    // Parse authenticatable config
+    final authenticatable = _parseAuthenticatable(doc['authenticatable']);
+
     // Parse fields
     final fieldsMap = doc['fields'] as YamlMap? ?? YamlMap();
     final fields = <SchemaField>[];
@@ -124,7 +149,31 @@ class SchemaParser {
       fields.add(_parseField(name, fieldDef));
     }
 
-    return ParsedSchema(modelName: modelName, config: config, fields: fields);
+    return ParsedSchema(modelName: modelName, config: config, fields: fields, authenticatable: authenticatable);
+  }
+
+  /// Parses the authenticatable configuration from YAML.
+  ///
+  /// Supports both boolean shorthand (`authenticatable: true`) which uses
+  /// defaults, and object form with custom field mappings.
+  AuthenticatableConfig? _parseAuthenticatable(dynamic value) {
+    if (value == null) return null;
+
+    // Boolean shorthand: authenticatable: true
+    if (value is bool) {
+      return value ? const AuthenticatableConfig() : null;
+    }
+
+    // Object form: authenticatable: { identifierField: email, ... }
+    if (value is YamlMap) {
+      return AuthenticatableConfig(
+        identifierField: value['identifierField'] as String? ?? 'email',
+        passwordField: value['passwordField'] as String? ?? 'password',
+        displayNameField: value['displayNameField'] as String? ?? 'name',
+      );
+    }
+
+    return null;
   }
 
   SchemaField _parseField(String name, YamlMap field) {

@@ -1,10 +1,11 @@
 import 'package:dash/src/auth/auth_service.dart';
+import 'package:dash/src/model/model.dart';
 import 'package:shelf/shelf.dart';
 
 /// Middleware to protect routes that require authentication.
 ///
 /// Checks for a valid session cookie and redirects to login if not authenticated.
-Middleware authMiddleware(AuthService authService, {required String basePath}) {
+Middleware authMiddleware(AuthService<Model> authService, {required String basePath}) {
   final baseSegment = basePath.startsWith('/') ? basePath.substring(1) : basePath;
   return (Handler innerHandler) {
     return (Request request) async {

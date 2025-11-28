@@ -14,13 +14,28 @@ DevCommand seedUsersCommand() => DevCommand(
     final count = args.isNotEmpty ? int.tryParse(args.first) ?? 5 : 5;
     print('\n🌱 Seeding $count users...\n');
 
+    // Always create an admin user first if none exists
+    final existingAdmin = await User.query().where('email', 'admin@example.com').first();
+    if (existingAdmin == null) {
+      final admin = User(
+        name: 'Admin User',
+        email: 'admin@example.com',
+        password: AuthService.hashPassword('password'),
+        role: 'admin',
+        isActive: true,
+      );
+      await admin.save();
+      print('   ✓ Created admin: Admin User (admin@example.com / password)');
+    }
+
     final roles = ['user', 'admin', 'moderator'];
 
     for (var i = 0; i < count; i++) {
       final name = _faker.person.name();
       final email = _faker.internet.email();
       final role = roles[i % roles.length];
-      final password = 'password123'; // In production, hash this!
+      // Hash the password using bcrypt
+      final password = AuthService.hashPassword('password123');
 
       final user = User(name: name, email: email, password: password, role: role);
       await user.save();
@@ -28,6 +43,7 @@ DevCommand seedUsersCommand() => DevCommand(
     }
 
     print('\n✅ Seeded $count users\n');
+    print('   💡 Login with: admin@example.com / password\n');
   },
 );
 

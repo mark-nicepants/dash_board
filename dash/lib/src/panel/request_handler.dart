@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:dash/src/auth/auth_service.dart';
+import 'package:dash/src/model/model.dart';
 import 'package:dash/src/panel/panel_config.dart';
 import 'package:shelf/shelf.dart';
 
@@ -10,7 +11,7 @@ import 'package:shelf/shelf.dart';
 /// special handling beyond basic page rendering.
 class RequestHandler {
   final PanelConfig _config;
-  final AuthService _authService;
+  final AuthService<Model> _authService;
 
   RequestHandler(this._config, this._authService);
 
@@ -48,7 +49,7 @@ class RequestHandler {
     }
 
     // Attempt login
-    final sessionId = _authService.login(email, password);
+    final sessionId = await _authService.login(email, password);
     if (sessionId == null) {
       return Response.found('${_config.path}/login?error=invalid_credentials');
     }

@@ -1,6 +1,69 @@
 import 'package:dash/dash.dart';
 import 'package:test/test.dart';
 
+/// Test user model that implements Authenticatable for testing AuthService.
+class TestUser extends Model with Authenticatable {
+  @override
+  String get table => 'test_users';
+
+  String email;
+  String password;
+  String name;
+  String role;
+  bool isActive;
+
+  TestUser({required this.email, required this.password, required this.name, this.role = 'user', this.isActive = true});
+
+  factory TestUser.empty() => TestUser(email: '', password: '', name: '');
+
+  @override
+  String getAuthIdentifier() => email;
+
+  @override
+  String getAuthIdentifierName() => 'email';
+
+  @override
+  String getAuthPassword() => password;
+
+  @override
+  void setAuthPassword(String hash) {
+    password = hash;
+  }
+
+  @override
+  String getDisplayName() => name;
+
+  @override
+  bool canAccessPanel(String panelId) => isActive;
+
+  @override
+  dynamic getKey() => null;
+
+  @override
+  void setKey(dynamic value) {}
+
+  @override
+  List<String> getFields() => ['email', 'password', 'name', 'role', 'is_active'];
+
+  @override
+  Map<String, dynamic> toMap() => {
+    'email': email,
+    'password': password,
+    'name': name,
+    'role': role,
+    'is_active': isActive,
+  };
+
+  @override
+  void fromMap(Map<String, dynamic> map) {
+    email = map['email'] ?? '';
+    password = map['password'] ?? '';
+    name = map['name'] ?? '';
+    role = map['role'] ?? 'user';
+    isActive = map['is_active'] ?? true;
+  }
+}
+
 void main() {
   group('AuthService - Password Hashing', () {
     test('hashPassword creates a valid bcrypt hash', () {
@@ -44,62 +107,60 @@ void main() {
   });
 
   group('AuthService - Session Management', () {
-    late AuthService authService;
+    late AuthService<TestUser> authService;
+    late Map<String, TestUser> testUsers;
 
     setUp(() {
-      authService = AuthService();
+      // Create test users
+      testUsers = {
+        'admin@example.com': TestUser(
+          email: 'admin@example.com',
+          password: AuthService.hashPassword('password'),
+          name: 'Admin User',
+          role: 'admin',
+        ),
+        'test@example.com': TestUser(
+          email: 'test@example.com',
+          password: AuthService.hashPassword('testpass'),
+          name: 'Test User',
+          role: 'user',
+        ),
+      };
+
+      // Create auth service with mock user resolver
+      authService = AuthService<TestUser>(
+        userResolver: (identifier) async => testUsers[identifier],
+        panelId: 'test-panel',
+      );
     });
 
-    test('default admin user exists', () {
-      final sessionId = authService.login('admin@example.com', 'password');
+    test('login with correct credentials returns session ID', () async {
+      final sessionId = await authService.login('admin@example.com', 'password');
       expect(sessionId, isNotNull);
       expect(sessionId!.length, greaterThan(30)); // Should be a long random token
     });
 
-    test('login with correct credentials returns session ID', () {
-      authService.addUser(
-        DashUser(
-          email: 'test@example.com',
-          passwordHash: AuthService.hashPassword('testpass'),
-          name: 'Test User',
-          role: 'user',
-        ),
-      );
-
-      final sessionId = authService.login('test@example.com', 'testpass');
-      expect(sessionId, isNotNull);
-    });
-
-    test('login with incorrect password returns null', () {
-      authService.addUser(
-        DashUser(
-          email: 'test@example.com',
-          passwordHash: AuthService.hashPassword('testpass'),
-          name: 'Test User',
-          role: 'user',
-        ),
-      );
-
-      final sessionId = authService.login('test@example.com', 'wrongpass');
+    test('login with incorrect password returns null', () async {
+      final sessionId = await authService.login('admin@example.com', 'wrongpass');
       expect(sessionId, isNull);
     });
 
-    test('login with non-existent user returns null', () {
-      final sessionId = authService.login('nonexistent@example.com', 'password');
+    test('login with non-existent user returns null', () async {
+      final sessionId = await authService.login('nonexistent@example.com', 'password');
       expect(sessionId, isNull);
     });
 
-    test('session tokens are cryptographically random', () {
-      final sessionId1 = authService.login('admin@example.com', 'password');
+    test('session tokens are cryptographically random', () async {
+      final sessionId1 = await authService.login('admin@example.com', 'password');
       authService.logout(sessionId1!);
-      final sessionId2 = authService.login('admin@example.com', 'password');
+      final sessionId2 = await authService.login('admin@example.com', 'password');
 
       // Session IDs should be different even for same user
       expect(sessionId1, isNot(equals(sessionId2)));
     });
 
-    test('isAuthenticated returns true for valid session', () {
-      final sessionId = authService.login('admin@example.com', 'password');
+    test('isAuthenticated returns true for valid session', () async {
+      final sessionId = await authService.login('admin@example.com', 'password');
       expect(authService.isAuthenticated(sessionId), isTrue);
     });
 
@@ -111,16 +172,16 @@ void main() {
       expect(authService.isAuthenticated('invalid-session-id'), isFalse);
     });
 
-    test('logout removes session', () {
-      final sessionId = authService.login('admin@example.com', 'password');
+    test('logout removes session', () async {
+      final sessionId = await authService.login('admin@example.com', 'password');
       expect(authService.isAuthenticated(sessionId), isTrue);
 
       authService.logout(sessionId!);
       expect(authService.isAuthenticated(sessionId), isFalse);
     });
 
-    test('getUser returns user for valid session', () {
-      final sessionId = authService.login('admin@example.com', 'password');
+    test('getUser returns user for valid session', () async {
+      final sessionId = await authService.login('admin@example.com', 'password');
       final user = authService.getUser(sessionId);
 
       expect(user, isNotNull);
@@ -132,19 +193,36 @@ void main() {
       final user = authService.getUser('invalid-session');
       expect(user, isNull);
     });
+
+    test('canAccessPanel is checked during login', () async {
+      // Add an inactive user
+      testUsers['inactive@example.com'] = TestUser(
+        email: 'inactive@example.com',
+        password: AuthService.hashPassword('password'),
+        name: 'Inactive User',
+        isActive: false, // This user should not be able to login
+      );
+
+      final sessionId = await authService.login('inactive@example.com', 'password');
+      expect(sessionId, isNull); // Should fail because canAccessPanel returns false
+    });
   });
 
   group('AuthService - Session Expiration', () {
-    late AuthService authService;
+    late AuthService<TestUser> authService;
 
     setUp(() {
-      authService = AuthService();
+      authService = AuthService<TestUser>(
+        userResolver: (identifier) async =>
+            TestUser(email: identifier, password: AuthService.hashPassword('password'), name: 'Test User'),
+        panelId: 'test-panel',
+      );
     });
 
     test('sessions expire after specified duration', () async {
       // Create a session that expires in 100ms
-      final sessionId = authService.login(
-        'admin@example.com',
+      final sessionId = await authService.login(
+        'test@example.com',
         'password',
         sessionDuration: const Duration(milliseconds: 100),
       );
@@ -158,8 +236,8 @@ void main() {
     });
 
     test('expired sessions are automatically removed on check', () async {
-      final sessionId = authService.login(
-        'admin@example.com',
+      final sessionId = await authService.login(
+        'test@example.com',
         'password',
         sessionDuration: const Duration(milliseconds: 50),
       );
@@ -173,8 +251,8 @@ void main() {
     });
 
     test('getUser returns null for expired session', () async {
-      final sessionId = authService.login(
-        'admin@example.com',
+      final sessionId = await authService.login(
+        'test@example.com',
         'password',
         sessionDuration: const Duration(milliseconds: 50),
       );
@@ -186,17 +264,16 @@ void main() {
     });
 
     test('cleanupExpiredSessions removes expired sessions', () async {
-      // Create multiple sessions with short expiration
-      final session1 = authService.login(
-        'admin@example.com',
+      final session1 = await authService.login(
+        'test@example.com',
         'password',
         sessionDuration: const Duration(milliseconds: 50),
       );
 
       authService.logout(session1!);
 
-      final session2 = authService.login(
-        'admin@example.com',
+      final session2 = await authService.login(
+        'test@example.com',
         'password',
         sessionDuration: const Duration(milliseconds: 50),
       );
@@ -214,9 +291,9 @@ void main() {
 
   group('Session class', () {
     test('isExpired returns false for future expiration', () {
-      final session = Session(
+      final session = Session<TestUser>(
         id: 'test-id',
-        email: 'test@example.com',
+        user: TestUser(email: 'test@example.com', password: 'hash', name: 'Test'),
         createdAt: DateTime.now(),
         expiresAt: DateTime.now().add(const Duration(hours: 1)),
       );
@@ -225,9 +302,9 @@ void main() {
     });
 
     test('isExpired returns true for past expiration', () {
-      final session = Session(
+      final session = Session<TestUser>(
         id: 'test-id',
-        email: 'test@example.com',
+        user: TestUser(email: 'test@example.com', password: 'hash', name: 'Test'),
         createdAt: DateTime.now().subtract(const Duration(hours: 2)),
         expiresAt: DateTime.now().subtract(const Duration(hours: 1)),
       );
@@ -237,9 +314,9 @@ void main() {
 
     test('timeRemaining returns correct duration', () {
       final expiresAt = DateTime.now().add(const Duration(minutes: 30));
-      final session = Session(
+      final session = Session<TestUser>(
         id: 'test-id',
-        email: 'test@example.com',
+        user: TestUser(email: 'test@example.com', password: 'hash', name: 'Test'),
         createdAt: DateTime.now(),
         expiresAt: expiresAt,
       );
@@ -248,6 +325,26 @@ void main() {
       // Should be approximately 30 minutes (allow small variance)
       expect(remaining.inSeconds, greaterThan(29 * 60));
       expect(remaining.inSeconds, lessThan(31 * 60));
+    });
+  });
+
+  group('Authenticatable mixin', () {
+    test('setPassword hashes and stores password', () {
+      final user = TestUser(email: 'test@example.com', password: '', name: 'Test');
+      user.setPassword('mypassword');
+
+      expect(user.password, isNot(equals('mypassword')));
+      expect(AuthService.verifyPassword('mypassword', user.password), isTrue);
+    });
+
+    test('getAuthIdentifier returns correct value', () {
+      final user = TestUser(email: 'test@example.com', password: 'hash', name: 'Test');
+      expect(user.getAuthIdentifier(), equals('test@example.com'));
+    });
+
+    test('getDisplayName returns correct value', () {
+      final user = TestUser(email: 'test@example.com', password: 'hash', name: 'Test User');
+      expect(user.getDisplayName(), equals('Test User'));
     });
   });
 }

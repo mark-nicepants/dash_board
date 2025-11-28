@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:dash/src/auth/auth_middleware.dart';
 import 'package:dash/src/auth/auth_service.dart';
+import 'package:dash/src/model/model.dart';
 import 'package:dash/src/panel/dev_console.dart';
 import 'package:dash/src/panel/panel_config.dart';
 import 'package:dash/src/panel/panel_router.dart';
@@ -18,7 +19,7 @@ import 'package:shelf/shelf_io.dart' as shelf_io;
 /// and coordinating between the router and request handlers.
 class PanelServer {
   final PanelConfig _config;
-  final AuthService _authService;
+  final AuthService<Model> _authService;
   final ResourceLoader _resourceLoader;
   late final PanelRouter _router;
   late final RequestHandler _requestHandler;

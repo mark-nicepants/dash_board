@@ -97,6 +97,14 @@ abstract class FormField {
   /// Tab index for keyboard navigation.
   int? _tabindex;
 
+  /// Callback to transform value before saving to the database.
+  /// Used to process field values (e.g., hashing passwords, formatting dates).
+  dynamic Function(dynamic value)? _dehydrateCallback;
+
+  /// Callback to transform value when loading from the database.
+  /// Used to process field values for display (e.g., formatting).
+  dynamic Function(dynamic value)? _hydrateCallback;
+
   FormField(this._name);
 
   /// Gets the field name.
@@ -298,6 +306,60 @@ abstract class FormField {
 
   /// Gets the tabindex.
   int? getTabindex() => _tabindex;
+
+  /// Sets a callback to transform the value before saving.
+  ///
+  /// The dehydrate callback is called when form data is being saved to the
+  /// database. Use this to transform or process values before storage.
+  ///
+  /// Example:
+  /// ```dart
+  /// TextInput.make('slug')
+  ///   .dehydrate((value) => value?.toString().toLowerCase().replaceAll(' ', '-'))
+  /// ```
+  FormField dehydrate(dynamic Function(dynamic value) callback) {
+    _dehydrateCallback = callback;
+    return this;
+  }
+
+  /// Gets the dehydrate callback.
+  dynamic Function(dynamic value)? getDehydrateCallback() => _dehydrateCallback;
+
+  /// Applies the dehydrate transformation to a value.
+  /// Returns the original value if no callback is set.
+  dynamic dehydrateValue(dynamic value) {
+    if (_dehydrateCallback != null) {
+      return _dehydrateCallback!(value);
+    }
+    return value;
+  }
+
+  /// Sets a callback to transform the value when loading from the database.
+  ///
+  /// The hydrate callback is called when loading form data for display.
+  /// Use this to format or process values for the UI.
+  ///
+  /// Example:
+  /// ```dart
+  /// TextInput.make('price')
+  ///   .hydrate((value) => '\$${value?.toStringAsFixed(2)}')
+  /// ```
+  FormField hydrate(dynamic Function(dynamic value) callback) {
+    _hydrateCallback = callback;
+    return this;
+  }
+
+  /// Gets the hydrate callback.
+  dynamic Function(dynamic value)? getHydrateCallback() => _hydrateCallback;
+
+  /// Applies the hydrate transformation to a value.
+  /// Returns the original value if no callback is set.
+  dynamic hydrateValue(dynamic value) {
+    if (_hydrateCallback != null) {
+      return _hydrateCallback!(value);
+    }
+    return value;
+  }
 
   /// Gets the validation rules as strings for display.
   List<String> getValidationRules() {

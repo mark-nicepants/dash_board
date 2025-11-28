@@ -4,6 +4,12 @@ model: User
 table: users
 timestamps: true
 
+# Enable authentication - this model can be used for login
+authenticatable:
+  identifierField: email
+  passwordField: password
+  displayNameField: name
+
 fields:
   id:
     type: int

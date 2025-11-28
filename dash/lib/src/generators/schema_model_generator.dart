@@ -17,8 +17,9 @@ class SchemaModelGenerator {
     buffer.writeln("import 'package:dash/dash.dart';");
     buffer.writeln();
 
-    // Class declaration - no annotation needed, everything is generated
-    buffer.writeln('class ${schema.modelName} extends Model {');
+    // Class declaration - with Authenticatable mixin if configured
+    final mixins = schema.authenticatable != null ? ' with Authenticatable' : '';
+    buffer.writeln('class ${schema.modelName} extends Model$mixins {');
 
     // Table name
     buffer.writeln('  @override');
@@ -73,6 +74,11 @@ class SchemaModelGenerator {
 
     // Relationship getters (comments for now)
     _generateRelationshipGetters(buffer);
+
+    // Authenticatable mixin methods if configured
+    if (schema.authenticatable != null) {
+      _generateAuthenticatableMethods(buffer);
+    }
 
     // Close class
     buffer.writeln('}');
@@ -293,6 +299,59 @@ class SchemaModelGenerator {
       'hasMany' => 'hasMany',
       _ => 'belongsTo',
     };
+  }
+
+  /// Generates the Authenticatable mixin method implementations.
+  void _generateAuthenticatableMethods(StringBuffer buffer) {
+    final auth = schema.authenticatable!;
+    final identifierField = auth.identifierField;
+    final passwordField = auth.passwordField;
+    final displayNameField = auth.displayNameField;
+
+    // Find the column name for the identifier field (for database queries)
+    final identifierSchemaField = schema.fields.where((f) => f.name == identifierField).firstOrNull;
+    final identifierColumnName = identifierSchemaField?.columnName ?? _toSnakeCase(identifierField);
+
+    buffer.writeln('  // ═══════════════════════════════════════════════════════════════════════════');
+    buffer.writeln('  // Authenticatable mixin implementation');
+    buffer.writeln('  // ═══════════════════════════════════════════════════════════════════════════');
+    buffer.writeln();
+
+    // getAuthIdentifier
+    buffer.writeln('  @override');
+    buffer.writeln('  String getAuthIdentifier() => $identifierField;');
+    buffer.writeln();
+
+    // getAuthIdentifierName
+    buffer.writeln('  @override');
+    buffer.writeln("  String getAuthIdentifierName() => '$identifierColumnName';");
+    buffer.writeln();
+
+    // getAuthPassword
+    buffer.writeln('  @override');
+    buffer.writeln('  String getAuthPassword() => $passwordField;');
+    buffer.writeln();
+
+    // setAuthPassword
+    buffer.writeln('  @override');
+    buffer.writeln('  void setAuthPassword(String hash) {');
+    buffer.writeln('    $passwordField = hash;');
+    buffer.writeln('  }');
+    buffer.writeln();
+
+    // getDisplayName
+    buffer.writeln('  @override');
+    buffer.writeln('  String getDisplayName() => $displayNameField;');
+    buffer.writeln();
+
+    // canAccessPanel - default implementation, users can override in partial class
+    buffer.writeln('  // Override canAccessPanel(String panelId) to customize access control');
+  }
+
+  String _toSnakeCase(String input) {
+    return input
+        .replaceAllMapped(RegExp(r'[A-Z]'), (match) => '_${match.group(0)!.toLowerCase()}')
+        .replaceFirst(RegExp(r'^_'), '');
   }
 
   String _getFromMapConversion(SchemaField field) {

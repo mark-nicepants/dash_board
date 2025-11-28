@@ -5,9 +5,8 @@ import 'package:dash_example/models/user.dart';
 import 'package:dash_example/resources/post_resource.dart';
 import 'package:dash_example/resources/user_resource.dart';
 
-Future<void> main({String dbDir = 'database'}) async {
+Future<void> main() async {
   print('🚀 Dash Example Admin Panel\n');
-  print('📁 Database directory: $dbDir\n');
 
   // Register models and their resource factories
   User.register(UserResource.new);
@@ -26,7 +25,15 @@ Future<void> main({String dbDir = 'database'}) async {
       clearDatabaseCommand(),
     ])
     ..database(
-      DatabaseConfig.using(SqliteConnector('$dbDir/app.db'), migrations: MigrationConfig.fromResources(verbose: true)),
+      DatabaseConfig.using(SqliteConnector('storage/app.db'), migrations: MigrationConfig.fromResources(verbose: true)),
+    )
+    ..storage(
+      StorageConfig()
+        ..defaultDisk = 'public'
+        ..disks = {
+          'public': LocalStorage(basePath: 'storage/public', urlPrefix: '/admin/storage/public'),
+          'local': LocalStorage(basePath: 'storage/app', urlPrefix: '/admin/storage/local'),
+        },
     );
 
   print('🔄 Running automatic migrations...\n');

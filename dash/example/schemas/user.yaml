@@ -33,6 +33,10 @@ fields:
     required: true
     min: 8
 
+  avatar:
+    type: string
+    nullable: true
+
   role:
     type: string
     required: true

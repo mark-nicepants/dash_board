@@ -38,3 +38,4 @@ coverage/
 
 node_modules/
 resources/dist/
+storage/

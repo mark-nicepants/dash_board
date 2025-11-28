@@ -44,6 +44,7 @@ export 'src/database/schema_builder.dart';
 export 'src/form/fields/checkbox.dart';
 export 'src/form/fields/date_picker.dart';
 export 'src/form/fields/field.dart';
+export 'src/form/fields/file_upload.dart';
 export 'src/form/fields/form_renderer.dart';
 export 'src/form/fields/section.dart';
 export 'src/form/fields/select.dart';
@@ -72,10 +73,13 @@ export 'src/panel/request_handler.dart';
 export 'src/resource.dart';
 // Service Locator
 export 'src/service_locator.dart' show inject, registerResourceFactory;
+// Storage
+export 'src/storage/storage.dart';
 // Table
 export 'src/table/columns/boolean_column.dart';
 export 'src/table/columns/column.dart' show TableColumn, ColumnAlignment;
 export 'src/table/columns/icon_column.dart';
+export 'src/table/columns/image_column.dart';
 export 'src/table/columns/text_column.dart';
 export 'src/table/table.dart';
 // Utils

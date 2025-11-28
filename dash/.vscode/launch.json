@@ -5,10 +5,7 @@
       "name": "Example",
       "type": "dart",
       "request": "launch",
-      "program": "example/bin/dash_example.dart",
-      "args": [
-        "example/database"
-      ],
+      "program": "example/lib/main.dart",
       "cwd": "${workspaceFolder}",
       "console": "terminal",
       "vmAdditionalArgs": [
@@ -20,10 +17,7 @@
       "name": "Example (Production)",
       "type": "dart",
       "request": "launch",
-      "program": "example/bin/dash_example.dart",
-      "args": [
-        "example/database"
-      ],
+      "program": "example/lib/main.dart",
       "cwd": "${workspaceFolder}",
       "console": "terminal",
       "env": {

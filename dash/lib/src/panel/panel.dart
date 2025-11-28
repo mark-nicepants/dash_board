@@ -12,6 +12,7 @@ import 'package:dash/src/panel/panel_config.dart';
 import 'package:dash/src/panel/panel_server.dart';
 import 'package:dash/src/resource.dart';
 import 'package:dash/src/service_locator.dart';
+import 'package:dash/src/storage/storage.dart';
 import 'package:dash/src/utils/resource_loader.dart';
 
 /// The main entry point for a Dash admin panel.
@@ -48,6 +49,9 @@ class Panel {
   // Auth model configuration
   Type? _authModelType;
   UserResolver<Model>? _customUserResolver;
+
+  // Storage configuration
+  StorageConfig? _storageConfig;
 
   Panel() {
     _config = PanelConfig();
@@ -154,6 +158,23 @@ class Panel {
     return this;
   }
 
+  /// Configures storage for file uploads.
+  ///
+  /// Example:
+  /// ```dart
+  /// final panel = Panel()
+  ///   ..storage(StorageConfig()
+  ///     ..defaultDisk = 'public'
+  ///     ..disks = {
+  ///       'local': LocalStorage(basePath: 'storage/app'),
+  ///       'public': LocalStorage(basePath: 'storage/public', urlPrefix: '/admin/storage/public'),
+  ///     });
+  /// ```
+  Panel storage(StorageConfig config) {
+    _storageConfig = config;
+    return this;
+  }
+
   /// Registers resources with this panel.
   Panel registerResources(List<Resource> resources) {
     _config.registerResources(resources);
@@ -223,6 +244,16 @@ class Panel {
       // Create server after DI is set up (PanelRouter needs ResourceLoader from DI)
       final resourceLoader = inject<ResourceLoader>();
       _server = PanelServer(_config, authService, resourceLoader);
+
+      // Configure storage if set
+      if (_storageConfig != null) {
+        _server!.configureStorage(_storageConfig!);
+
+        // Register StorageManager in service locator for URL generation
+        if (!inject.isRegistered<StorageManager>()) {
+          inject.registerSingleton<StorageManager>(_storageConfig!.createManager());
+        }
+      }
     }
 
     return this;

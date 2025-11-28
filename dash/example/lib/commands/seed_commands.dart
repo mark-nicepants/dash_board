@@ -29,13 +29,13 @@ DevCommand seedUsersCommand() => DevCommand(
     }
 
     final roles = ['user', 'admin', 'moderator'];
+    // Hash the password using bcrypt
+    final password = AuthService.hashPassword('password123');
 
     for (var i = 0; i < count; i++) {
       final name = _faker.person.name();
       final email = _faker.internet.email();
       final role = roles[i % roles.length];
-      // Hash the password using bcrypt
-      final password = AuthService.hashPassword('password123');
 
       final user = User(name: name, email: email, password: password, role: role);
       await user.save();

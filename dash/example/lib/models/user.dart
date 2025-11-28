@@ -17,6 +17,7 @@ class User extends Model with Authenticatable {
   String name;
   String email;
   String password;
+  String? avatar;
   String role;
   bool? isActive;
 
@@ -25,6 +26,7 @@ class User extends Model with Authenticatable {
     required this.name,
     required this.email,
     required this.password,
+    this.avatar,
     required this.role,
     this.isActive,
   });
@@ -39,7 +41,7 @@ class User extends Model with Authenticatable {
 
   @override
   List<String> getFields() {
-    return ['id', 'name', 'email', 'password', 'role', 'is_active', 'created_at', 'updated_at'];
+    return ['id', 'name', 'email', 'password', 'avatar', 'role', 'is_active', 'created_at', 'updated_at'];
   }
 
   @override
@@ -49,6 +51,7 @@ class User extends Model with Authenticatable {
       'name': name,
       'email': email,
       'password': password,
+      'avatar': avatar,
       'role': role,
       'is_active': isActive == true ? 1 : 0,
       'created_at': createdAt?.toIso8601String(),
@@ -62,6 +65,7 @@ class User extends Model with Authenticatable {
     name = getFromMap<String>(map, 'name') ?? '';
     email = getFromMap<String>(map, 'email') ?? '';
     password = getFromMap<String>(map, 'password') ?? '';
+    avatar = getFromMap<String>(map, 'avatar');
     role = getFromMap<String>(map, 'role') ?? '';
     isActive = map['is_active'] == 1 || map['is_active'] == true;
     createdAt = parseDateTime(map['created_at']);
@@ -73,6 +77,7 @@ class User extends Model with Authenticatable {
     String? name,
     String? email,
     String? password,
+    String? avatar,
     String? role,
     bool? isActive,
     DateTime? createdAt,
@@ -83,6 +88,7 @@ class User extends Model with Authenticatable {
       name: name ?? this.name,
       email: email ?? this.email,
       password: password ?? this.password,
+      avatar: avatar ?? this.avatar,
       role: role ?? this.role,
       isActive: isActive ?? this.isActive,
     )
@@ -157,6 +163,11 @@ class User extends Model with Authenticatable {
           name: 'password',
           type: ColumnType.text,
           nullable: false,
+        ),
+        ColumnDefinition(
+          name: 'avatar',
+          type: ColumnType.text,
+          nullable: true,
         ),
         ColumnDefinition(
           name: 'role',

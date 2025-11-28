@@ -1,10 +1,12 @@
 import 'package:dash/src/components/partials/table/cells/boolean_cell.dart';
 import 'package:dash/src/components/partials/table/cells/icon_cell.dart';
+import 'package:dash/src/components/partials/table/cells/image_cell.dart';
 import 'package:dash/src/components/partials/table/cells/text_cell.dart';
 import 'package:dash/src/model/model.dart';
 import 'package:dash/src/table/columns/boolean_column.dart';
 import 'package:dash/src/table/columns/column.dart';
 import 'package:dash/src/table/columns/icon_column.dart';
+import 'package:dash/src/table/columns/image_column.dart';
 import 'package:dash/src/table/columns/text_column.dart';
 import 'package:jaspr/jaspr.dart';
 
@@ -20,6 +22,10 @@ class TableCellFactory {
 
     if (column is BooleanColumn) {
       return BooleanCell<T>(column: column, record: record);
+    }
+
+    if (column is ImageColumn) {
+      return ImageCell<T>(column: column, record: record);
     }
 
     if (column is IconColumn) {

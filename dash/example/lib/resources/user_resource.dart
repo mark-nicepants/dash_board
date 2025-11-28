@@ -18,6 +18,13 @@ class UserResource extends Resource<User> {
               .sortable()
               .width('80px'),
 
+          ImageColumn.make('avatar') //
+              .label('')
+              .circular()
+              .size(40)
+              .disk('public')
+              .width('60px'),
+
           TextColumn.make('name') //
               .searchable()
               .sortable()
@@ -82,6 +89,14 @@ class UserResource extends Resource<User> {
   @override
   FormSchema<User> form(FormSchema<User> form) {
     return form.columns(2).fields([
+      FileUpload.make('avatar') //
+          .label('Avatar')
+          .avatar()
+          .disk('public')
+          .directory('avatars')
+          .maxSize(2048) // 2MB
+          .columnSpanFull(),
+
       TextInput.make('name') //
           .label('Full Name')
           .placeholder('Enter full name')

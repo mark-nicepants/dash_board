@@ -8,10 +8,12 @@ import 'package:dash/src/panel/dev_console.dart';
 import 'package:dash/src/panel/panel_config.dart';
 import 'package:dash/src/panel/panel_router.dart';
 import 'package:dash/src/panel/request_handler.dart';
+import 'package:dash/src/storage/storage.dart';
 import 'package:dash/src/utils/resource_loader.dart';
 import 'package:jaspr/server.dart';
 import 'package:shelf/shelf.dart';
 import 'package:shelf/shelf_io.dart' as shelf_io;
+import 'package:shelf_static/shelf_static.dart';
 
 /// Manages the HTTP server for the Dash panel.
 ///
@@ -26,6 +28,9 @@ class PanelServer {
   HttpServer? _server;
   DevConsole? _devConsole;
 
+  /// Storage manager for file uploads.
+  StorageManager? _storageManager;
+
   /// Whether to enable interactive dev console mode.
   /// Defaults to true unless DASH_ENV is set to 'production'.
   bool enableDevConsole = Platform.environment['DASH_ENV'] != 'production';
@@ -36,6 +41,22 @@ class PanelServer {
   PanelServer(this._config, this._authService, this._resourceLoader) {
     _router = PanelRouter(_config, _resourceLoader);
     _requestHandler = RequestHandler(_config, _authService);
+  }
+
+  /// Configures storage for file uploads.
+  ///
+  /// Example:
+  /// ```dart
+  /// server.configureStorage(StorageConfig()
+  ///   ..defaultDisk = 'public'
+  ///   ..disks = {
+  ///     'local': LocalStorage(basePath: 'storage/app'),
+  ///     'public': LocalStorage(basePath: 'storage/public', urlPrefix: '/storage'),
+  ///   });
+  /// ```
+  void configureStorage(StorageConfig config) {
+    _storageManager = config.createManager();
+    _requestHandler.setStorageManager(_storageManager!);
   }
 
   /// Whether the server is currently running.
@@ -58,6 +79,7 @@ class PanelServer {
     final pipeline = const Pipeline()
         .addMiddleware(_conditionalLogRequests())
         .addMiddleware(_staticAssetsMiddleware())
+        .addMiddleware(_storageAssetsMiddleware())
         .addMiddleware(authMiddleware(_authService, basePath: _config.path))
         .addHandler(_handleRequest);
 
@@ -256,12 +278,21 @@ class PanelServer {
   /// - /admin/assets/css/* -> resources/dist/css/*
   /// - /admin/assets/js/*  -> resources/dist/js/*
   /// - /admin/assets/img/* -> resources/img/*
+  ///
+  /// Uses shelf_static for efficient file serving with proper MIME types,
+  /// ETags, and range request support.
   Middleware _staticAssetsMiddleware() {
+    final basePath = _config.path.replaceFirst('/', '');
+    final assetsPrefix = '$basePath/assets/';
+
+    // Create static handlers for each directory
+    final distHandler = createStaticHandler(_resourceLoader.distDir, defaultDocument: null);
+
+    final imagesHandler = createStaticHandler(_resourceLoader.imagesDir, defaultDocument: null);
+
     return (Handler innerHandler) {
       return (Request request) async {
         final path = request.url.path;
-        final basePath = _config.path.replaceFirst('/', '');
-        final assetsPrefix = '$basePath/assets/';
 
         // Not an asset request, continue to next handler
         if (!path.startsWith(assetsPrefix)) {
@@ -269,61 +300,103 @@ class PanelServer {
         }
 
         final assetPath = path.substring(assetsPrefix.length);
-        String fileSystemPath;
 
-        if (assetPath.startsWith('css/')) {
-          // CSS files from dist/css
-          fileSystemPath = '${_resourceLoader.distDir}/css/${assetPath.substring(4)}';
-        } else if (assetPath.startsWith('js/')) {
-          // JS files from dist/js
-          fileSystemPath = '${_resourceLoader.distDir}/js/${assetPath.substring(3)}';
+        // Route to appropriate handler based on path prefix
+        if (assetPath.startsWith('css/') || assetPath.startsWith('js/')) {
+          // CSS/JS files from dist/
+          final response = await distHandler(
+            Request(request.method, request.requestedUri.replace(path: '/$assetPath')),
+          );
+          if (response.statusCode != 404) {
+            return _addCacheHeaders(response);
+          }
         } else if (assetPath.startsWith('img/')) {
           // Image files from img/
-          fileSystemPath = '${_resourceLoader.imagesDir}/${assetPath.substring(4)}';
-        } else {
-          // Unknown asset type, continue to next handler
-          return innerHandler(request);
+          final subPath = assetPath.substring(4); // Remove 'img/' prefix
+          final response = await imagesHandler(
+            Request(request.method, request.requestedUri.replace(path: '/$subPath')),
+          );
+          if (response.statusCode != 404) {
+            return _addCacheHeaders(response);
+          }
         }
 
-        final file = File(fileSystemPath);
-        if (!await file.exists()) {
-          return Response.notFound('Asset not found: $assetPath');
-        }
-
-        // Determine content type
-        final contentType = _getContentType(fileSystemPath);
-        final bytes = await file.readAsBytes();
-
-        return Response.ok(
-          bytes,
-          headers: {
-            'content-type': contentType,
-            'cache-control': _resourceLoader.isProduction
-                ? 'public, max-age=31536000' // 1 year for production
-                : 'no-cache', // No cache for development
-          },
-        );
+        // Asset not found or unknown type
+        return Response.notFound('Asset not found: $assetPath');
       };
     };
   }
 
-  /// Gets the content type for a file based on its extension.
-  String _getContentType(String path) {
-    final ext = path.split('.').last.toLowerCase();
-    return switch (ext) {
-      'css' => 'text/css; charset=utf-8',
-      'js' => 'application/javascript; charset=utf-8',
-      'png' => 'image/png',
-      'jpg' || 'jpeg' => 'image/jpeg',
-      'gif' => 'image/gif',
-      'svg' => 'image/svg+xml',
-      'ico' => 'image/x-icon',
-      'webp' => 'image/webp',
-      'woff' => 'font/woff',
-      'woff2' => 'font/woff2',
-      'ttf' => 'font/ttf',
-      'eot' => 'application/vnd.ms-fontobject',
-      _ => 'application/octet-stream',
+  /// Adds cache control headers to static asset responses.
+  Response _addCacheHeaders(Response response) {
+    final cacheControl = _resourceLoader.isProduction
+        ? 'public, max-age=31536000' // 1 year for production
+        : 'no-cache'; // No cache for development
+
+    return response.change(headers: {'cache-control': cacheControl});
+  }
+
+  /// Creates middleware to serve files from storage.
+  ///
+  /// Handles requests to /storage/* and serves files from the configured
+  /// storage disks.
+  Middleware _storageAssetsMiddleware() {
+    final basePath = _config.path.replaceFirst('/', '');
+    final storagePrefix = '$basePath/storage/';
+
+    return (Handler innerHandler) {
+      return (Request request) async {
+        final path = request.url.path;
+
+        // Not a storage request, continue to next handler
+        if (!path.startsWith(storagePrefix)) {
+          return innerHandler(request);
+        }
+
+        // No storage manager configured
+        if (_storageManager == null) {
+          return Response.notFound('Storage not configured');
+        }
+
+        // Extract the file path from the URL
+        // Format: /admin/storage/{disk}/{path...}
+        final storagePath = path.substring(storagePrefix.length);
+        final segments = storagePath.split('/');
+
+        if (segments.isEmpty) {
+          return Response.notFound('Invalid storage path');
+        }
+
+        // First segment is the disk name, rest is the file path
+        final diskName = segments.first;
+        final filePath = segments.skip(1).join('/');
+
+        if (filePath.isEmpty) {
+          return Response.notFound('No file specified');
+        }
+
+        try {
+          final storage = _storageManager!.disk(diskName);
+
+          // Check if file exists
+          if (!await storage.exists(filePath)) {
+            return Response.notFound('File not found: $filePath');
+          }
+
+          // Read file data
+          final data = await storage.get(filePath);
+          if (data == null) {
+            return Response.notFound('Could not read file: $filePath');
+          }
+
+          // Get MIME type
+          final mimeType = await storage.mimeType(filePath) ?? 'application/octet-stream';
+
+          return Response.ok(data, headers: {'content-type': mimeType, 'cache-control': 'public, max-age=31536000'});
+        } on StateError catch (e) {
+          return Response.notFound('Storage error: ${e.message}');
+        }
+      };
     };
   }
 

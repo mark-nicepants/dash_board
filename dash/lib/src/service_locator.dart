@@ -3,6 +3,7 @@ import 'package:dash/src/model/model.dart';
 import 'package:dash/src/panel/panel_colors.dart';
 import 'package:dash/src/panel/panel_config.dart';
 import 'package:dash/src/resource.dart';
+import 'package:dash/src/storage/storage.dart';
 import 'package:dash/src/utils/resource_loader.dart';
 import 'package:get_it/get_it.dart';
 
@@ -17,6 +18,38 @@ PanelColors get panelColors {
     return inject<PanelConfig>().colors;
   }
   return PanelColors.defaults;
+}
+
+/// Gets a storage URL for a file path on a specific disk.
+///
+/// Uses the registered [StorageManager] to get the URL with the proper prefix.
+/// Returns the path unchanged if it's already a full URL or absolute path.
+String getStorageUrl(String path, {String? disk}) {
+  // If it's already a full URL or absolute path, return as-is
+  if (path.startsWith('http://') || path.startsWith('https://') || path.startsWith('/')) {
+    return path;
+  }
+
+  // Use StorageManager if registered
+  if (inject.isRegistered<StorageManager>()) {
+    final storageManager = inject<StorageManager>();
+    try {
+      final storage = storageManager.disk(disk);
+      return storage.url(path);
+    } catch (_) {
+      // Disk not found, fall through to fallback
+    }
+  }
+
+  // Fallback: construct URL manually
+  String basePath = '/admin';
+  if (inject.isRegistered<PanelConfig>()) {
+    basePath = inject<PanelConfig>().path;
+  }
+  if (disk != null) {
+    return '$basePath/storage/$disk/$path';
+  }
+  return '$basePath/storage/$path';
 }
 
 typedef _ResourceFactory = Resource Function();

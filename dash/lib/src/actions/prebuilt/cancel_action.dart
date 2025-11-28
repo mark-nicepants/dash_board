@@ -34,7 +34,6 @@ class CancelAction<T extends Model> extends Action<T> {
       size: ButtonSize.md,
       icon: getIcon(),
       iconPosition: getIconPosition(),
-      disabled: isDisabled,
       attributes: const {'onclick': 'history.back()'},
     );
   }

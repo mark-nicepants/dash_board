@@ -1,5 +1,4 @@
 import 'package:dash/src/actions/action.dart';
-import 'package:dash/src/actions/action_color.dart';
 import 'package:dash/src/actions/prebuilt/cancel_action.dart';
 import 'package:dash/src/actions/prebuilt/create_action.dart';
 import 'package:dash/src/actions/prebuilt/edit_action.dart';
@@ -206,12 +205,7 @@ abstract class Resource<T extends Model> {
   /// ];
   /// ```
   List<Action<T>> viewFormActions(dynamic recordId) {
-    return [
-      Action.make<T>(
-        'edit',
-      ).label('Edit $singularLabel').color(ActionColor.primary).url((_, basePath) => '$basePath/$recordId/edit'),
-      CancelAction.make<T>().label('Back'),
-    ];
+    return [CancelAction.make<T>().label('Back')];
   }
 
   /// Creates a new instance of the model.

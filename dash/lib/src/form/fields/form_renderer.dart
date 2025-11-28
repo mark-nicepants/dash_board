@@ -47,16 +47,11 @@ class FormRenderer extends StatelessComponent {
       FormSubmitMethod.patch => 'PATCH',
     };
 
-    return form(
-      action: schema.getAction(),
-      method: FormMethod.post,
-      classes: customClasses,
-      [
-        // Method spoofing for PUT/PATCH (placed inside content to avoid space-y-6 gap)
-        if (methodAttr != null) input(type: InputType.hidden, name: '_method', value: methodAttr),
-        content,
-      ],
-    );
+    return form(action: schema.getAction(), method: FormMethod.post, classes: customClasses, [
+      // Method spoofing for PUT/PATCH (placed inside content to avoid space-y-6 gap)
+      if (methodAttr != null) input(type: InputType.hidden, name: '_method', value: methodAttr),
+      content,
+    ]);
   }
 
   Component _buildFormContent(BuildContext context) {

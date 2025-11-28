@@ -91,20 +91,17 @@ class ResourceForm<T extends Model> extends StatelessComponent {
           .operation(FormOperation.edit)
           .record(record as T)
           .action('$basePath/$recordId')
-          .method(FormSubmitMethod.put)
-          .submitLabel('Save Changes');
+          .method(FormSubmitMethod.put);
 
       // Pre-populate fields with record values
       _populateFieldsFromRecord(formSchema);
     } else {
-      formSchema
-          .operation(FormOperation.create)
-          .action('$basePath/store')
-          .method(FormSubmitMethod.post)
-          .submitLabel('Create ${resource.singularLabel}');
+      formSchema.operation(FormOperation.create).action('$basePath/store').method(FormSubmitMethod.post);
     }
 
-    formSchema.cancelLabel('Cancel').showCancelButton();
+    // Set form actions from resource
+    final operation = isEditMode ? FormOperation.edit : FormOperation.create;
+    formSchema.formActions(resource.formActions(operation));
 
     // Override with old input if available (repopulate form on validation errors)
     if (oldInput != null) {

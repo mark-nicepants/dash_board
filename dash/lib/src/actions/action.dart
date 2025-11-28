@@ -1,8 +1,8 @@
 import 'package:dash/src/actions/action_color.dart';
 import 'package:dash/src/actions/action_size.dart';
+import 'package:dash/src/components/partials/button.dart';
 import 'package:dash/src/components/partials/heroicon.dart';
 import 'package:dash/src/model/model.dart';
-import 'package:dash/src/table/columns/text_column.dart' show IconPosition;
 import 'package:jaspr/jaspr.dart';
 
 /// Base class for all Dash actions.
@@ -354,13 +354,35 @@ class Action<T extends Model> {
   bool isPostAction() => _actionUrl != null;
 
   // ============================================================
+  // Type Conversions
+  // ============================================================
+
+  /// Converts ActionColor to ButtonVariant.
+  ButtonVariant get buttonVariant => switch (_color) {
+    ActionColor.primary => ButtonVariant.primary,
+    ActionColor.secondary => ButtonVariant.secondary,
+    ActionColor.danger => ButtonVariant.danger,
+    ActionColor.warning => ButtonVariant.warning,
+    ActionColor.success => ButtonVariant.success,
+    ActionColor.info => ButtonVariant.info,
+  };
+
+  /// Converts ActionSize to ButtonSize.
+  ButtonSize get buttonSize => switch (_size) {
+    ActionSize.xs => ButtonSize.xs,
+    ActionSize.sm => ButtonSize.sm,
+    ActionSize.md => ButtonSize.md,
+    ActionSize.lg => ButtonSize.lg,
+  };
+
+  // ============================================================
   // Rendering
   // ============================================================
 
   /// Renders the action as a Jaspr [Component].
   ///
   /// The action is rendered differently based on its configuration:
-  /// - URL actions render as `<a>` tags
+  /// - URL actions render as `<a>` tags via Button
   /// - POST actions render as `<form>` with `<button>`
   Component render(T record, {required String basePath}) {
     if (isHidden(record)) {
@@ -369,29 +391,25 @@ class Action<T extends Model> {
 
     final isDisabledState = isDisabled(record);
 
-    // Build content (icon + label)
-    final content = _buildContent();
-
-    // Get CSS classes
-    final classes = _buildClasses(isDisabledState);
-
-    // URL action - render as <a> tag
+    // URL action - render as link button
     if (isUrlAction()) {
       final url = getUrl(record, basePath)!;
-      final attrs = <String, String>{
-        if (_openUrlInNewTab) 'target': '_blank',
-        if (_tooltip != null) 'title': _tooltip!,
-        ..._extraAttributes ?? {},
-      };
-
-      if (isDisabledState) {
-        return span(classes: '$classes opacity-50 cursor-not-allowed', content);
-      }
-
-      return a(href: url, classes: classes, attributes: attrs, content);
+      return Button(
+        label: getLabel(),
+        variant: buttonVariant,
+        size: buttonSize,
+        icon: _icon,
+        iconPosition: _iconPosition,
+        hideLabel: _isLabelHidden,
+        href: url,
+        openInNewTab: _openUrlInNewTab,
+        disabled: isDisabledState,
+        subtle: true, // Table row actions use subtle style
+        attributes: {if (_tooltip != null) 'title': _tooltip!, ..._extraAttributes ?? {}},
+      );
     }
 
-    // POST action - render as <form> with <button>
+    // POST action - render as form with button
     if (isPostAction()) {
       final url = getActionUrl(record, basePath)!;
       final confirmScript = _requiresConfirmation ? "return confirm('${_getConfirmationMessage()}')" : null;
@@ -399,77 +417,36 @@ class Action<T extends Model> {
       return form(action: url, method: FormMethod.post, classes: 'inline', [
         // Method spoofing for DELETE/PUT/PATCH
         if (_actionMethod != 'POST') input(type: InputType.hidden, name: '_method', value: _actionMethod),
-        button(
+        Button(
+          label: getLabel(),
+          variant: buttonVariant,
+          size: buttonSize,
+          icon: _icon,
+          iconPosition: _iconPosition,
+          hideLabel: _isLabelHidden,
           type: ButtonType.submit,
-          classes: classes,
+          disabled: isDisabledState,
+          subtle: true, // Table row actions use subtle style
           attributes: {
             if (confirmScript != null) 'onclick': confirmScript,
             if (_tooltip != null) 'title': _tooltip!,
-            if (isDisabledState) 'disabled': 'true',
             ..._extraAttributes ?? {},
           },
-          content,
         ),
       ]);
     }
 
     // Fallback - render as disabled button
-    return button(
-      type: ButtonType.button,
-      classes: '$classes opacity-50 cursor-not-allowed',
-      attributes: {'disabled': 'true'},
-      content,
+    return Button(
+      label: getLabel(),
+      variant: buttonVariant,
+      size: buttonSize,
+      icon: _icon,
+      iconPosition: _iconPosition,
+      hideLabel: _isLabelHidden,
+      disabled: true,
+      subtle: true,
     );
-  }
-
-  /// Builds the content (icon + label) for the action.
-  List<Component> _buildContent() {
-    final components = <Component>[];
-
-    if (_icon != null && _iconPosition == IconPosition.before) {
-      components.add(Heroicon(_icon!, size: _getIconSize()));
-    }
-
-    if (!_isLabelHidden) {
-      components.add(text(getLabel()));
-    }
-
-    if (_icon != null && _iconPosition == IconPosition.after) {
-      components.add(Heroicon(_icon!, size: _getIconSize()));
-    }
-
-    return components;
-  }
-
-  /// Gets the icon size based on action size.
-  int _getIconSize() => switch (_size) {
-    ActionSize.xs => 14,
-    ActionSize.sm => 16,
-    ActionSize.md => 18,
-    ActionSize.lg => 20,
-  };
-
-  /// Builds CSS classes for the action button.
-  String _buildClasses(bool isDisabled) {
-    final baseClasses = 'inline-flex items-center gap-1.5 font-medium rounded-md transition-colors';
-
-    final sizeClasses = switch (_size) {
-      ActionSize.xs => 'px-2 py-1 text-xs',
-      ActionSize.sm => 'px-3 py-1.5 text-xs',
-      ActionSize.md => 'px-4 py-2 text-sm',
-      ActionSize.lg => 'px-5 py-2.5 text-base',
-    };
-
-    final colorClasses = switch (_color) {
-      ActionColor.primary => 'text-lime-400 hover:text-lime-300 bg-gray-700 hover:bg-gray-600',
-      ActionColor.secondary => 'text-gray-300 hover:text-white bg-gray-700 hover:bg-gray-600',
-      ActionColor.danger => 'text-red-400 hover:text-white bg-gray-700 hover:bg-red-600',
-      ActionColor.warning => 'text-amber-400 hover:text-amber-300 bg-gray-700 hover:bg-gray-600',
-      ActionColor.success => 'text-green-400 hover:text-green-300 bg-gray-700 hover:bg-gray-600',
-      ActionColor.info => 'text-blue-400 hover:text-blue-300 bg-gray-700 hover:bg-gray-600',
-    };
-
-    return '$baseClasses $sizeClasses $colorClasses';
   }
 
   /// Gets the confirmation message for the dialog.
@@ -489,76 +466,51 @@ class Action<T extends Model> {
   /// Header actions are used in page headers and don't operate on a specific
   /// record. They typically navigate to URLs like create pages.
   Component renderAsHeaderAction({required String basePath}) {
-    final content = _buildHeaderContent();
-    final classes = _buildHeaderClasses();
-
     // For header actions, we expect a URL that doesn't need a record
     if (_url != null) {
-      // Create a dummy call - the URL function should handle null-like behavior
-      // For header actions, the basePath is what matters
-      final attrs = <String, String>{
-        if (_openUrlInNewTab) 'target': '_blank',
-        if (_tooltip != null) 'title': _tooltip!,
-        ..._extraAttributes ?? {},
-      };
-
-      return a(href: '$basePath/create', classes: classes, attributes: attrs, content);
+      return Button(
+        label: getLabel(),
+        variant: buttonVariant,
+        size: buttonSize,
+        icon: _icon,
+        iconPosition: _iconPosition,
+        hideLabel: _isLabelHidden,
+        href: '$basePath/create',
+        openInNewTab: _openUrlInNewTab,
+        attributes: {if (_tooltip != null) 'title': _tooltip!, ..._extraAttributes ?? {}},
+      );
     }
 
     // Fallback - render as a button (for POST actions in headers)
-    return button(
-      type: ButtonType.button,
-      classes: classes,
+    return Button(
+      label: getLabel(),
+      variant: buttonVariant,
+      size: buttonSize,
+      icon: _icon,
+      iconPosition: _iconPosition,
+      hideLabel: _isLabelHidden,
       attributes: {if (_tooltip != null) 'title': _tooltip!, ..._extraAttributes ?? {}},
-      content,
     );
   }
 
-  /// Builds content for header actions (larger icon size).
-  List<Component> _buildHeaderContent() {
-    final components = <Component>[];
+  // ============================================================
+  // Form Action Rendering
+  // ============================================================
 
-    if (_icon != null && _iconPosition == IconPosition.before) {
-      components.add(Heroicon(_icon!, size: 18));
-    }
-
-    if (!_isLabelHidden) {
-      components.add(text(getLabel()));
-    }
-
-    if (_icon != null && _iconPosition == IconPosition.after) {
-      components.add(Heroicon(_icon!, size: 18));
-    }
-
-    return components;
-  }
-
-  /// Builds CSS classes for header action buttons (more prominent styling).
-  String _buildHeaderClasses() {
-    final baseClasses = 'inline-flex items-center gap-2 font-semibold rounded-lg transition-all duration-200';
-
-    final sizeClasses = switch (_size) {
-      ActionSize.xs => 'text-xs px-3 py-1.5',
-      ActionSize.sm => 'text-sm px-3 py-1.5',
-      ActionSize.md => 'text-sm px-4 py-2',
-      ActionSize.lg => 'text-base px-6 py-3',
-    };
-
-    final colorClasses = switch (_color) {
-      ActionColor.primary =>
-        'bg-lime-500 text-white hover:bg-lime-600 active:bg-lime-700 focus:ring-2 focus:ring-lime-500 focus:ring-offset-2 focus:ring-offset-gray-900',
-      ActionColor.secondary =>
-        'bg-gray-700 text-gray-300 hover:bg-gray-600 hover:text-gray-100 active:bg-gray-800 focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 focus:ring-offset-gray-900',
-      ActionColor.danger =>
-        'bg-red-600 text-white hover:bg-red-700 active:bg-red-800 focus:ring-2 focus:ring-red-500 focus:ring-offset-2 focus:ring-offset-gray-900',
-      ActionColor.warning =>
-        'bg-amber-500 text-white hover:bg-amber-600 active:bg-amber-700 focus:ring-2 focus:ring-amber-500 focus:ring-offset-2 focus:ring-offset-gray-900',
-      ActionColor.success =>
-        'bg-green-600 text-white hover:bg-green-700 active:bg-green-800 focus:ring-2 focus:ring-green-500 focus:ring-offset-2 focus:ring-offset-gray-900',
-      ActionColor.info =>
-        'bg-blue-600 text-white hover:bg-blue-700 active:bg-blue-800 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-gray-900',
-    };
-
-    return '$baseClasses $sizeClasses $colorClasses';
+  /// Renders the action as a form button (without record context).
+  ///
+  /// Form actions are used in form footers for submit/cancel operations.
+  /// Override this in subclasses for custom behavior (e.g., submit vs button).
+  Component renderAsFormAction({bool isDisabled = false}) {
+    return Button(
+      label: getLabel(),
+      variant: buttonVariant,
+      size: ButtonSize.md, // Form actions always use md size
+      icon: _icon,
+      iconPosition: _iconPosition,
+      hideLabel: _isLabelHidden,
+      disabled: isDisabled,
+      attributes: {if (_tooltip != null) 'title': _tooltip!, ..._extraAttributes ?? {}},
+    );
   }
 }

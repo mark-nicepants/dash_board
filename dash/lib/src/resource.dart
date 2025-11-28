@@ -1,5 +1,7 @@
 import 'package:dash/src/actions/action.dart';
+import 'package:dash/src/actions/prebuilt/cancel_action.dart';
 import 'package:dash/src/actions/prebuilt/create_action.dart';
+import 'package:dash/src/actions/prebuilt/save_action.dart';
 import 'package:dash/src/components/pages/resource_form.dart';
 import 'package:dash/src/components/pages/resource_index.dart';
 import 'package:dash/src/components/partials/heroicon.dart';
@@ -136,6 +138,29 @@ abstract class Resource<T extends Model> {
   /// ```
   List<Action<T>> indexHeaderActions() {
     return [CreateAction.make<T>(singularLabel)];
+  }
+
+  /// Defines the form actions for create/edit pages.
+  ///
+  /// Override this method to customize the actions shown at the bottom of forms.
+  /// By default, shows a save/create button and cancel button.
+  ///
+  /// The [operation] parameter indicates whether this is a create, edit, or view form.
+  ///
+  /// Example:
+  /// ```dart
+  /// @override
+  /// List<Action<User>> formActions(FormOperation operation) => [
+  ///   SaveAction.make(operation: operation),
+  ///   CancelAction.make(),
+  ///   if (operation == FormOperation.edit)
+  ///     Action.make<User>('preview')
+  ///       .label('Preview')
+  ///       .color(ActionColor.info),
+  /// ];
+  /// ```
+  List<Action<T>> formActions(FormOperation operation) {
+    return [SaveAction.make<T>(operation: operation), CancelAction.make<T>()];
   }
 
   /// Creates a new instance of the model.

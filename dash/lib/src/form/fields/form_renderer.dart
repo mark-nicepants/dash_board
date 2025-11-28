@@ -93,6 +93,15 @@ class FormRenderer extends StatelessComponent {
   }
 
   Component _buildFormActions() {
+    // If custom form actions are set, render them
+    if (schema.hasFormActions()) {
+      final actions = schema.getFormActions()!;
+      return div(classes: FormStyles.formActions, [
+        for (final action in actions) action.renderAsFormAction(isDisabled: schema.isDisabled()),
+      ]);
+    }
+
+    // Default: render standard submit/cancel buttons
     return div(classes: FormStyles.formActions, [
       button(
         type: ButtonType.submit,

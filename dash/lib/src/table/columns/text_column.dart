@@ -1,3 +1,4 @@
+import 'package:dash/src/components/partials/button.dart' show IconPosition;
 import 'package:dash/src/model/model.dart';
 import 'package:dash/src/table/columns/column.dart';
 import 'package:intl/intl.dart';
@@ -386,6 +387,3 @@ enum TextSize { small, medium, large }
 
 /// Text weight options.
 enum TextWeight { thin, normal, medium, semibold, bold }
-
-/// Icon position options.
-enum IconPosition { before, after }

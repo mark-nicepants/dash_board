@@ -58,6 +58,18 @@ class UserResource extends Resource<User> {
     //   .color(ActionColor.secondary),
   ];
 
+  // Form actions - override to customize the submit/cancel buttons
+  @override
+  List<Action<User>> formActions(FormOperation operation) => [
+    SaveAction.make(operation: operation),
+    CancelAction.make(),
+    // You can add more form actions here, e.g.:
+    // if (operation == FormOperation.edit)
+    //   Action.make<User>('preview')
+    //     .label('Preview')
+    //     .color(ActionColor.info),
+  ];
+
   @override
   FormSchema<User> form(FormSchema<User> form) {
     return form.columns(2).fields([

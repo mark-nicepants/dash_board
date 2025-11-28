@@ -1,3 +1,4 @@
+import 'package:dash/src/actions/action.dart';
 import 'package:dash/src/form/fields/field.dart';
 import 'package:dash/src/form/fields/section.dart';
 import 'package:dash/src/model/model.dart';
@@ -66,6 +67,9 @@ class FormSchema<T extends Model> {
 
   /// The form method (POST, PUT, PATCH).
   FormSubmitMethod _method = FormSubmitMethod.post;
+
+  /// Custom form actions (submit, cancel, etc.).
+  List<Action<T>>? _formActions;
 
   FormSchema();
 
@@ -202,6 +206,27 @@ class FormSchema<T extends Model> {
 
   /// Gets the form method.
   FormSubmitMethod getMethod() => _method;
+
+  /// Sets custom form actions (submit, cancel, etc.).
+  ///
+  /// When set, these actions replace the default submit/cancel buttons.
+  /// ```dart
+  /// form.formActions([
+  ///   SaveAction.make(),
+  ///   CancelAction.make(),
+  ///   Action.make<User>('preview').label('Preview').color(ActionColor.info),
+  /// ]);
+  /// ```
+  FormSchema<T> formActions(List<Action<T>> actions) {
+    _formActions = actions;
+    return this;
+  }
+
+  /// Gets the custom form actions, if set.
+  List<Action<T>>? getFormActions() => _formActions;
+
+  /// Checks if custom form actions are set.
+  bool hasFormActions() => _formActions != null && _formActions!.isNotEmpty;
 
   /// Fills the form with data from the record.
   void fill() {

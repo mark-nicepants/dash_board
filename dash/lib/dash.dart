@@ -17,6 +17,8 @@ export 'src/actions/prebuilt/view_action.dart';
 // Auth
 export 'src/auth/auth_service.dart' show AuthService, Session;
 export 'src/auth/authenticatable.dart';
+export 'src/auth/request_session.dart';
+export 'src/auth/session_store.dart' show SessionStore, FileSessionStore, InMemorySessionStore, SessionData;
 // Components
 export 'src/components/layout.dart';
 export 'src/components/pages/dashboard_page.dart';
@@ -27,6 +29,7 @@ export 'src/components/pages/resource_view.dart';
 export 'src/components/partials/button.dart';
 export 'src/components/partials/heroicon.dart';
 export 'src/components/partials/table/table_components.dart';
+export 'src/components/partials/user_menu.dart';
 export 'src/database/connectors/sqlite_connector.dart';
 export 'src/database/database_config.dart';
 // Database

@@ -25,7 +25,7 @@ class PanelRouter {
   PanelRouter(this._config, this._resourceLoader);
 
   /// Creates a DashLayout with all required properties from config.
-  /// Optionally wraps with page assets.
+  /// Optionally wraps with page assets. Gets user info from RequestSession.
   _PageWithAssets _wrapInLayout({required String title, required Component child, PageAssetCollector? pageAssets}) {
     return _PageWithAssets(
       DashLayout(

@@ -16,33 +16,37 @@ Future<void> main() async {
   // Create and configure the admin panel with automatic migrations
   // Schemas are automatically extracted from resources!
   final panel = Panel()
-    ..setId('admin')
-    ..setPath('/admin')
-    ..authModel<User>()
-    ..addDevCommands([
-      seedUsersCommand(), //
-      seedPostsCommand(),
-      seedAllCommand(),
-      clearDatabaseCommand(),
-    ])
-    ..plugin(
-      AnalyticsPlugin.make() //
-          .enableDashboardWidget(true)
-          .trackPageViews(true)
-          .trackModelEvents(true)
-          .retentionDays(90),
-    )
-    ..database(
-      DatabaseConfig.using(SqliteConnector('storage/app.db'), migrations: MigrationConfig.fromResources(verbose: true)),
-    )
-    ..storage(
-      StorageConfig()
-        ..defaultDisk = 'public'
-        ..disks = {
-          'public': LocalStorage(basePath: 'storage/public', urlPrefix: '/admin/storage/public'),
-          'local': LocalStorage(basePath: 'storage/app', urlPrefix: '/admin/storage/local'),
-        },
-    );
+      .setId('admin')
+      .setPath('/admin')
+      .authModel<User>()
+      .sessionStore(FileSessionStore('storage/sessions'))
+      .addDevCommands([
+        seedUsersCommand(), //
+        seedPostsCommand(),
+        seedAllCommand(),
+        clearDatabaseCommand(),
+      ])
+      .plugin(
+        AnalyticsPlugin.make() //
+            .enableDashboardWidget(true)
+            .trackPageViews(true)
+            .trackModelEvents(true)
+            .retentionDays(90),
+      )
+      .database(
+        DatabaseConfig.using(
+          SqliteConnector('storage/app.db'),
+          migrations: MigrationConfig.fromResources(verbose: true),
+        ),
+      )
+      .storage(
+        StorageConfig()
+          ..defaultDisk = 'public'
+          ..disks = {
+            'public': LocalStorage(basePath: 'storage/public', urlPrefix: '/admin/storage/public'),
+            'local': LocalStorage(basePath: 'storage/app', urlPrefix: '/admin/storage/local'),
+          },
+      );
 
   print('🔄 Running automatic migrations...\n');
 

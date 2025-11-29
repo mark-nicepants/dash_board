@@ -1,7 +1,4 @@
-import 'package:dash/src/components/partials/heroicon.dart';
-import 'package:dash/src/plugin/navigation_item.dart';
-import 'package:dash/src/plugin/render_hook.dart';
-import 'package:dash/src/resource.dart';
+import 'package:dash/dash.dart';
 import 'package:jaspr/jaspr.dart';
 
 /// Base layout component for authenticated pages in the admin panel.
@@ -31,13 +28,19 @@ class DashLayout extends StatelessComponent {
 
   @override
   Component build(BuildContext context) {
-    return div(classes: 'flex min-h-screen bg-gray-900', [
-      // Sidebar
-      aside(classes: 'w-64 bg-gray-800 text-white flex flex-col', [
-        div(classes: 'p-6 border-b border-gray-700 flex justify-center', [
-          img(src: '$basePath/assets/img/logo_square.png', alt: 'Dash Logo', classes: 'h-14'),
+    // Get user info from RequestSession
+    final session = RequestSession.instance();
+
+    final userName = session.userName;
+    final userAvatarUrl = session.userAvatarUrl;
+
+    return div(classes: 'flex h-screen bg-gray-900 overflow-hidden', [
+      // Sidebar (fixed)
+      aside(classes: 'w-64 bg-gray-900 text-white flex flex-col h-screen', [
+        div(classes: 'px-6 py-4 border-b border-gray-700 flex items-center h-[60px] bg-gray-800 shrink-0', [
+          img(src: '$basePath/assets/img/logo_square.png', alt: 'Dash Logo', classes: 'h-10'),
         ]),
-        nav(classes: 'flex-1 py-6', [
+        nav(classes: 'flex-1 py-6 overflow-y-auto', [
           ul(classes: 'space-y-1', [
             li([
               a(
@@ -60,22 +63,16 @@ class DashLayout extends StatelessComponent {
         ]),
         // Render hook: sidebar footer
         ...?renderHooks?.render(RenderHook.sidebarFooter),
-        // Logout button
-        div(classes: 'p-6 border-t border-gray-700', [
-          a(
-            href: '$basePath/logout',
-            classes:
-                'flex items-center justify-center gap-2 px-4 py-2.5 text-gray-300 border border-gray-700 rounded-lg hover:bg-gray-700 hover:text-white transition-all',
-            [
-              const Heroicon(HeroIcons.arrowRightOnRectangle),
-              span([text('Logout')]),
-            ],
-          ),
-        ]),
       ]),
-      // Main content
-      div(classes: 'flex-1 flex flex-col', [
-        main_(classes: 'flex-1 p-8', [
+      // Main content area
+      div(classes: 'flex-1 flex flex-col h-screen overflow-hidden', [
+        // Top header with user menu (sticky)
+        if (session.isAuthenticated)
+          header(classes: 'flex items-center justify-end px-8 bg-gray-800 border-b border-gray-700 h-[60px] shrink-0', [
+            UserMenu(name: userName!, avatarUrl: userAvatarUrl, basePath: basePath),
+          ]),
+        // Scrollable content area
+        main_(classes: 'flex-1 p-8 overflow-y-auto', [
           // Render hook: content before
           ...?renderHooks?.render(RenderHook.contentBefore),
           child,

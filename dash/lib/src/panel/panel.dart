@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:dash/src/auth/auth_service.dart';
 import 'package:dash/src/auth/authenticatable.dart';
+import 'package:dash/src/auth/session_store.dart';
 import 'package:dash/src/database/database_config.dart';
 import 'package:dash/src/database/migrations/schema_definition.dart';
 import 'package:dash/src/database/query_builder.dart';
@@ -62,6 +63,7 @@ class Panel {
   // Auth model configuration
   Type? _authModelType;
   UserResolver<Model>? _customUserResolver;
+  SessionStore? _sessionStore;
 
   // Storage configuration
   StorageConfig? _storageConfig;
@@ -190,6 +192,21 @@ class Panel {
   /// ```
   Panel storage(StorageConfig config) {
     _storageConfig = config;
+    return this;
+  }
+
+  /// Configures the session store for persisting user sessions.
+  ///
+  /// By default, sessions are stored in memory and lost when the server restarts.
+  /// Use [FileSessionStore] to persist sessions to disk.
+  ///
+  /// Example:
+  /// ```dart
+  /// final panel = Panel()
+  ///   ..sessionStore(FileSessionStore('storage/sessions'));
+  /// ```
+  Panel sessionStore(SessionStore store) {
+    _sessionStore = store;
     return this;
   }
 
@@ -504,7 +521,7 @@ class Panel {
     // Create user resolver using model's query builder
     final userResolver = _customUserResolver ?? _createDefaultUserResolver(metadata);
 
-    _authService = AuthService<Model>(userResolver: userResolver, panelId: _config.id);
+    _authService = AuthService<Model>(userResolver: userResolver, panelId: _config.id, sessionStore: _sessionStore);
   }
 
   /// Creates a default user resolver that queries by the auth identifier field.

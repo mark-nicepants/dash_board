@@ -3,6 +3,7 @@ import 'dart:math';
 
 import 'package:bcrypt/bcrypt.dart';
 import 'package:dash/src/auth/authenticatable.dart';
+import 'package:dash/src/auth/session_store.dart';
 import 'package:dash/src/model/model.dart';
 
 /// Function type for resolving users from a data source.
@@ -27,12 +28,13 @@ typedef UserResolver<T> = Future<T?> Function(String identifier);
 ///   userResolver: (identifier) => User.query()
 ///     .where('email', '=', identifier)
 ///     .first(),
+///   sessionStore: FileSessionStore('storage/sessions'),
 /// );
 ///
 /// final sessionId = await authService.login('admin@example.com', 'password');
 /// ```
 class AuthService<T extends Model> {
-  final Map<String, Session<T>> _sessions = {}; // sessionId -> Session
+  final Map<String, Session<T>> _sessions = {}; // sessionId -> Session (in-memory cache)
 
   /// Function to resolve a user by their identifier (e.g., email).
   final UserResolver<T> _userResolver;
@@ -40,9 +42,73 @@ class AuthService<T extends Model> {
   /// The ID of the panel this auth service is associated with.
   final String _panelId;
 
-  AuthService({required UserResolver<T> userResolver, String panelId = 'default'})
+  /// The session store for persisting sessions.
+  final SessionStore _sessionStore;
+
+  AuthService({required UserResolver<T> userResolver, String panelId = 'default', SessionStore? sessionStore})
     : _userResolver = userResolver,
-      _panelId = panelId;
+      _panelId = panelId,
+      _sessionStore = sessionStore ?? InMemorySessionStore();
+
+  /// Loads a session from the persistent store into memory cache.
+  ///
+  /// Returns the session if found and valid, null otherwise.
+  /// Automatically deletes expired sessions from the store.
+  Future<Session<T>?> _loadSessionFromStore(String sessionId) async {
+    final sessionData = await _sessionStore.load(sessionId);
+    if (sessionData == null) {
+      return null;
+    }
+
+    // Check if expired - delete from store if so
+    if (sessionData.isExpired) {
+      await _sessionStore.delete(sessionId);
+      return null;
+    }
+
+    // Resolve the user from the stored identifier
+    final user = await _userResolver(sessionData.userIdentifier);
+    if (user == null) {
+      // User no longer exists - remove session
+      await _sessionStore.delete(sessionId);
+      return null;
+    }
+
+    // Cache in memory
+    final session = Session<T>(
+      id: sessionData.id,
+      user: user,
+      createdAt: sessionData.createdAt,
+      expiresAt: sessionData.expiresAt,
+    );
+    _sessions[sessionId] = session;
+
+    return session;
+  }
+
+  /// Gets the session for a session ID.
+  ///
+  /// First checks the in-memory cache, then falls back to the persistent store.
+  /// Returns null if the session is not found or expired.
+  Future<Session<T>?> _getSession(String? sessionId) async {
+    if (sessionId == null) {
+      return null;
+    }
+
+    // Check in-memory cache first
+    final session = _sessions[sessionId];
+    if (session != null) {
+      if (session.isExpired) {
+        _sessions.remove(sessionId);
+        await _sessionStore.delete(sessionId);
+        return null;
+      }
+      return session;
+    }
+
+    // Fall back to persistent store
+    return _loadSessionFromStore(sessionId);
+  }
 
   /// Hashes a password using bcrypt.
   ///
@@ -110,58 +176,42 @@ class AuthService<T extends Model> {
 
     // Generate secure session token
     final sessionId = _generateSessionId();
-    final session = Session<T>(
-      id: sessionId,
-      user: user,
-      createdAt: DateTime.now(),
-      expiresAt: DateTime.now().add(sessionDuration),
-    );
+    final now = DateTime.now();
+    final expiresAt = now.add(sessionDuration);
+
+    final session = Session<T>(id: sessionId, user: user, createdAt: now, expiresAt: expiresAt);
     _sessions[sessionId] = session;
+
+    // Persist session to store
+    await _sessionStore.save(
+      SessionData(id: sessionId, userIdentifier: authUser.getAuthIdentifier(), createdAt: now, expiresAt: expiresAt),
+    );
 
     return sessionId;
   }
 
   /// Logs out by removing the session.
-  void logout(String sessionId) {
+  Future<void> logout(String sessionId) async {
     _sessions.remove(sessionId);
+    await _sessionStore.delete(sessionId);
   }
 
   /// Checks if a session is valid and not expired.
   ///
+  /// Checks in-memory cache first, then falls back to persistent store.
   /// Automatically removes expired sessions during the check.
-  bool isAuthenticated(String? sessionId) {
-    if (sessionId == null) {
-      return false;
-    }
-
-    final session = _sessions[sessionId];
-    if (session == null) {
-      return false;
-    }
-
-    // Check if session has expired
-    if (session.isExpired) {
-      _sessions.remove(sessionId);
-      return false;
-    }
-
-    return true;
+  Future<bool> isAuthenticated(String? sessionId) async {
+    final session = await _getSession(sessionId);
+    return session != null;
   }
 
   /// Gets the user for a session.
   ///
+  /// Checks in-memory cache first, then falls back to persistent store.
   /// Returns null if the session is invalid or expired.
-  T? getUser(String? sessionId) {
-    if (sessionId == null) {
-      return null;
-    }
-
-    final session = _sessions[sessionId];
-    if (session == null || session.isExpired) {
-      return null;
-    }
-
-    return session.user;
+  Future<T?> getUser(String? sessionId) async {
+    final session = await _getSession(sessionId);
+    return session?.user;
   }
 
   /// Refreshes the user data for a session from the database.
@@ -169,12 +219,8 @@ class AuthService<T extends Model> {
   /// Useful when user data may have changed since login.
   /// Returns the refreshed user, or null if session is invalid.
   Future<T?> refreshUser(String? sessionId) async {
-    if (sessionId == null) {
-      return null;
-    }
-
-    final session = _sessions[sessionId];
-    if (session == null || session.isExpired) {
+    final session = await _getSession(sessionId);
+    if (session == null || sessionId == null) {
       return null;
     }
 
@@ -197,8 +243,9 @@ class AuthService<T extends Model> {
   /// Cleans up expired sessions.
   ///
   /// Should be called periodically to prevent memory leaks.
-  void cleanupExpiredSessions() {
+  Future<void> cleanupExpiredSessions() async {
     _sessions.removeWhere((_, session) => session.isExpired);
+    await _sessionStore.cleanupExpired();
   }
 
   /// Generates a cryptographically secure random session ID.

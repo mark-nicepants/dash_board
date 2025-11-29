@@ -4,6 +4,7 @@ import 'dart:math';
 import 'dart:typed_data';
 
 import 'package:dash/src/auth/auth_service.dart';
+import 'package:dash/src/auth/request_session.dart';
 import 'package:dash/src/model/model.dart';
 import 'package:dash/src/panel/panel_config.dart';
 import 'package:dash/src/storage/storage.dart';
@@ -73,29 +74,19 @@ class RequestHandler {
     }
 
     // Set session cookie and redirect to dashboard
-    return Response.found(_config.path, headers: {'set-cookie': 'dash_session=$sessionId; Path=/; HttpOnly'});
+    return Response.found(_config.path, headers: {'set-cookie': RequestSession.createSessionCookie(sessionId)});
   }
 
   /// Handles logout request.
   Response _handleLogout(Request request) {
-    // Get session from cookie
-    final cookies = request.headers['cookie'];
-    if (cookies != null) {
-      final cookieList = cookies.split(';');
-      for (final cookie in cookieList) {
-        final parts = cookie.trim().split('=');
-        if (parts.length == 2 && parts[0] == 'dash_session') {
-          _authService.logout(parts[1]);
-          break;
-        }
-      }
+    // Get session ID from cookie and logout
+    final sessionId = RequestSession.parseSessionId(request);
+    if (sessionId != null) {
+      _authService.logout(sessionId);
     }
 
     // Clear cookie and redirect to login
-    return Response.found(
-      '${_config.path}/login',
-      headers: {'set-cookie': 'dash_session=; Path=/; HttpOnly; Max-Age=0'},
-    );
+    return Response.found('${_config.path}/login', headers: {'set-cookie': RequestSession.clearSessionCookie()});
   }
 
   /// Handles file upload via multipart form data.

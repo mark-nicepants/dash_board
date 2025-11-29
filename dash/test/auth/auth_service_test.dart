@@ -133,7 +133,7 @@ void main() {
 
     test('session tokens are cryptographically random', () async {
       final sessionId1 = await authService.login('admin@example.com', 'password');
-      authService.logout(sessionId1!);
+      await authService.logout(sessionId1!);
       final sessionId2 = await authService.login('admin@example.com', 'password');
 
       // Session IDs should be different even for same user
@@ -142,36 +142,36 @@ void main() {
 
     test('isAuthenticated returns true for valid session', () async {
       final sessionId = await authService.login('admin@example.com', 'password');
-      expect(authService.isAuthenticated(sessionId), isTrue);
+      expect(await authService.isAuthenticated(sessionId), isTrue);
     });
 
-    test('isAuthenticated returns false for null session', () {
-      expect(authService.isAuthenticated(null), isFalse);
+    test('isAuthenticated returns false for null session', () async {
+      expect(await authService.isAuthenticated(null), isFalse);
     });
 
-    test('isAuthenticated returns false for invalid session', () {
-      expect(authService.isAuthenticated('invalid-session-id'), isFalse);
+    test('isAuthenticated returns false for invalid session', () async {
+      expect(await authService.isAuthenticated('invalid-session-id'), isFalse);
     });
 
     test('logout removes session', () async {
       final sessionId = await authService.login('admin@example.com', 'password');
-      expect(authService.isAuthenticated(sessionId), isTrue);
+      expect(await authService.isAuthenticated(sessionId), isTrue);
 
-      authService.logout(sessionId!);
-      expect(authService.isAuthenticated(sessionId), isFalse);
+      await authService.logout(sessionId!);
+      expect(await authService.isAuthenticated(sessionId), isFalse);
     });
 
     test('getUser returns user for valid session', () async {
       final sessionId = await authService.login('admin@example.com', 'password');
-      final user = authService.getUser(sessionId);
+      final user = await authService.getUser(sessionId);
 
       expect(user, isNotNull);
       expect(user!.email, equals('admin@example.com'));
       expect(user.name, equals('Admin User'));
     });
 
-    test('getUser returns null for invalid session', () {
-      final user = authService.getUser('invalid-session');
+    test('getUser returns null for invalid session', () async {
+      final user = await authService.getUser('invalid-session');
       expect(user, isNull);
     });
 
@@ -207,12 +207,12 @@ void main() {
         sessionDuration: const Duration(milliseconds: 100),
       );
 
-      expect(authService.isAuthenticated(sessionId), isTrue);
+      expect(await authService.isAuthenticated(sessionId), isTrue);
 
       // Wait for expiration
       await Future.delayed(const Duration(milliseconds: 150));
 
-      expect(authService.isAuthenticated(sessionId), isFalse);
+      expect(await authService.isAuthenticated(sessionId), isFalse);
     });
 
     test('expired sessions are automatically removed on check', () async {
@@ -225,9 +225,9 @@ void main() {
       await Future.delayed(const Duration(milliseconds: 100));
 
       // First check should remove the expired session
-      expect(authService.isAuthenticated(sessionId), isFalse);
+      expect(await authService.isAuthenticated(sessionId), isFalse);
       // Second check should also return false (session is gone)
-      expect(authService.isAuthenticated(sessionId), isFalse);
+      expect(await authService.isAuthenticated(sessionId), isFalse);
     });
 
     test('getUser returns null for expired session', () async {
@@ -239,7 +239,7 @@ void main() {
 
       await Future.delayed(const Duration(milliseconds: 100));
 
-      final user = authService.getUser(sessionId);
+      final user = await authService.getUser(sessionId);
       expect(user, isNull);
     });
 
@@ -250,7 +250,7 @@ void main() {
         sessionDuration: const Duration(milliseconds: 50),
       );
 
-      authService.logout(session1!);
+      await authService.logout(session1!);
 
       final session2 = await authService.login(
         'test@example.com',
@@ -262,10 +262,10 @@ void main() {
       await Future.delayed(const Duration(milliseconds: 100));
 
       // Cleanup
-      authService.cleanupExpiredSessions();
+      await authService.cleanupExpiredSessions();
 
       // Session should be gone
-      expect(authService.isAuthenticated(session2), isFalse);
+      expect(await authService.isAuthenticated(session2), isFalse);
     });
   });
 

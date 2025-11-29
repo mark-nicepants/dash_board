@@ -1,11 +1,16 @@
 import 'package:dash/src/auth/auth_service.dart';
+import 'package:dash/src/auth/request_session.dart';
 import 'package:dash/src/model/model.dart';
 import 'package:shelf/shelf.dart';
 
 /// Middleware to protect routes that require authentication.
 ///
 /// Checks for a valid session cookie and redirects to login if not authenticated.
+/// Initializes [RequestSession] with the authenticated user for downstream handlers.
 Middleware authMiddleware(AuthService<Model> authService, {required String basePath}) {
+  // Ensure RequestSession is registered
+  RequestSession.register();
+
   final baseSegment = basePath.startsWith('/') ? basePath.substring(1) : basePath;
   return (Handler innerHandler) {
     return (Request request) async {
@@ -15,32 +20,20 @@ Middleware authMiddleware(AuthService<Model> authService, {required String baseP
         return innerHandler(request);
       }
 
-      // Check for session cookie
-      final cookies = request.headers['cookie'];
-      String? sessionId;
+      // Parse session ID from cookie
+      final sessionId = RequestSession.parseSessionId(request);
 
-      if (cookies != null) {
-        final cookieList = cookies.split(';');
-        for (final cookie in cookieList) {
-          final parts = cookie.trim().split('=');
-          if (parts.length == 2 && parts[0] == 'dash_session') {
-            sessionId = parts[1];
-            break;
-          }
-        }
-      }
-
-      // Check if authenticated
-      if (!authService.isAuthenticated(sessionId)) {
+      // Check if authenticated (loads from file if not in memory)
+      if (!await authService.isAuthenticated(sessionId)) {
         // Redirect to login
         return Response.found('$basePath/login');
       }
 
-      // Add user to request context
-      final user = authService.getUser(sessionId);
-      final updatedRequest = request.change(context: {'user': user, 'sessionId': sessionId});
+      // Get the authenticated user and initialize RequestSession
+      final user = await authService.getUser(sessionId);
+      RequestSession.instance().initFromRequest(request, user: user);
 
-      return innerHandler(updatedRequest);
+      return innerHandler(request);
     };
   };
 }

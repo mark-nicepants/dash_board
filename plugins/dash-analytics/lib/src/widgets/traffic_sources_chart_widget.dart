@@ -64,7 +64,5 @@ class TrafficSourcesChartWidget extends DoughnutChartWidget {
     if (!inject.isRegistered<MetricsService>()) {
       return;
     }
-
-    // TODO: Source tracking requires querying by tags which needs more complex SQL
   }
 }

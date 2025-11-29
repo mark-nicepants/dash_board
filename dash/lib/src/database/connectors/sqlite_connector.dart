@@ -176,6 +176,27 @@ class SqliteConnector extends DatabaseConnector {
     }
   }
 
+  @override
+  String dateTrunc(String column, String granularity) {
+    switch (granularity) {
+      case 'hour':
+        return "strftime('%Y-%m-%d %H:00:00', $column)";
+      case 'day':
+        return 'date($column)';
+      case 'week':
+        return "date($column, 'weekday 0', '-6 days')";
+      case 'month':
+        return "strftime('%Y-%m-01', $column)";
+      case 'year':
+        return "strftime('%Y-01-01', $column)";
+      default:
+        throw ArgumentError(
+          'Invalid granularity: $granularity. '
+          'Must be one of: hour, day, week, month, year',
+        );
+    }
+  }
+
   /// Executes raw SQL without returning results.
   /// Useful for DDL statements like CREATE TABLE.
   Future<void> executeRaw(String sql) async {

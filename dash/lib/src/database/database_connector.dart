@@ -133,6 +133,23 @@ abstract class DatabaseConnector {
   /// Returns the type of this database connector.
   String get type;
 
+  /// Returns a SQL expression that truncates a datetime column to the given granularity.
+  ///
+  /// This is used for GROUP BY operations that aggregate by time periods.
+  /// Each connector should override this to use native date functions.
+  ///
+  /// [column] is the datetime column name.
+  /// [granularity] is one of: 'hour', 'day', 'week', 'month', 'year'.
+  ///
+  /// Example usage:
+  /// ```dart
+  /// final expr = connector.dateTrunc('created_at', 'day');
+  /// // SQLite: date(created_at)
+  /// // MySQL: DATE(created_at)
+  /// // PostgreSQL: DATE_TRUNC('day', created_at)
+  /// ```
+  String dateTrunc(String column, String granularity);
+
   /// Runs automatic migrations for the given table schemas.
   ///
   /// This is an opt-in feature. If not overridden, it does nothing.

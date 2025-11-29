@@ -18,20 +18,21 @@ enum Period {
 
 /// Extension methods for Period.
 extension PeriodExtension on Period {
-  /// Returns the SQL date format function for grouping by this period.
-  /// Uses SQLite date/time functions.
-  String get sqliteDateFormat {
+  /// Returns the granularity string for use with [DatabaseConnector.dateTrunc].
+  ///
+  /// This is the database-agnostic way to get date truncation.
+  String get granularity {
     switch (this) {
       case Period.hour:
-        return "strftime('%Y-%m-%d %H:00:00', {column})";
+        return 'hour';
       case Period.day:
-        return 'date({column})';
+        return 'day';
       case Period.week:
-        return "date({column}, 'weekday 0', '-6 days')";
+        return 'week';
       case Period.month:
-        return "strftime('%Y-%m-01', {column})";
+        return 'month';
       case Period.year:
-        return "strftime('%Y-01-01', {column})";
+        return 'year';
     }
   }
 

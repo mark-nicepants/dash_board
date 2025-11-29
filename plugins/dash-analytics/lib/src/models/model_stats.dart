@@ -119,7 +119,7 @@ class ModelStats<T extends Model> {
   Future<List<MetricDataPoint>> count() async {
     _ensureDateRange();
 
-    final dateFormat = _period.sqliteDateFormat.replaceAll('{column}', _dateColumn);
+    final dateFormat = _connector.dateTrunc(_dateColumn, _period.granularity);
     final table = _instance.table;
 
     final whereClause = _buildWhereClause();
@@ -150,7 +150,7 @@ class ModelStats<T extends Model> {
   Future<List<MetricDataPoint>> sum(String column) async {
     _ensureDateRange();
 
-    final dateFormat = _period.sqliteDateFormat.replaceAll('{column}', _dateColumn);
+    final dateFormat = _connector.dateTrunc(_dateColumn, _period.granularity);
     final table = _instance.table;
 
     final whereClause = _buildWhereClause();

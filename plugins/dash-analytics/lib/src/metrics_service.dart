@@ -266,7 +266,7 @@ class MetricQuery {
   Future<List<MetricDataPoint>> getData() async {
     _ensureDateRange();
 
-    final dateFormat = _period.sqliteDateFormat.replaceAll('{column}', 'recorded_at');
+    final dateFormat = _connector.dateTrunc('recorded_at', _period.granularity);
 
     final query = _buildBaseQuery()
         .selectRaw('$dateFormat as period')

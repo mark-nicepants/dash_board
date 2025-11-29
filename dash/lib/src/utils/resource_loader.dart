@@ -139,6 +139,7 @@ class ResourceLoader {
         .replaceAll('@scripts', scripts)
         .replaceAll('@pageHeadAssets', pageHeadAssets)
         .replaceAll('@pageBodyAssets', pageBodyAssets)
+        .replaceAll('@basePath', basePath)
         .replaceAll('@body', body);
   }
 

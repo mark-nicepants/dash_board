@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:dash/src/auth/auth_middleware.dart';
 import 'package:dash/src/auth/auth_service.dart';
+import 'package:dash/src/interactive/wire_handler.dart';
 import 'package:dash/src/model/model.dart';
 import 'package:dash/src/panel/dev_console.dart';
 import 'package:dash/src/panel/panel_config.dart';
@@ -25,6 +26,7 @@ class PanelServer {
   final ResourceLoader _resourceLoader;
   late final PanelRouter _router;
   late final RequestHandler _requestHandler;
+  late final WireHandler _wireHandler;
   HttpServer? _server;
   DevConsole? _devConsole;
 
@@ -41,6 +43,7 @@ class PanelServer {
   PanelServer(this._config, this._authService, this._resourceLoader) {
     _router = PanelRouter(_config, _resourceLoader);
     _requestHandler = RequestHandler(_config, _authService);
+    _wireHandler = WireHandler(basePath: _config.path);
   }
 
   /// Configures storage for file uploads.
@@ -264,6 +267,11 @@ class PanelServer {
   Future<Response> _handleRequest(Request request) async {
     // Fire request callbacks (for analytics, logging, etc.)
     await _config.fireRequestCallbacks(request);
+
+    // Handle wire requests (interactive component actions)
+    if (_wireHandler.isWireRequest(request)) {
+      return await _wireHandler.handle(request);
+    }
 
     // Try custom handler (login, logout, etc.)
     final customResponse = await _requestHandler.handle(request);

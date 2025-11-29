@@ -61,6 +61,8 @@ export 'src/generators/models_barrel_generator.dart';
 export 'src/generators/resource_generator.dart';
 export 'src/generators/schema_model_generator.dart';
 export 'src/generators/schema_parser.dart';
+// Interactive Components (Livewire-like)
+export 'src/interactive/interactive.dart';
 // Models
 export 'src/model/annotations.dart';
 export 'src/model/model.dart';

@@ -6,6 +6,7 @@ import 'package:dash/src/auth/session_store.dart';
 import 'package:dash/src/database/database_config.dart';
 import 'package:dash/src/database/migrations/schema_definition.dart';
 import 'package:dash/src/database/query_builder.dart';
+import 'package:dash/src/interactive/component_registry.dart';
 import 'package:dash/src/model/model.dart';
 import 'package:dash/src/model/model_metadata.dart';
 import 'package:dash/src/panel/dev_console.dart';
@@ -229,6 +230,58 @@ class Panel {
   /// ```
   Panel registerSchemas(List<TableSchema> schemas) {
     registerAdditionalSchemas(schemas);
+    return this;
+  }
+
+  // ============================================================
+  // Interactive Components
+  // ============================================================
+
+  /// Registers interactive component factories for wire: directive handling.
+  ///
+  /// Interactive components are Livewire-like server-driven components
+  /// that maintain state on the server and update via wire: directives.
+  ///
+  /// The factory is called to create an instance, and the component's
+  /// `componentName` (class name) is used as the registration key.
+  ///
+  /// Example:
+  /// ```dart
+  /// panel.interactiveComponents([
+  ///   Counter.make,
+  ///   SearchBox.make,
+  /// ]);
+  /// ```
+  ///
+  /// Then use in your pages:
+  /// ```dart
+  /// final counter = Counter(initialCount: 5);
+  /// return counter.build(); // Renders with wire: wrapper attributes
+  /// ```
+  Panel interactiveComponents(List<InteractiveComponentFactory> factories) {
+    for (final factory in factories) {
+      // Create a temporary instance to get the component name
+      final instance = factory();
+      ComponentRegistry.registerFactory(instance.componentName, factory);
+    }
+    return this;
+  }
+
+  /// Registers a single interactive component factory.
+  ///
+  /// If [name] is omitted, the component's class name is used.
+  ///
+  /// Example:
+  /// ```dart
+  /// // Uses class name 'Counter' as the registration key
+  /// panel.interactiveComponent(Counter.make);
+  ///
+  /// // Or with explicit name
+  /// panel.interactiveComponent(Counter.make, name: 'my-counter');
+  /// ```
+  Panel interactiveComponent(InteractiveComponentFactory factory, {String? name}) {
+    final registrationName = name ?? factory().componentName;
+    ComponentRegistry.registerFactory(registrationName, factory);
     return this;
   }
 

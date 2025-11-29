@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:dash/src/components/partials/heroicon.dart';
 import 'package:dash/src/service_locator.dart';
 import 'package:dash/src/table/columns/column.dart';
 import 'package:jaspr/jaspr.dart';
@@ -24,12 +25,9 @@ class ColumnToggle extends StatelessComponent {
         button(
           type: ButtonType.button,
           classes:
-              'inline-flex items-center gap-2 px-3 py-2 text-sm font-medium bg-gray-700 text-gray-300 hover:bg-gray-600 hover:text-gray-100 rounded-lg transition-all',
+              'inline-flex items-center justify-center px-3 py-2 text-sm font-medium bg-gray-700 border border-gray-700 text-gray-300 hover:bg-gray-600 hover:text-gray-100 rounded-lg transition-all',
           attributes: {'x-on:click': 'open = !open', 'x-bind:aria-expanded': 'open', 'aria-haspopup': 'true'},
-          [
-            span(classes: 'text-base', [text('☰')]),
-            span([text('Columns')]),
-          ],
+          [const Heroicon(HeroIcons.viewColumns, size: 20)],
         ),
         div(
           classes:

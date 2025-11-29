@@ -262,6 +262,9 @@ class PanelServer {
 
   /// Main request handler that coordinates between custom and routed requests.
   Future<Response> _handleRequest(Request request) async {
+    // Fire request callbacks (for analytics, logging, etc.)
+    await _config.fireRequestCallbacks(request);
+
     // Try custom handler (login, logout, etc.)
     final customResponse = await _requestHandler.handle(request);
     if (customResponse.statusCode != 404) {

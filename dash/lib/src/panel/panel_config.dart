@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:dash/src/database/database_config.dart';
 import 'package:dash/src/panel/dev_console.dart';
 import 'package:dash/src/panel/panel_colors.dart';
@@ -7,6 +9,10 @@ import 'package:dash/src/plugin/plugin.dart';
 import 'package:dash/src/plugin/render_hook.dart';
 import 'package:dash/src/resource.dart';
 import 'package:dash/src/widgets/widget.dart';
+import 'package:shelf/shelf.dart';
+
+/// Callback type for request hooks.
+typedef RequestCallback = FutureOr<void> Function(Request request);
 
 /// Configuration for a Dash panel.
 ///
@@ -59,6 +65,24 @@ class PanelConfig {
 
   /// The asset registry for this panel.
   AssetRegistry get assets => _assetRegistry;
+
+  // Event hooks
+  final List<RequestCallback> _requestCallbacks = [];
+
+  /// Registers a callback to be called on each request.
+  void addRequestCallback(RequestCallback callback) {
+    _requestCallbacks.add(callback);
+  }
+
+  /// Fires all request callbacks.
+  Future<void> fireRequestCallbacks(Request request) async {
+    for (final callback in _requestCallbacks) {
+      await callback(request);
+    }
+  }
+
+  /// The registered request callbacks.
+  List<RequestCallback> get requestCallbacks => List.unmodifiable(_requestCallbacks);
 
   /// Sets the unique identifier for this panel.
   void setId(String id) {

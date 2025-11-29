@@ -92,6 +92,25 @@ abstract class Widget with AssetProvider {
   bool canView() => true;
 
   // ============================================================
+  // Data Loading
+  // ============================================================
+
+  /// Preloads any async data required by this widget.
+  ///
+  /// Override this method if your widget needs to fetch data before
+  /// rendering. This is called by the dashboard before building
+  /// the widget grid.
+  ///
+  /// Example:
+  /// ```dart
+  /// @override
+  /// Future<void> preload() async {
+  ///   _data = await fetchMyData();
+  /// }
+  /// ```
+  Future<void> preload() async {}
+
+  // ============================================================
   // Rendering
   // ============================================================
 

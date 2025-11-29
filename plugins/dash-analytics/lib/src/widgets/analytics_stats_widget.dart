@@ -4,7 +4,7 @@ import 'package:dash_analytics/src/metrics_service.dart';
 /// Analytics stats widget showing page views, visitors, and more.
 ///
 /// This widget displays real-time statistics from the MetricsService
-/// when available, falling back to demo data when no metrics are recorded.
+/// when available, or placeholder stats when no metrics are recorded.
 ///
 /// ## Example
 ///
@@ -34,52 +34,29 @@ class AnalyticsStatsWidget extends StatsOverviewWidget {
     // Return cached stats if available
     if (_cachedStats != null) return _cachedStats!;
 
-    // Try to get real data from MetricsService
-    try {
-      if (inject.isRegistered<MetricsService>()) {
-        // For now, return demo data - actual data fetching requires async
-        // The plugin will populate real data via pre-loading mechanism
-        return _getDemoStats();
-      }
-    } catch (_) {
-      // Fall through to demo data
-    }
-
-    return _getDemoStats();
+    return _getPlaceholderStats();
   }
 
-  List<Stat> _getDemoStats() {
+  List<Stat> _getPlaceholderStats() {
     return [
-      Stat.make('Page Views', '12,345')
-          .icon(HeroIcons.eye)
-          .description('+23% from last week')
-          .descriptionIcon(HeroIcons.arrowTrendingUp)
-          .descriptionColor('green')
-          .chart([45, 52, 38, 65, 72, 58, 90, 85, 95, 102])
-          .chartColor('cyan'),
-      Stat.make('Unique Visitors', '1,234')
-          .icon(HeroIcons.users)
-          .description('+12% from last week')
-          .descriptionIcon(HeroIcons.arrowTrendingUp)
-          .descriptionColor('green')
-          .chart([120, 150, 180, 165, 200, 220, 195, 240, 280, 310])
-          .chartColor('violet'),
-      Stat.make('Bounce Rate', '32%')
-          .icon(HeroIcons.arrowTrendingDown)
-          .description('-5% from last week')
-          .descriptionIcon(HeroIcons.arrowTrendingDown)
-          .descriptionColor('green')
-          .chart([42, 38, 45, 35, 38, 32, 35, 30, 32, 28])
-          .chartColor('amber'),
+      Stat.make(
+        'Page Views',
+        '-',
+      ).icon(HeroIcons.eye).description('No data available').descriptionColor('gray').chartColor('cyan'),
+      Stat.make(
+        'Unique Visitors',
+        '-',
+      ).icon(HeroIcons.users).description('No data available').descriptionColor('gray').chartColor('violet'),
+      Stat.make(
+        'Bounce Rate',
+        '-',
+      ).icon(HeroIcons.arrowTrendingDown).description('No data available').descriptionColor('gray').chartColor('amber'),
     ];
   }
 
-  /// Pre-loads stats data asynchronously.
-  ///
-  /// Call this before rendering to fetch real metrics data.
-  Future<void> preloadStats() async {
+  @override
+  Future<void> preload() async {
     if (!inject.isRegistered<MetricsService>()) {
-      _cachedStats = _getDemoStats();
       return;
     }
 
@@ -119,8 +96,7 @@ class AnalyticsStatsWidget extends StatsOverviewWidget {
         ).icon(HeroIcons.arrowTrendingDown).description('Coming soon').descriptionColor('gray').chartColor('amber'),
       ];
     } catch (e) {
-      // Fall back to demo data on error
-      _cachedStats = _getDemoStats();
+      // On error, leave cached stats null so placeholder is shown
     }
   }
 

@@ -21,10 +21,9 @@ import 'package:dash/src/storage/storage.dart';
 import 'package:dash/src/utils/resource_loader.dart';
 import 'package:dash/src/widgets/widget.dart' as dash;
 import 'package:jaspr/jaspr.dart';
-import 'package:shelf/shelf.dart';
 
-/// Callback type for request event hooks.
-typedef RequestCallback = FutureOr<void> Function(Request request);
+// Re-export RequestCallback from panel_config for external use
+export 'package:dash/src/panel/panel_config.dart' show RequestCallback;
 
 /// Callback type for model event hooks.
 typedef ModelCallback = FutureOr<void> Function(Model model);
@@ -67,8 +66,7 @@ class Panel {
   // Storage configuration
   StorageConfig? _storageConfig;
 
-  // Event hooks
-  final List<RequestCallback> _requestCallbacks = [];
+  // Event hooks (model callbacks still stored here, request callbacks moved to PanelConfig)
   final List<ModelCallback> _modelCreatedCallbacks = [];
   final List<ModelCallback> _modelUpdatedCallbacks = [];
   final List<ModelCallback> _modelDeletedCallbacks = [];
@@ -372,7 +370,7 @@ class Panel {
   /// });
   /// ```
   Panel onRequest(RequestCallback callback) {
-    _requestCallbacks.add(callback);
+    _config.addRequestCallback(callback);
     return this;
   }
 
@@ -399,13 +397,6 @@ class Panel {
   Panel onModelDeleted(ModelCallback callback) {
     _modelDeletedCallbacks.add(callback);
     return this;
-  }
-
-  /// Fires request callbacks. Called internally by PanelServer.
-  Future<void> fireRequestCallbacks(Request request) async {
-    for (final callback in _requestCallbacks) {
-      await callback(request);
-    }
   }
 
   /// Fires model created callbacks.

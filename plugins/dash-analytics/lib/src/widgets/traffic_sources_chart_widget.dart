@@ -5,7 +5,7 @@ import 'package:dash_analytics/src/metrics_service.dart';
 ///
 /// Displays a breakdown of where visitors come from using
 /// a Chart.js doughnut chart. Shows real data when available,
-/// falls back to demo data otherwise.
+/// or an empty placeholder chart otherwise.
 ///
 /// Traffic sources are tracked via page view tags with a 'source' key:
 /// ```dart
@@ -41,47 +41,30 @@ class TrafficSourcesChartWidget extends DoughnutChartWidget {
   @override
   ChartData getData() {
     if (_cachedData != null) return _cachedData!;
-    return _getDemoData();
+    return _getEmptyData();
   }
 
-  ChartData _getDemoData() {
+  ChartData _getEmptyData() {
     return const ChartData(
-      labels: ['Direct', 'Organic', 'Referral', 'Social', 'Email'],
+      labels: ['No data'],
       datasets: [
         ChartDataset(
           label: 'Traffic Sources',
-          data: [35, 30, 18, 12, 5],
-          backgroundColor: [
-            'rgb(6, 182, 212)', // Cyan
-            'rgb(139, 92, 246)', // Violet
-            'rgb(245, 158, 11)', // Amber
-            'rgb(34, 197, 94)', // Green
-            'rgb(239, 68, 68)', // Red
-          ],
-          borderColor: [
-            'rgb(6, 182, 212)',
-            'rgb(139, 92, 246)',
-            'rgb(245, 158, 11)',
-            'rgb(34, 197, 94)',
-            'rgb(239, 68, 68)',
-          ],
+          data: [1],
+          backgroundColor: ['rgb(107, 114, 128)'],
+          borderColor: ['rgb(107, 114, 128)'],
           borderWidth: 2,
         ),
       ],
     );
   }
 
-  /// Pre-loads chart data asynchronously.
-  ///
-  /// This method queries the metrics service for page views grouped by source.
-  Future<void> preloadData() async {
+  @override
+  Future<void> preload() async {
     if (!inject.isRegistered<MetricsService>()) {
-      _cachedData = _getDemoData();
       return;
     }
 
-    // For now, return demo data
-    // Source tracking requires querying by tags which needs more complex SQL
-    _cachedData = _getDemoData();
+    // TODO: Source tracking requires querying by tags which needs more complex SQL
   }
 }

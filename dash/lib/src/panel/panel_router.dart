@@ -297,6 +297,10 @@ class PanelRouter {
 
     // Default dashboard page with widgets
     final widgets = _config.widgets;
+
+    // Preload all widget data in parallel
+    await Future.wait(widgets.map((w) => w.preload()));
+
     return _wrapInLayout(
       title: 'Dashboard',
       child: DashboardPage(widgets: widgets, renderHooks: _config.renderHooks),

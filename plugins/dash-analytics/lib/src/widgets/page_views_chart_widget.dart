@@ -4,8 +4,8 @@ import 'package:dash_analytics/src/metrics_service.dart';
 /// Page views line chart widget showing weekly traffic trends.
 ///
 /// Displays a comparison of page views between this week and last week
-/// using Chart.js line chart. Shows real data when available, falls back
-/// to demo data otherwise.
+/// using Chart.js line chart. Shows real data when available, or an
+/// empty placeholder chart otherwise.
 ///
 /// ## Example
 ///
@@ -35,11 +35,40 @@ class PageViewsChartWidget extends LineChartWidget {
 
   @override
   ChartData getData() {
-    return _cachedData!;
+    if (_cachedData != null) return _cachedData!;
+    return _getEmptyData();
   }
 
-  /// Pre-loads chart data asynchronously.
-  Future<void> preloadData() async {
+  ChartData _getEmptyData() {
+    return const ChartData(
+      labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+      datasets: [
+        ChartDataset(
+          label: 'This Week',
+          data: [0, 0, 0, 0, 0, 0, 0],
+          borderColor: 'rgb(6, 182, 212)',
+          backgroundColor: 'rgba(6, 182, 212, 0.1)',
+          tension: 0.3,
+          fill: true,
+        ),
+        ChartDataset(
+          label: 'Last Week',
+          data: [0, 0, 0, 0, 0, 0, 0],
+          borderColor: 'rgb(156, 163, 175)',
+          backgroundColor: 'rgba(156, 163, 175, 0.05)',
+          tension: 0.3,
+          fill: true,
+        ),
+      ],
+    );
+  }
+
+  @override
+  Future<void> preload() async {
+    if (!inject.isRegistered<MetricsService>()) {
+      return;
+    }
+
     final metrics = inject<MetricsService>();
 
     // Get this week's data

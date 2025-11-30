@@ -6,6 +6,7 @@ import 'package:dash/src/actions/prebuilt/edit_action.dart';
 import 'package:dash/src/components/partials/breadcrumbs.dart';
 import 'package:dash/src/components/partials/heroicon.dart';
 import 'package:dash/src/components/partials/page_header.dart';
+import 'package:dash/src/components/partials/pagination.dart';
 import 'package:dash/src/components/partials/table/column_toggle.dart';
 import 'package:dash/src/components/partials/table/table_components.dart';
 import 'package:dash/src/interactive/interactive_component.dart';
@@ -206,87 +207,11 @@ class ResourceIndex<T extends Model> extends InteractiveComponent {
   Component _buildPagination() {
     if (!tableConfig.isPaginated()) return div([]);
 
-    final totalPages = (totalRecords / tableConfig.getRecordsPerPage()).ceil();
-    if (totalPages <= 1) return div([]);
-
-    return div(classes: 'flex items-center justify-between px-4 py-3 bg-gray-800 border-t border-gray-700 sm:px-6', [
-      div(classes: 'flex justify-between flex-1 sm:hidden', [
-        if (currentPage > 1)
-          button(
-            classes:
-                'relative inline-flex items-center px-4 py-2 text-sm font-medium text-gray-300 bg-gray-700 border border-gray-600 rounded-md hover:bg-gray-600',
-            attributes: {'wire:click': 'setPage(${currentPage - 1})'},
-            [text('Previous')],
-          )
-        else
-          div([]),
-        if (currentPage < totalPages)
-          button(
-            classes:
-                'relative inline-flex items-center px-4 py-2 ml-3 text-sm font-medium text-gray-300 bg-gray-700 border border-gray-600 rounded-md hover:bg-gray-600',
-            attributes: {'wire:click': 'setPage(${currentPage + 1})'},
-            [text('Next')],
-          )
-        else
-          div([]),
-      ]),
-      div(classes: 'hidden sm:flex sm:flex-1 sm:items-center sm:justify-between', [
-        div([
-          p(classes: 'text-sm text-gray-400', [
-            text('Showing '),
-            span(classes: 'font-medium', [text('${(currentPage - 1) * tableConfig.getRecordsPerPage() + 1}')]),
-            text(' to '),
-            span(classes: 'font-medium', [
-              text('${(currentPage * tableConfig.getRecordsPerPage()).clamp(0, totalRecords)}'),
-            ]),
-            text(' of '),
-            span(classes: 'font-medium', [text('$totalRecords')]),
-            text(' results'),
-          ]),
-        ]),
-        div([
-          nav(classes: 'relative z-0 inline-flex -space-x-px rounded-md shadow-sm', [
-            // Previous
-            button(
-              classes:
-                  'relative inline-flex items-center px-2 py-2 text-sm font-medium text-gray-400 bg-gray-800 border border-gray-600 rounded-l-md hover:bg-gray-700 ${currentPage == 1 ? 'opacity-50 cursor-not-allowed' : ''}',
-              attributes: currentPage > 1 ? {'wire:click': 'setPage(${currentPage - 1})'} : {'disabled': 'disabled'},
-              [
-                span(classes: 'sr-only', [text('Previous')]),
-                const Heroicon(HeroIcons.chevronLeft, className: 'w-5 h-5'),
-              ],
-            ),
-            // Pages (simplified)
-            for (var i = 1; i <= totalPages; i++)
-              if (i == 1 || i == totalPages || (i >= currentPage - 1 && i <= currentPage + 1))
-                button(
-                  classes: i == currentPage
-                      ? 'relative z-10 inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-primary-600 border border-primary-500'
-                      : 'relative inline-flex items-center px-4 py-2 text-sm font-medium text-gray-300 bg-gray-800 border border-gray-600 hover:bg-gray-700',
-                  attributes: {'wire:click': 'setPage($i)'},
-                  [text('$i')],
-                )
-              else if (i == currentPage - 2 || i == currentPage + 2)
-                span(
-                  classes:
-                      'relative inline-flex items-center px-4 py-2 text-sm font-medium text-gray-400 bg-gray-800 border border-gray-600',
-                  [text('...')],
-                ),
-            // Next
-            button(
-              classes:
-                  'relative inline-flex items-center px-2 py-2 text-sm font-medium text-gray-400 bg-gray-800 border border-gray-600 rounded-r-md hover:bg-gray-700 ${currentPage == totalPages ? 'opacity-50 cursor-not-allowed' : ''}',
-              attributes: currentPage < totalPages
-                  ? {'wire:click': 'setPage(${currentPage + 1})'}
-                  : {'disabled': 'disabled'},
-              [
-                span(classes: 'sr-only', [text('Next')]),
-                const Heroicon(HeroIcons.chevronRight, className: 'w-5 h-5'),
-              ],
-            ),
-          ]),
-        ]),
-      ]),
-    ]);
+    return Pagination.make(
+      currentPage: currentPage,
+      totalRecords: totalRecords,
+      perPage: tableConfig.getRecordsPerPage(),
+      onPageClick: (page) => 'setPage($page)',
+    );
   }
 }

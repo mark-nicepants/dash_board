@@ -62,12 +62,34 @@
 /// | `wire:keydown.enter="method"` | Handle specific key events |
 /// | `wire:loading` | Show element during requests |
 ///
+/// ## Event System
+///
+/// Components can dispatch events and listen to events from other components:
+///
+/// ### Dispatching Events
+/// ```dart
+/// void goToPage(int page) {
+///   currentPage = page;
+///   dispatch('page-changed', {'page': page});
+/// }
+/// ```
+///
+/// ### Listening to Events
+/// ```dart
+/// @override
+/// Map<String, Function(Map<String, dynamic>)> getListeners() => {
+///   'page-changed': (data) => onPageChanged(data['page'] as int),
+///   'search-updated': (data) => onSearchUpdated(data['query'] as String),
+/// };
+/// ```
+///
 /// ## Alpine.js Integration
 ///
 /// Use `$wire` in Alpine.js to access component methods:
 /// ```html
 /// <button x-on:click="$wire.call('increment')">+</button>
 /// <button x-on:click="$wire.set('count', 0)">Reset</button>
+/// <button x-on:click="$wire.dispatch('my-event', {data: 'value'})">Emit</button>
 /// ```
 library;
 

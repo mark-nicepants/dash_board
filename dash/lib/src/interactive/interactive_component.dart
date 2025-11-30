@@ -4,6 +4,21 @@ import 'package:dash/src/interactive/component_state.dart';
 import 'package:dash/src/plugin/asset.dart';
 import 'package:jaspr/jaspr.dart';
 
+/// Represents an event dispatched by an interactive component.
+///
+/// Events are broadcast to other components that have registered listeners.
+class WireEvent {
+  /// The event name (e.g., 'page-changed', 'search-updated').
+  final String name;
+
+  /// Optional payload data for the event.
+  final Map<String, dynamic> payload;
+
+  const WireEvent(this.name, [this.payload = const {}]);
+
+  Map<String, dynamic> toJson() => {'name': name, 'payload': payload};
+}
+
 /// Base class for interactive (Livewire-like) components.
 ///
 /// An [InteractiveComponent] combines server-side rendering with client-side
@@ -86,6 +101,72 @@ abstract class InteractiveComponent with AssetProvider {
   FutureOr<void> beforeRender() {}
 
   // ============================================================
+  // Events (Livewire-style dispatch/listen)
+  // ============================================================
+
+  /// Events dispatched by this component during the current request.
+  ///
+  /// These are sent to the client and broadcast to other components.
+  final List<WireEvent> _dispatchedEvents = [];
+
+  /// Dispatches an event to other components.
+  ///
+  /// Events can be listened to by other components using [getListeners].
+  /// The event will be broadcast client-side after this component re-renders.
+  ///
+  /// Example:
+  /// ```dart
+  /// void goToPage(int page) {
+  ///   currentPage = page;
+  ///   dispatch('page-changed', {'page': page});
+  /// }
+  /// ```
+  void dispatch(String event, [Map<String, dynamic>? payload]) {
+    _dispatchedEvents.add(WireEvent(event, payload ?? {}));
+  }
+
+  /// Returns the list of events dispatched during this request.
+  List<WireEvent> getDispatchedEvents() => List.unmodifiable(_dispatchedEvents);
+
+  /// Clears dispatched events (called after sending response).
+  void clearDispatchedEvents() => _dispatchedEvents.clear();
+
+  /// Returns a map of event names to handler methods.
+  ///
+  /// Override to declare which events this component listens to.
+  /// When another component dispatches an event, all listeners
+  /// will be refreshed automatically.
+  ///
+  /// Example:
+  /// ```dart
+  /// @override
+  /// Map<String, Function(Map<String, dynamic>)> getListeners() => {
+  ///   'page-changed': (data) => onPageChanged(data['page'] as int),
+  ///   'search-updated': (data) => onSearchUpdated(data['query'] as String),
+  /// };
+  /// ```
+  Map<String, Function(Map<String, dynamic>)> getListeners() => {};
+
+  /// Handles an incoming event from another component.
+  ///
+  /// Returns true if the event was handled by a listener.
+  FutureOr<bool> handleEvent(String event, Map<String, dynamic> payload) async {
+    final listeners = getListeners();
+    final handler = listeners[event];
+
+    if (handler == null) {
+      return false;
+    }
+
+    final result = handler(payload);
+    if (result is Future) {
+      await result;
+    }
+
+    return true;
+  }
+
+  // ============================================================
   // Rendering
   // ============================================================
 
@@ -100,9 +181,17 @@ abstract class InteractiveComponent with AssetProvider {
   /// This wraps your [render()] output with the necessary
   /// data attributes for the wire system to function.
   Component build() {
+    final listeners = getListeners();
+    final listenerNames = listeners.keys.toList();
+
     return div(
       id: 'wire-$componentId',
-      attributes: {'wire:id': componentId, 'wire:name': componentName, 'wire:initial-data': _serializeState()},
+      attributes: {
+        'wire:id': componentId,
+        'wire:name': componentName,
+        'wire:initial-data': _serializeState(),
+        if (listenerNames.isNotEmpty) 'wire:listeners': listenerNames.join(','),
+      },
       [render()],
     );
   }

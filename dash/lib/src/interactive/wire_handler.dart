@@ -16,11 +16,18 @@ import 'package:jaspr/server.dart';
 ///   "state": "base64encodedState.signature",
 ///   "action": "methodName",        // optional
 ///   "params": ["arg1", "arg2"],    // optional
-///   "models": {"prop": "value"}    // optional
+///   "models": {"prop": "value"},   // optional
+///   "event": {"name": "...", "payload": {...}}  // optional, for event handling
 /// }
 /// ```
 ///
-/// Response: The re-rendered component HTML.
+/// Response format:
+/// ```json
+/// {
+///   "html": "<div wire:id=...>...</div>",
+///   "events": [{"name": "page-changed", "payload": {"page": 2}}]
+/// }
+/// ```
 class WireHandler {
   /// The base path for wire requests (e.g., '/admin').
   final String basePath;
@@ -60,6 +67,7 @@ class WireHandler {
       final action = data['action'] as String?;
       final params = (data['params'] as List?)?.cast<dynamic>();
       final models = data['models'] as Map<String, dynamic>?;
+      final incomingEvent = data['event'] as Map<String, dynamic>?;
 
       if (componentName == null || serializedState == null) {
         return Response.badRequest(body: 'Missing component name or state');
@@ -72,6 +80,7 @@ class WireHandler {
         action: action,
         params: params,
         modelUpdates: models,
+        incomingEvent: incomingEvent,
       );
 
       if (component == null) {
@@ -81,7 +90,17 @@ class WireHandler {
       // Render the updated component
       final html = await _renderComponent(component);
 
-      return Response.ok(html, headers: {'content-type': 'text/html; charset=utf-8', 'x-wire-response': 'true'});
+      // Get any events dispatched by this component
+      final dispatchedEvents = component.getDispatchedEvents();
+      component.clearDispatchedEvents();
+
+      // Return JSON response with HTML and events
+      final responseData = {'html': html, 'events': dispatchedEvents.map((e) => e.toJson()).toList()};
+
+      return Response.ok(
+        jsonEncode(responseData),
+        headers: {'content-type': 'application/json; charset=utf-8', 'x-wire-response': 'true'},
+      );
     } catch (e, stack) {
       print('WireHandler error: $e');
       print(stack);

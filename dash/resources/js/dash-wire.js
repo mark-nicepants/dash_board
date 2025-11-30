@@ -6,10 +6,11 @@
  * - wire:* directive parsing and binding
  * - Server communication for actions and model updates
  * - DOM morphing for efficient updates
+ * - Event dispatching between components
  * 
  * @example
  * ```html
- * <div wire:id="counter" wire:name="Counter" wire:initial-data="...">
+ * <div wire:id="counter" wire:name="Counter" wire:initial-data="..." wire:listeners="count-updated">
  *   <span>Count: 5</span>
  *   <button wire:click="increment">+</button>
  *   <button wire:click="decrement">-</button>
@@ -48,6 +49,13 @@ export function initDashWire() {
   }
 
   /**
+   * Get all wire components on the page
+   */
+  function getAllComponents() {
+    return document.querySelectorAll('[wire\\:id]');
+  }
+
+  /**
    * Get component data from a wire wrapper element
    */
   function getComponentData(wrapper) {
@@ -55,6 +63,7 @@ export function initDashWire() {
       id: wrapper.getAttribute('wire:id'),
       name: wrapper.getAttribute('wire:name'),
       data: wrapper.getAttribute('wire:initial-data'),
+      listeners: (wrapper.getAttribute('wire:listeners') || '').split(',').filter(Boolean),
     };
   }
 
@@ -130,6 +139,7 @@ export function initDashWire() {
 
   /**
    * Send a wire request to the server
+   * Returns { html: string, events: Array<{name, payload}> }
    */
   async function sendWireRequest(componentData, payload) {
     const url = `${config.basePath}/${componentData.id}`;
@@ -140,7 +150,7 @@ export function initDashWire() {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Accept': 'text/html',
+        'Accept': 'application/json',
         'X-Wire-Request': 'true',
       },
       body: JSON.stringify({
@@ -154,7 +164,59 @@ export function initDashWire() {
       throw new Error(`Wire request failed: ${response.status} ${response.statusText}`);
     }
 
-    return response.text();
+    const data = await response.json();
+    return data;
+  }
+
+  /**
+   * Broadcast events to listening components
+   */
+  async function broadcastEvents(events, sourceComponentId) {
+    if (!events || events.length === 0) return;
+
+    log('Broadcasting events:', events);
+
+    // Find all components that listen to these events
+    const allComponents = getAllComponents();
+    
+    for (const event of events) {
+      const { name, payload } = event;
+      
+      log(`Broadcasting event "${name}" with payload:`, payload);
+
+      // Find components listening to this event
+      for (const wrapper of allComponents) {
+        // Don't send event back to the source component
+        if (wrapper.getAttribute('wire:id') === sourceComponentId) continue;
+
+        const componentData = getComponentData(wrapper);
+        
+        // Check if this component listens to this event
+        if (componentData.listeners.includes(name)) {
+          log(`Component "${componentData.id}" is listening to "${name}"`);
+          
+          // Send the event to this component
+          try {
+            wrapper.setAttribute('wire:loading', '');
+            
+            const response = await sendWireRequest(componentData, {
+              event: { name, payload },
+            });
+
+            morphComponent(wrapper, response.html);
+            
+            // Recursively broadcast any events from this component
+            if (response.events && response.events.length > 0) {
+              await broadcastEvents(response.events, componentData.id);
+            }
+          } catch (error) {
+            console.error(`[DashWire] Failed to send event to ${componentData.id}:`, error);
+          } finally {
+            wrapper.removeAttribute('wire:loading');
+          }
+        }
+      }
+    }
   }
 
   /**
@@ -218,13 +280,19 @@ export function initDashWire() {
         wrapper.setAttribute('wire:initial-data', newData);
       }
       
+      // Update wire:listeners if changed
+      const newListeners = newWrapper.getAttribute('wire:listeners');
+      if (newListeners !== null) {
+        wrapper.setAttribute('wire:listeners', newListeners);
+      }
+      
       // Replace inner HTML
       wrapper.innerHTML = newWrapper.innerHTML;
     }
 
     // Re-initialize Alpine if present
     if (window.Alpine) {
-      const newEl = document.querySelector(`[wire\\:id="${wrapper.getAttribute('wire:id')}"]`) || wrapper;
+      const newEl = document.querySelector(`[wire\\:id="${wireId}"]`) || wrapper;
       window.Alpine.initTree(newEl);
     }
   }
@@ -251,13 +319,18 @@ export function initDashWire() {
     try {
       const modelValues = collectModelValues(wrapper);
       
-      const newHtml = await sendWireRequest(componentData, {
+      const response = await sendWireRequest(componentData, {
         action: parsed.method,
         params: parsed.params,
         models: modelValues,
       });
 
-      morphComponent(wrapper, newHtml);
+      morphComponent(wrapper, response.html);
+      
+      // Broadcast any dispatched events to other components
+      if (response.events && response.events.length > 0) {
+        await broadcastEvents(response.events, componentData.id);
+      }
     } catch (error) {
       console.error('[DashWire] Action failed:', error);
     } finally {
@@ -303,11 +376,16 @@ export function initDashWire() {
       log('Model update:', property, '=', value);
 
       try {
-        const newHtml = await sendWireRequest(componentData, {
+        const response = await sendWireRequest(componentData, {
           models: { [property]: value },
         });
 
-        morphComponent(wrapper, newHtml);
+        morphComponent(wrapper, response.html);
+        
+        // Broadcast any dispatched events
+        if (response.events && response.events.length > 0) {
+          await broadcastEvents(response.events, componentData.id);
+        }
       } catch (error) {
         console.error('[DashWire] Model update failed:', error);
       }
@@ -331,13 +409,18 @@ export function initDashWire() {
     log('Model blur validation:', property, '=', value);
 
     try {
-      const newHtml = await sendWireRequest(componentData, {
+      const response = await sendWireRequest(componentData, {
         action: 'validateField',
         params: [property],
         models: { ...modelValues, [property]: value },
       });
 
-      morphComponent(wrapper, newHtml);
+      morphComponent(wrapper, response.html);
+      
+      // Broadcast any dispatched events
+      if (response.events && response.events.length > 0) {
+        await broadcastEvents(response.events, componentData.id);
+      }
     } catch (error) {
       console.error('[DashWire] Blur validation failed:', error);
     }
@@ -364,18 +447,32 @@ export function initDashWire() {
     try {
       const modelValues = collectModelValues(wrapper);
       
-      const newHtml = await sendWireRequest(componentData, {
+      const response = await sendWireRequest(componentData, {
         action: parsed.method,
         params: parsed.params,
         models: modelValues,
       });
 
-      morphComponent(wrapper, newHtml);
+      morphComponent(wrapper, response.html);
+      
+      // Broadcast any dispatched events
+      if (response.events && response.events.length > 0) {
+        await broadcastEvents(response.events, componentData.id);
+      }
     } catch (error) {
       console.error('[DashWire] Submit failed:', error);
     } finally {
       wrapper.removeAttribute('wire:loading');
     }
+  }
+
+  /**
+   * Dispatch a custom event from JavaScript
+   * Usage: DashWire.dispatch('my-event', { data: 'value' })
+   */
+  async function dispatchEvent(eventName, payload = {}) {
+    log(`Dispatching event "${eventName}" from JS:`, payload);
+    await broadcastEvents([{ name: eventName, payload }], null);
   }
 
   /**
@@ -477,13 +574,23 @@ export function initDashWire() {
           async call(method, ...params) {
             const modelValues = collectModelValues(wrapper);
             
-            const newHtml = await sendWireRequest(componentData, {
+            const response = await sendWireRequest(componentData, {
               action: method,
               params: params,
               models: modelValues,
             });
 
-            morphComponent(wrapper, newHtml);
+            morphComponent(wrapper, response.html);
+            
+            // Broadcast any dispatched events
+            if (response.events && response.events.length > 0) {
+              await broadcastEvents(response.events, componentData.id);
+            }
+          },
+
+          // Dispatch an event to other components
+          async dispatch(eventName, payload = {}) {
+            await dispatchEvent(eventName, payload);
           },
 
           // Get/set a property
@@ -502,11 +609,16 @@ export function initDashWire() {
               }
             }
 
-            const newHtml = await sendWireRequest(componentData, {
+            const response = await sendWireRequest(componentData, {
               models: { [property]: value },
             });
 
-            morphComponent(wrapper, newHtml);
+            morphComponent(wrapper, response.html);
+            
+            // Broadcast any dispatched events
+            if (response.events && response.events.length > 0) {
+              await broadcastEvents(response.events, componentData.id);
+            }
           },
 
           // Shorthand for calling methods
@@ -531,6 +643,8 @@ export function initDashWire() {
     morph: morphComponent,
     findComponent,
     getComponentData,
+    dispatch: dispatchEvent,
+    broadcast: broadcastEvents,
   };
 
   log('DashWire initialized');

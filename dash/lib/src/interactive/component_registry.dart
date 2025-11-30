@@ -173,19 +173,22 @@ class ComponentRegistry {
   /// This is the main entry point for wire requests. It:
   /// 1. Creates a new component instance from the factory
   /// 2. Restores state from the serialized data
-  /// 3. Dispatches the requested action
-  /// 4. Returns the updated component for re-rendering
+  /// 3. Handles any incoming event from another component
+  /// 4. Dispatches the requested action
+  /// 5. Returns the updated component for re-rendering
   ///
   /// [typeName] is the registered factory name.
   /// [serializedState] is the state from the client.
   /// [action] is the method to call (optional).
   /// [params] are action parameters (optional).
+  /// [incomingEvent] is an event from another component (optional).
   static Future<InteractiveComponent?> handleWireRequest({
     required String typeName,
     required String serializedState,
     String? action,
     List<dynamic>? params,
     Map<String, dynamic>? modelUpdates,
+    Map<String, dynamic>? incomingEvent,
   }) async {
     final factory = _instance._factories[typeName];
     if (factory == null) {
@@ -203,6 +206,15 @@ class ComponentRegistry {
     if (modelUpdates != null) {
       for (final entry in modelUpdates.entries) {
         await component.updateProperty(entry.key, entry.value);
+      }
+    }
+
+    // Handle incoming event if any (from another component's dispatch)
+    if (incomingEvent != null) {
+      final eventName = incomingEvent['name'] as String?;
+      final eventPayload = incomingEvent['payload'] as Map<String, dynamic>? ?? {};
+      if (eventName != null) {
+        await component.handleEvent(eventName, eventPayload);
       }
     }
 

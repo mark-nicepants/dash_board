@@ -4,11 +4,11 @@ import 'package:dash/src/actions/action.dart';
 import 'package:dash/src/actions/prebuilt/delete_action.dart';
 import 'package:dash/src/actions/prebuilt/edit_action.dart';
 import 'package:dash/src/components/partials/breadcrumbs.dart';
-import 'package:dash/src/components/partials/heroicon.dart';
 import 'package:dash/src/components/partials/page_header.dart';
 import 'package:dash/src/components/partials/pagination.dart';
 import 'package:dash/src/components/partials/table/column_toggle.dart';
 import 'package:dash/src/components/partials/table/table_components.dart';
+import 'package:dash/src/components/partials/table/table_search_input.dart';
 import 'package:dash/src/interactive/interactive_component.dart';
 import 'package:dash/src/model/model.dart';
 import 'package:dash/src/panel/panel_config.dart';
@@ -174,22 +174,7 @@ class ResourceIndex<T extends Model> extends InteractiveComponent {
   }
 
   Component _buildSearchBar() {
-    return div(classes: 'relative', [
-      div(classes: 'absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none', [
-        const Heroicon(
-          HeroIcons.magnifyingGlass,
-          style: HeroIconStyle.solid,
-          className: 'absolute left-2 top-2.5 h-4 w-4 text-gray-500',
-        ),
-      ]),
-      input(
-        type: InputType.text,
-        classes:
-            'block w-full pl-10 pr-3 py-2 border border-gray-600 rounded-lg leading-5 bg-gray-700 text-gray-300 placeholder-gray-400 focus:outline-none focus:bg-gray-900 focus:border-primary-500 focus:ring-primary-500 sm:text-sm transition duration-150 ease-in-out',
-        attributes: {'placeholder': tableConfig.getSearchPlaceholder(), 'wire:model.debounce.300ms': 'searchQuery'},
-        value: searchQuery,
-      ),
-    ]);
+    return TableSearchInput(value: searchQuery, placeholder: tableConfig.getSearchPlaceholder());
   }
 
   List<Component> _buildRowActions(T record) {

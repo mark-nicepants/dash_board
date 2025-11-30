@@ -19,6 +19,8 @@
  * ```
  */
 
+import { Idiomorph } from 'idiomorph';
+
 export function initDashWire() {
   /**
    * Configuration
@@ -313,56 +315,11 @@ export function initDashWire() {
       log('Captured focus state:', { focusSelector, selectionStart, selectionEnd });
     }
 
-    // Use Idiomorph if available (recommended)
-    if (window.Idiomorph) {
-      log('Morphing with Idiomorph');
-      window.Idiomorph.morph(wrapper, newWrapper, {
-        morphStyle: 'outerHTML',
-      });
-    } else if (window.morphdom) {
-      // Fallback to morphdom
-      log('Morphing with morphdom');
-      window.morphdom(wrapper, newWrapper);
-    } else {
-      // Simple fallback - replace inner content and update attributes
-      log('Replacing content (no morph library)');
-      
-      // Update the wire:initial-data attribute with new state
-      const newData = newWrapper.getAttribute('wire:initial-data');
-      if (newData) {
-        wrapper.setAttribute('wire:initial-data', newData);
-      }
-      
-      // Update wire:listeners if changed
-      const newListeners = newWrapper.getAttribute('wire:listeners');
-      if (newListeners !== null) {
-        wrapper.setAttribute('wire:listeners', newListeners);
-      }
-      
-      // Replace inner HTML
-      wrapper.innerHTML = newWrapper.innerHTML;
-    }
-    
-    // Restore focus after morphing
-    if (hadFocus && focusSelector) {
-      // Need to re-query for the wrapper as it may have been replaced
-      const newWrapperEl = document.querySelector(`[wire\\:id="${wireId}"]`) || wrapper;
-      const elementToFocus = newWrapperEl.querySelector(focusSelector);
-      
-      if (elementToFocus) {
-        log('Restoring focus to:', elementToFocus);
-        elementToFocus.focus();
-        
-        // Restore cursor position
-        if (selectionStart !== null && elementToFocus.setSelectionRange) {
-          try {
-            elementToFocus.setSelectionRange(selectionStart, selectionEnd);
-          } catch (e) {
-            // Some input types don't support setSelectionRange
-          }
-        }
-      }
-    }
+    // Use Idiomorph for DOM morphing
+    log('Morphing with Idiomorph');
+    Idiomorph.morph(wrapper, newWrapper, {
+      morphStyle: 'outerHTML',
+    });
 
     // Re-initialize Alpine if present
     if (window.Alpine) {

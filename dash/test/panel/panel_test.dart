@@ -1,7 +1,6 @@
 import 'dart:async';
 
 import 'package:dash/dash.dart';
-import 'package:dash/src/service_locator.dart';
 import 'package:dash/src/widgets/widget.dart' as dash;
 import 'package:jaspr/jaspr.dart';
 import 'package:test/test.dart';
@@ -130,12 +129,10 @@ void main() {
   group('Panel', () {
     setUp(() async {
       await inject.reset();
-      clearResourceFactories();
     });
 
     tearDown(() async {
       await inject.reset();
-      clearResourceFactories();
     });
 
     group('initialization', () {

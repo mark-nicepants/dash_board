@@ -93,6 +93,10 @@ abstract class Model {
     throw UnimplementedError('Model.resource must be overridden in subclasses to return the associated Resource.');
   }
 
+  TableSchema get schema {
+    throw UnimplementedError('Model.schema must be overridden in subclasses to return the table schema.');
+  }
+
   /// Gets the primary key value of this model instance.
   dynamic getKey();
 
@@ -452,8 +456,4 @@ abstract class Model {
   String toString() {
     return '$runtimeType(${toMap()})';
   }
-
-  /// Gets the table schema for automatic migrations.
-  /// Must be implemented by generated model classes.
-  TableSchema get schema;
 }

@@ -23,7 +23,7 @@ class DatabaseConfig {
   }
 
   /// Establishes the database connection and runs migrations if configured.
-  Future<void> connect(PanelConfig panelConfig) async {
+  Future<void> connect([PanelConfig? panelConfig]) async {
     await connector.connect();
 
     if (migrationConfig != null && migrationConfig!.autoMigrate) {

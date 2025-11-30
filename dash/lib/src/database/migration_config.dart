@@ -28,8 +28,8 @@ class MigrationConfig {
       _resolveFromConfig = true;
 
   /// Gets the schemas, resolving from config if needed.
-  List<TableSchema> getSchemas(PanelConfig config) {
-    if (_resolveFromConfig) {
+  List<TableSchema> getSchemas([PanelConfig? config]) {
+    if (_resolveFromConfig && config != null) {
       final schemas = <TableSchema>[];
 
       // Gather schemas from registered resources

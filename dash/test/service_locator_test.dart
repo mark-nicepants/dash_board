@@ -1,6 +1,7 @@
 import 'package:dash/dash.dart';
 // Import service_locator directly to test internal functions
 import 'package:dash/src/service_locator.dart';
+import 'package:meta/meta.dart';
 import 'package:test/test.dart';
 
 /// Test model for service locator tests
@@ -31,6 +32,10 @@ class TestModel extends Model {
 
   @override
   List<String> getFields() => ['id', 'name'];
+
+  @override
+  @mustBeOverridden
+  TableSchema get schema => throw UnimplementedError();
 }
 
 /// Test resource for service locator tests
@@ -46,88 +51,6 @@ class TestResource extends Resource<TestModel> {
 }
 
 void main() {
-  group('registerResourceFactory', () {
-    setUp(clearResourceFactories);
-
-    test('should register resource factory', () {
-      registerResourceFactory<TestModel>(TestResource.new);
-      expect(hasResourceFactoryFor<TestModel>(), isTrue);
-    });
-
-    test('hasResourceFactoryFor returns false when not registered', () {
-      expect(hasResourceFactoryFor<TestModel>(), isFalse);
-    });
-
-    test('buildRegisteredResources returns list of resources', () {
-      registerResourceFactory<TestModel>(TestResource.new);
-
-      final resources = buildRegisteredResources();
-
-      expect(resources, hasLength(1));
-      expect(resources.first, isA<TestResource>());
-    });
-
-    test('buildRegisteredResources creates new instances each time', () {
-      registerResourceFactory<TestModel>(TestResource.new);
-
-      final resources1 = buildRegisteredResources();
-      final resources2 = buildRegisteredResources();
-
-      expect(resources1.first, isNot(same(resources2.first)));
-    });
-
-    test('clearResourceFactories removes all factories', () {
-      registerResourceFactory<TestModel>(TestResource.new);
-      expect(hasResourceFactoryFor<TestModel>(), isTrue);
-
-      clearResourceFactories();
-
-      expect(hasResourceFactoryFor<TestModel>(), isFalse);
-    });
-  });
-
-  group('registerAdditionalSchemas', () {
-    setUp(clearAdditionalSchemas);
-
-    test('should register additional schemas', () {
-      final schema = const TableSchema(
-        name: 'metrics',
-        columns: [
-          ColumnDefinition(name: 'id', type: ColumnType.integer, isPrimaryKey: true),
-          ColumnDefinition(name: 'name', type: ColumnType.text),
-        ],
-      );
-
-      registerAdditionalSchemas([schema]);
-
-      final schemas = getAdditionalSchemas();
-      expect(schemas, hasLength(1));
-      expect(schemas.first.name, equals('metrics'));
-    });
-
-    test('getAdditionalSchemas returns empty list initially', () {
-      expect(getAdditionalSchemas(), isEmpty);
-    });
-
-    test('getAdditionalSchemas returns unmodifiable list', () {
-      final schemas = getAdditionalSchemas();
-      expect(() => schemas.add(const TableSchema(name: 'test', columns: [])), throwsUnsupportedError);
-    });
-
-    test('clearAdditionalSchemas removes all schemas', () {
-      final schema = const TableSchema(
-        name: 'metrics',
-        columns: [ColumnDefinition(name: 'id', type: ColumnType.integer, isPrimaryKey: true)],
-      );
-      registerAdditionalSchemas([schema]);
-      expect(getAdditionalSchemas(), hasLength(1));
-
-      clearAdditionalSchemas();
-
-      expect(getAdditionalSchemas(), isEmpty);
-    });
-  });
-
   group('getStorageUrl', () {
     test('returns http URLs unchanged', () {
       expect(getStorageUrl('http://example.com/image.jpg'), equals('http://example.com/image.jpg'));

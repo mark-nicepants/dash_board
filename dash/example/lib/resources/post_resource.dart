@@ -50,6 +50,7 @@ class PostResource extends Resource<Post> {
               .label('Created')
               .toggleable(isToggledHiddenByDefault: true),
         ])
+        .bulkActions([DeleteAction<Post>('posts')])
         .defaultSort('created_at', 'desc')
         .searchPlaceholder('Search posts...');
   }

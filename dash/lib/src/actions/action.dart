@@ -1,7 +1,12 @@
 import 'package:dash/src/actions/action_color.dart';
 import 'package:dash/src/actions/action_size.dart';
+import 'package:dash/src/actions/handler/action_handler.dart';
+import 'package:dash/src/actions/handler/action_handler_registry.dart';
 import 'package:dash/src/components/partials/button.dart';
 import 'package:dash/src/components/partials/heroicon.dart';
+import 'package:dash/src/components/partials/modal/modal.dart';
+import 'package:dash/src/components/partials/modal/modal_size.dart';
+import 'package:dash/src/form/fields/field.dart';
 import 'package:dash/src/model/model.dart';
 import 'package:jaspr/jaspr.dart';
 
@@ -59,6 +64,19 @@ class Action<T extends Model> {
   String? _confirmationDescription;
   String? _confirmationButtonLabel;
   String? _cancelButtonLabel;
+
+  // Modal Configuration
+  HeroIcons? _modalIcon;
+  ActionColor _modalIconColor = ActionColor.danger;
+  ModalSize _modalSize = ModalSize.sm;
+
+  // Form Schema (for actions with forms)
+  List<Object>? _formFields;
+  int _formColumns = 1;
+  Map<String, dynamic> Function(T record)? _fillFormCallback;
+
+  // Action Handler
+  ActionHandler? _handler;
 
   // Action Callback (for POST actions)
   String Function(T record, String basePath)? _actionUrl;
@@ -241,6 +259,147 @@ class Action<T extends Model> {
   Action<T> cancelButtonLabel(String label) {
     _cancelButtonLabel = label;
     return this;
+  }
+
+  // ============================================================
+  // Modal Configuration
+  // ============================================================
+
+  /// Sets the icon for the confirmation modal.
+  ///
+  /// ```dart
+  /// Action.make('delete')
+  ///   .requiresConfirmation()
+  ///   .modalIcon(HeroIcons.trash)
+  /// ```
+  Action<T> modalIcon(HeroIcons icon) {
+    _modalIcon = icon;
+    return this;
+  }
+
+  /// Sets the icon color for the confirmation modal.
+  Action<T> modalIconColor(ActionColor color) {
+    _modalIconColor = color;
+    return this;
+  }
+
+  /// Sets the size of the confirmation modal.
+  Action<T> modalSize(ModalSize size) {
+    _modalSize = size;
+    return this;
+  }
+
+  // ============================================================
+  // Form Schema (for actions with forms)
+  // ============================================================
+
+  /// Sets form fields to display in the action modal.
+  ///
+  /// Actions with forms show a modal where users can fill in data
+  /// before the action is executed.
+  ///
+  /// ```dart
+  /// Action.make('updateStatus')
+  ///   .schema([
+  ///     Select.make('status')
+  ///       .options([
+  ///         SelectOption('pending', 'Pending'),
+  ///         SelectOption('approved', 'Approved'),
+  ///         SelectOption('rejected', 'Rejected'),
+  ///       ])
+  ///       .required(),
+  ///     Textarea.make('notes').label('Notes'),
+  ///   ])
+  ///   .fillForm((record) => {'status': record.status})
+  ///   .actionUrl((record, basePath) => '$basePath/${record.id}/update-status')
+  /// ```
+  Action<T> schema(List<Object> fields) {
+    _formFields = fields;
+    // Actions with forms need to open a modal
+    _requiresConfirmation = true;
+    // Default to larger modal for forms
+    if (_modalSize == ModalSize.sm) {
+      _modalSize = ModalSize.md;
+    }
+    return this;
+  }
+
+  /// Sets the number of columns for the form fields.
+  Action<T> formColumns(int columns) {
+    _formColumns = columns;
+    return this;
+  }
+
+  /// Pre-fills the form fields with data from the record.
+  ///
+  /// ```dart
+  /// Action.make('updateStatus')
+  ///   .schema([...])
+  ///   .fillForm((record) => {'status': record.status, 'notes': ''})
+  /// ```
+  Action<T> fillForm(Map<String, dynamic> Function(T record) callback) {
+    _fillFormCallback = callback;
+    return this;
+  }
+
+  /// Whether this action has a form.
+  bool hasForm() => _formFields != null && _formFields!.isNotEmpty;
+
+  /// Gets the form fields.
+  List<Object>? getFormFields() => _formFields;
+
+  /// Gets the form columns.
+  int getFormColumns() => _formColumns;
+
+  /// Gets the filled form data for a record.
+  Map<String, dynamic>? getFilledFormData(T record) => _fillFormCallback?.call(record);
+
+  // ============================================================
+  // Action Handler
+  // ============================================================
+
+  /// Sets an action handler for server-side execution.
+  ///
+  /// When a handler is set, the action will POST to a generated route
+  /// that executes the handler logic.
+  ///
+  /// ```dart
+  /// Action.make('archive')
+  ///   .label('Archive')
+  ///   .handler(ArchiveUserHandler())
+  ///   .requiresConfirmation()
+  /// ```
+  ///
+  /// The handler is automatically registered when the action is rendered.
+  Action<T> handler(ActionHandler actionHandler) {
+    _handler = actionHandler;
+    return this;
+  }
+
+  /// Gets the action handler.
+  ActionHandler? getHandler() => _handler;
+
+  /// Whether this action has a handler.
+  bool hasHandler() => _handler != null;
+
+  /// Registers the handler with the registry (called automatically).
+  ///
+  /// The [resourceSlug] is used to generate a unique route key.
+  void registerHandler(String resourceSlug) {
+    if (_handler != null) {
+      ActionHandlerRegistry.register(resourceSlug: resourceSlug, actionName: _name, handler: _handler!);
+    }
+  }
+
+  /// Gets the action URL, using the handler route if a handler is set.
+  String getActionUrlForRecord(T record, String basePath, {String? resourceSlug}) {
+    // If handler is set, use the handler route
+    if (_handler != null && resourceSlug != null) {
+      final recordId = getRecordId(record);
+      return ActionHandlerRegistry.getRoutePath(basePath, _name, recordId: recordId);
+    }
+    // Otherwise use the custom action URL
+    return _actionUrl?.call(record, basePath) ?? '$basePath/${getRecordId(record)}/actions/$_name';
   }
 
   // ============================================================
@@ -441,8 +600,13 @@ class Action<T extends Model> {
     // POST action - render as form with button
     if (isPostAction()) {
       final url = getActionUrl(record, basePath)!;
-      final confirmScript = _requiresConfirmation ? "return confirm('${_getConfirmationMessage()}')" : null;
 
+      // If confirmation is required, render with a modal
+      if (_requiresConfirmation) {
+        return _renderWithConfirmationModal(record, url, isDisabledState);
+      }
+
+      // Direct form submission without confirmation
       return form(action: url, method: FormMethod.post, classes: 'inline', [
         // Method spoofing for DELETE/PUT/PATCH
         if (_actionMethod != 'POST') input(type: InputType.hidden, name: '_method', value: _actionMethod),
@@ -455,12 +619,8 @@ class Action<T extends Model> {
           hideLabel: _isLabelHidden,
           type: ButtonType.submit,
           disabled: isDisabledState,
-          subtle: true, // Table row actions use subtle style
-          attributes: {
-            if (confirmScript != null) 'onclick': confirmScript,
-            if (_tooltip != null) 'title': _tooltip!,
-            ..._extraAttributes ?? {},
-          },
+          subtle: true,
+          attributes: {if (_tooltip != null) 'title': _tooltip!, ..._extraAttributes ?? {}},
         ),
       ]);
     }
@@ -478,12 +638,101 @@ class Action<T extends Model> {
     );
   }
 
-  /// Gets the confirmation message for the dialog.
-  String _getConfirmationMessage() {
-    if (_confirmationDescription != null) {
-      return '$_confirmationHeading\\n\\n$_confirmationDescription';
+  /// Renders a POST action with a styled confirmation modal.
+  ///
+  /// The modal contains the form that submits when confirmed.
+  Component _renderWithConfirmationModal(T record, String url, bool isDisabledState) {
+    // Generate a unique modal ID based on action name and record
+    final recordId = getRecordId(record);
+    final modalId = 'confirm-$_name-$recordId';
+
+    // Determine the icon to show (use provided or default based on color)
+    // Don't show icon for form actions (they focus on the form content)
+    final displayIcon = hasForm() ? null : (_modalIcon ?? _getDefaultConfirmationIcon());
+
+    // Build form content
+    final formContent = _buildModalFormContent(record, url, modalId);
+
+    return div(
+      classes: 'inline',
+      attributes: {'x-data': '{ open: false }'},
+      [
+        // Trigger button
+        Button(
+          label: getLabel(),
+          variant: buttonVariant,
+          size: buttonSize,
+          icon: _icon,
+          iconPosition: _iconPosition,
+          hideLabel: _isLabelHidden,
+          disabled: isDisabledState,
+          subtle: true,
+          attributes: {'@click': 'open = true', if (_tooltip != null) 'title': _tooltip!, ..._extraAttributes ?? {}},
+        ),
+
+        // Confirmation modal (inline, Alpine-controlled by parent x-data)
+        Modal(
+          id: modalId,
+          heading: getConfirmationHeading(),
+          description: hasForm() ? null : getConfirmationDescription(),
+          icon: displayIcon,
+          iconColor: _modalIconColor,
+          size: _modalSize,
+          body: formContent,
+          manageOwnState: false, // Parent div provides x-data with 'open'
+          footer: [
+            const ModalCancelButton(),
+            ModalConfirmButton(
+              label: getConfirmationButtonLabel(),
+              color: hasForm() ? ActionColor.primary : _modalIconColor,
+              attributes: {'@click': "document.getElementById('$modalId-form').submit()"},
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  /// Builds the form content for the modal.
+  Component _buildModalFormContent(T record, String url, String modalId) {
+    final formId = '$modalId-form';
+
+    // Get initial data if fillForm callback is provided
+    final initialData = _fillFormCallback?.call(record) ?? {};
+
+    // Build field components if this action has a form
+    final fieldComponents = <Component>[];
+    if (hasForm()) {
+      for (final field in _formFields!) {
+        if (field is FormField) {
+          // Fill with initial data if available
+          final fieldName = field.getName();
+          if (initialData.containsKey(fieldName)) {
+            field.defaultValue(initialData[fieldName]);
+          }
+          fieldComponents.add(_ActionFormFieldWrapper(field: field));
+        }
+      }
     }
-    return _confirmationHeading ?? 'Are you sure?';
+
+    return form(action: url, method: FormMethod.post, id: formId, [
+      // Method spoofing for DELETE/PUT/PATCH
+      if (_actionMethod != 'POST') input(type: InputType.hidden, name: '_method', value: _actionMethod),
+
+      // Form fields (if any)
+      if (fieldComponents.isNotEmpty)
+        div(classes: 'grid grid-cols-1 ${_formColumns > 1 ? 'md:grid-cols-$_formColumns' : ''} gap-4', fieldComponents),
+    ]);
+  }
+
+  /// Gets the default icon for confirmation based on the action color/type.
+  HeroIcons _getDefaultConfirmationIcon() {
+    return switch (_color) {
+      ActionColor.danger => HeroIcons.exclamationTriangle,
+      ActionColor.warning => HeroIcons.exclamationCircle,
+      ActionColor.info => HeroIcons.informationCircle,
+      _ => HeroIcons.questionMarkCircle,
+    };
   }
 
   // ============================================================
@@ -574,5 +823,19 @@ class Action<T extends Model> {
       disabled: isDisabled,
       attributes: {if (_tooltip != null) 'title': _tooltip!, ..._extraAttributes ?? {}},
     );
+  }
+}
+
+/// Internal component wrapper for rendering FormField instances in action modals.
+///
+/// This is needed because FormField.build() requires a BuildContext.
+class _ActionFormFieldWrapper extends StatelessComponent {
+  final FormField field;
+
+  const _ActionFormFieldWrapper({required this.field});
+
+  @override
+  Component build(BuildContext context) {
+    return field.build(context);
   }
 }

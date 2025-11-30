@@ -1,3 +1,4 @@
+import 'package:dash/src/components/partials/table/checkbox_column.dart';
 import 'package:dash/src/components/partials/table/sort_indicator.dart';
 import 'package:dash/src/table/columns/column.dart';
 import 'package:jaspr/jaspr.dart';
@@ -32,6 +33,9 @@ class TableHeader<T> extends StatelessComponent {
   /// Label for the actions column.
   final String actionsLabel;
 
+  /// Whether to show the checkbox column for bulk selection.
+  final bool showCheckbox;
+
   const TableHeader({
     required this.columns,
     this.sortColumn,
@@ -39,14 +43,23 @@ class TableHeader<T> extends StatelessComponent {
     this.onSortUrl,
     this.showActions = false,
     this.actionsLabel = 'Actions',
+    this.showCheckbox = false,
     super.key,
   });
 
   @override
   Component build(BuildContext context) {
     return thead(classes: 'bg-gray-800 border-b border-gray-700', [
-      tr([for (final column in columns) _buildHeaderCell(column), if (showActions) _buildActionsHeader()]),
+      tr([
+        if (showCheckbox) _buildCheckboxHeader(),
+        for (final column in columns) _buildHeaderCell(column),
+        if (showActions) _buildActionsHeader(),
+      ]),
     ]);
+  }
+
+  Component _buildCheckboxHeader() {
+    return const CheckboxColumnHeader();
   }
 
   Component _buildHeaderCell(TableColumn column) {

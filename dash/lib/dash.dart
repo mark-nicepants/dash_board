@@ -7,7 +7,11 @@ library;
 // Actions
 export 'src/actions/action.dart';
 export 'src/actions/action_color.dart';
+export 'src/actions/action_group.dart';
 export 'src/actions/action_size.dart';
+export 'src/actions/handler/action_context.dart';
+export 'src/actions/handler/action_handler.dart';
+export 'src/actions/handler/action_handler_registry.dart';
 export 'src/actions/prebuilt/cancel_action.dart';
 export 'src/actions/prebuilt/create_action.dart';
 export 'src/actions/prebuilt/delete_action.dart';
@@ -28,6 +32,9 @@ export 'src/components/pages/resource_index.dart';
 export 'src/components/pages/resource_view.dart';
 export 'src/components/partials/button.dart';
 export 'src/components/partials/heroicon.dart';
+// Modals
+export 'src/components/partials/modal/modal.dart';
+export 'src/components/partials/modal/modal_size.dart';
 export 'src/components/partials/table/table_components.dart';
 export 'src/components/partials/user_menu.dart';
 export 'src/database/connectors/sqlite_connector.dart';

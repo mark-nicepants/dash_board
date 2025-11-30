@@ -46,9 +46,9 @@ abstract final class FormStyles {
   static String get select =>
       'w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-gray-100 focus:outline-none focus:ring-2 focus:ring-${panelColors.primary}-500 focus:border-transparent transition-all disabled:opacity-50 disabled:cursor-not-allowed appearance-none cursor-pointer';
 
-  /// Checkbox styling.
+  /// Checkbox styling (uses @tailwindcss/forms plugin with 'class' strategy).
   static String get checkbox =>
-      'w-4 h-4 bg-gray-700 border-gray-600 rounded text-${panelColors.primary}-500 focus:ring-2 focus:ring-${panelColors.primary}-500 focus:ring-offset-0 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed';
+      'form-checkbox w-4 h-4 bg-gray-700 border-2 border-gray-500 rounded text-${panelColors.primary}-500 focus:ring-${panelColors.primary}-500 focus:ring-offset-gray-900 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed';
 
   // ============================================
   // HELPER TEXT & DESCRIPTIONS

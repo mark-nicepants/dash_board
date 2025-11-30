@@ -77,6 +77,7 @@ class ResourceIndex<T extends Model> extends StatelessComponent {
           onSortUrl: _buildSortUrl,
           containerId: 'resource-table-container',
           resourceSlug: resource.slug,
+          basePath: basePath,
           emptyStateIcon: resource.iconComponent,
           emptyStateHeading: 'No ${resource.label.toLowerCase()} found',
           emptyStateDescription: 'Get started by creating your first ${resource.singularLabel.toLowerCase()}.',

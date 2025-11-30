@@ -17,11 +17,15 @@
 /// ```
 library;
 
+// Bulk actions
+export 'bulk_actions_toolbar.dart';
 // Cell components
 export 'cells/boolean_cell.dart';
 export 'cells/icon_cell.dart';
 export 'cells/table_cell_factory.dart';
 export 'cells/text_cell.dart';
+// Checkbox column for bulk selection
+export 'checkbox_column.dart';
 // Main table component
 export 'data_table.dart';
 // Sub-components

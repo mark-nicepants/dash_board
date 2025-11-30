@@ -12,6 +12,7 @@
     "dev:js": "esbuild resources/js/app.js --bundle --format=iife --outfile=resources/dist/js/app.js"
   },
   "devDependencies": {
+    "@tailwindcss/forms": "^0.5.10",
     "@tailwindcss/postcss": "^4.0.0",
     "autoprefixer": "^10.4.16",
     "cssnano": "^6.0.1",

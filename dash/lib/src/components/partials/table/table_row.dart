@@ -36,8 +36,17 @@ class TableRow<T extends Model> extends StatelessComponent {
     ]);
   }
 
+  /// Static method to build a cell without needing a full TableRow instance.
+  ///
+  /// Useful when building custom table layouts (e.g., with checkbox columns).
+  static Component buildCell<M extends Model>(TableColumn column, M record) {
+    return td(classes: _getCellClasses(column), attributes: _getCellAttributes(column), [
+      TableCellFactory.build(column, record),
+    ]);
+  }
+
   Component _buildCell(TableColumn column) {
-    return td(classes: _buildCellClasses(column), attributes: _buildCellAttributes(column), [
+    return td(classes: _getCellClasses(column), attributes: _getCellAttributes(column), [
       TableCellFactory.build(column, record),
     ]);
   }
@@ -48,7 +57,7 @@ class TableRow<T extends Model> extends StatelessComponent {
     ]);
   }
 
-  String _buildCellClasses(TableColumn column) {
+  static String _getCellClasses(TableColumn column) {
     final classes = <String>['px-6 py-4 text-sm text-gray-200', _getAlignmentClass(column)];
 
     if (column.isToggleable()) {
@@ -61,7 +70,7 @@ class TableRow<T extends Model> extends StatelessComponent {
     return classes.join(' ');
   }
 
-  Map<String, String> _buildCellAttributes(TableColumn column) {
+  static Map<String, String> _getCellAttributes(TableColumn column) {
     final attrs = <String, String>{'data-column': column.getName()};
     if (column.isToggleable()) {
       attrs['data-toggleable'] = 'true';
@@ -72,7 +81,7 @@ class TableRow<T extends Model> extends StatelessComponent {
     return attrs;
   }
 
-  String _getAlignmentClass(TableColumn column) {
+  static String _getAlignmentClass(TableColumn column) {
     return switch (column.getAlignment()) {
       ColumnAlignment.start => 'text-left',
       ColumnAlignment.center => 'text-center',

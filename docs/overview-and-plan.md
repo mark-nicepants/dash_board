@@ -316,7 +316,7 @@ class User extends Model with _$UserModelMixin {
 
 #### 2.3 Advanced Form Fields
 - [ ] Rich text editor integration
-- [ ] File upload component
+- [x] File upload component
 - [ ] Multi-select with search (Select.multiple().searchable())
 - [ ] Relationship select (async search)
 - [ ] Repeater field (dynamic lists)

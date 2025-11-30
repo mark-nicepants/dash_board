@@ -19,7 +19,7 @@ import 'package:dash/src/model/model.dart';
 /// - Label: "Delete"
 /// - Icon: [HeroIcons.trash]
 /// - Color: [ActionColor.danger]
-/// - Requires confirmation
+/// - Requires confirmation with modal
 /// - POST to: `{basePath}/{recordId}/delete`
 class DeleteAction<T extends Model> extends Action<T> {
   DeleteAction([String? recordLabel]) : super('delete') {
@@ -27,6 +27,9 @@ class DeleteAction<T extends Model> extends Action<T> {
     icon(HeroIcons.trash);
     color(ActionColor.danger);
     requiresConfirmation();
+    modalIcon(HeroIcons.trash);
+    modalIconColor(ActionColor.danger);
+    confirmationButtonLabel('Delete');
     if (recordLabel != null) {
       confirmationHeading('Are you sure you want to delete this $recordLabel?');
     } else {

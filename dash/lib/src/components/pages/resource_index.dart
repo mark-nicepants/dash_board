@@ -6,6 +6,7 @@ import 'package:dash/src/components/partials/page_header.dart';
 import 'package:dash/src/components/partials/pagination.dart';
 import 'package:dash/src/components/partials/table/column_toggle.dart';
 import 'package:dash/src/components/partials/table/table_components.dart';
+import 'package:dash/src/components/partials/table/table_search_input.dart';
 import 'package:dash/src/model/model.dart';
 import 'package:dash/src/panel/panel_config.dart';
 import 'package:dash/src/resource.dart';
@@ -69,6 +70,7 @@ class ResourceIndex<T extends Model> extends StatelessComponent {
         if (tableConfig.isSearchable()) _buildSearchBar(),
         if (toggleableColumns.isNotEmpty) ColumnToggle(columns: toggleableColumns, resourceSlug: resource.slug),
       ]),
+
       div(classes: 'overflow-hidden rounded-b-xl', [
         DataTable<T>(
           tableConfig: tableConfig,
@@ -89,18 +91,7 @@ class ResourceIndex<T extends Model> extends StatelessComponent {
   }
 
   Component _buildSearchBar() {
-    final primary = panelColors.primary;
-    return div(classes: 'flex-1 max-w-xs', [
-      input(
-        id: 'resource-search-input',
-        type: InputType.text,
-        classes:
-            'w-full px-3 py-2 bg-gray-900 border border-gray-700 rounded-lg text-sm text-gray-200 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-$primary-500 focus:border-transparent transition-all',
-        value: searchQuery ?? '',
-        name: 'search',
-        attributes: {'placeholder': tableConfig.getSearchPlaceholder()},
-      ),
-    ]);
+    return TableSearchInput(value: searchQuery, placeholder: tableConfig.getSearchPlaceholder());
   }
 
   String _buildSortUrl(String column, String direction) {

@@ -106,8 +106,7 @@ void main() {
     });
 
     test('authModel with custom resolver stores resolver', () {
-      final manager = PanelAuthManager()
-        ..authModel<_TestUser>(userResolver: (identifier) async => null);
+      final manager = PanelAuthManager()..authModel<_TestUser>(userResolver: (identifier) async => null);
 
       expect(manager.hasAuthModel, isTrue);
     });

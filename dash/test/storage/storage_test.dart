@@ -178,10 +178,7 @@ void main() {
       });
 
       test('respects custom default visibility', () async {
-        final privateStorage = LocalStorage(
-          basePath: tempDir.path,
-          defaultVisibility: 'private',
-        );
+        final privateStorage = LocalStorage(basePath: tempDir.path, defaultVisibility: 'private');
         expect(await privateStorage.getVisibility('any.txt'), equals('private'));
       });
     });

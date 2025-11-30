@@ -22,11 +22,7 @@ void main() {
       test('replaces all placeholders', () async {
         final loader = await _createTestLoader(tempDir);
 
-        final html = loader.renderTemplate(
-          title: 'My Dashboard',
-          body: '<h1>Hello</h1>',
-          basePath: '/admin',
-        );
+        final html = loader.renderTemplate(title: 'My Dashboard', body: '<h1>Hello</h1>', basePath: '/admin');
 
         expect(html, contains('<title>My Dashboard</title>'));
         expect(html, contains('<h1>Hello</h1>'));
@@ -61,11 +57,7 @@ void main() {
       test('uses correct basePath for asset URLs', () async {
         final loader = await _createTestLoader(tempDir);
 
-        final html = loader.renderTemplate(
-          title: 'Test',
-          body: '<div></div>',
-          basePath: '/dashboard',
-        );
+        final html = loader.renderTemplate(title: 'Test', body: '<div></div>', basePath: '/dashboard');
 
         expect(html, contains('/dashboard/assets/css/'));
         expect(html, contains('/dashboard/assets/js/'));
@@ -76,10 +68,7 @@ void main() {
 
         expect(loader.isProduction, isFalse);
 
-        final html = loader.renderTemplate(
-          title: 'Test',
-          body: '<div></div>',
-        );
+        final html = loader.renderTemplate(title: 'Test', body: '<div></div>');
 
         expect(html, contains('dash.css'));
         expect(html, contains('app.js'));
@@ -136,11 +125,13 @@ void main() {
         try {
           await expectLater(
             ResourceLoader.initialize(),
-            throwsA(isA<StateError>().having(
-              (e) => e.message,
-              'message',
-              contains('Could not find dash resources directory'),
-            )),
+            throwsA(
+              isA<StateError>().having(
+                (e) => e.message,
+                'message',
+                contains('Could not find dash resources directory'),
+              ),
+            ),
           );
         } finally {
           Directory.current = originalDir;
@@ -170,17 +161,9 @@ void main() {
 }
 
 /// Creates a test ResourceLoader with mock resources.
-Future<ResourceLoader> _createTestLoader(
-  Directory tempDir, {
-  String? css,
-  String? js,
-}) async {
+Future<ResourceLoader> _createTestLoader(Directory tempDir, {String? css, String? js}) async {
   final resourcesDir = Directory(p.join(tempDir.path, 'resources'));
-  await _createResourcesStructure(
-    resourcesDir.path,
-    css: css,
-    js: js,
-  );
+  await _createResourcesStructure(resourcesDir.path, css: css, js: js);
 
   final originalDir = Directory.current;
   Directory.current = tempDir;
@@ -193,11 +176,7 @@ Future<ResourceLoader> _createTestLoader(
 }
 
 /// Creates a minimal resources directory structure for testing.
-Future<void> _createResourcesStructure(
-  String resourcesPath, {
-  String? css,
-  String? js,
-}) async {
+Future<void> _createResourcesStructure(String resourcesPath, {String? css, String? js}) async {
   // Create directories
   await Directory(p.join(resourcesPath, 'dist', 'css')).create(recursive: true);
   await Directory(p.join(resourcesPath, 'dist', 'js')).create(recursive: true);
@@ -221,10 +200,8 @@ Future<void> _createResourcesStructure(
 ''');
 
   // Create CSS file
-  await File(p.join(resourcesPath, 'dist', 'css', 'dash.css'))
-      .writeAsString(css ?? '/* test css */');
+  await File(p.join(resourcesPath, 'dist', 'css', 'dash.css')).writeAsString(css ?? '/* test css */');
 
   // Create JS file
-  await File(p.join(resourcesPath, 'dist', 'js', 'app.js'))
-      .writeAsString(js ?? '// test js');
+  await File(p.join(resourcesPath, 'dist', 'js', 'app.js')).writeAsString(js ?? '// test js');
 }

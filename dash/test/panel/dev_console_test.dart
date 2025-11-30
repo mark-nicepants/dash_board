@@ -4,11 +4,7 @@ import 'package:test/test.dart';
 void main() {
   group('DevCommand', () {
     test('creates command with required properties', () {
-      final command = DevCommand(
-        name: 'test',
-        description: 'A test command',
-        handler: (_) async {},
-      );
+      final command = DevCommand(name: 'test', description: 'A test command', handler: (_) async {});
 
       expect(command.name, equals('test'));
       expect(command.description, equals('A test command'));
@@ -44,11 +40,7 @@ void main() {
     });
 
     test('registerCommand adds command', () {
-      final command = DevCommand(
-        name: 'custom',
-        description: 'Custom command',
-        handler: (_) async {},
-      );
+      final command = DevCommand(name: 'custom', description: 'Custom command', handler: (_) async {});
 
       console.registerCommand(command);
 
@@ -58,12 +50,7 @@ void main() {
     });
 
     test('registerCommand registers shortName alias', () {
-      final command = DevCommand(
-        name: 'custom',
-        shortName: 'c',
-        description: 'Custom command',
-        handler: (_) async {},
-      );
+      final command = DevCommand(name: 'custom', shortName: 'c', description: 'Custom command', handler: (_) async {});
 
       console.registerCommand(command);
 

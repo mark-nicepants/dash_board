@@ -1,15 +1,26 @@
-import 'package:dash/src/database/database_connector.dart';
-import 'package:dash/src/database/migrations/schema_definition.dart';
-import 'package:dash/src/model/model.dart';
-import 'package:dash/src/panel/panel_colors.dart';
-import 'package:dash/src/panel/panel_config.dart';
-import 'package:dash/src/resource.dart';
-import 'package:dash/src/storage/storage.dart';
+import 'package:dash/dash.dart';
 import 'package:dash/src/utils/resource_loader.dart';
 import 'package:get_it/get_it.dart';
 
 /// Global service locator instance.
 final inject = GetIt.instance;
+
+/// Registry of registered model slugs.
+/// Populated when models call their register() method.
+final Set<String> _registeredModelSlugs = {};
+
+/// Tracks a model slug as registered.
+void trackModelSlug(String slug) {
+  _registeredModelSlugs.add(slug);
+}
+
+/// Gets all registered model slugs.
+Set<String> get registeredModelSlugs => Set.unmodifiable(_registeredModelSlugs);
+
+/// Clears registered model slugs (for testing).
+void clearRegisteredModelSlugs() {
+  _registeredModelSlugs.clear();
+}
 
 /// Gets the current panel colors from the registered config.
 ///
@@ -19,6 +30,22 @@ PanelColors get panelColors {
     return inject<PanelConfig>().colors;
   }
   return PanelColors.defaults;
+}
+
+T modelInstanceFromSlug<T extends Model>(String slug) {
+  return inject<T>(instanceName: 'model:$slug');
+}
+
+/// Gets a resource instance by model slug.
+Resource resourceFromSlug(String slug) {
+  return inject<Resource>(instanceName: 'resource:$slug');
+}
+
+/// Builds all registered resources.
+///
+/// Returns a list of Resource instances for all models that called register().
+List<Resource> buildRegisteredResources() {
+  return _registeredModelSlugs.map(resourceFromSlug).toList();
 }
 
 /// Gets a storage URL for a file path on a specific disk.
@@ -51,72 +78,6 @@ String getStorageUrl(String path, {String? disk}) {
     return '$basePath/storage/$disk/$path';
   }
   return '$basePath/storage/$path';
-}
-
-typedef _ResourceFactory = Resource Function();
-
-const _resourceFactoriesKey = '__dash_resource_factories__';
-
-Map<Type, _ResourceFactory> _resourceFactoryMap() {
-  if (!inject.isRegistered<Map<Type, _ResourceFactory>>(instanceName: _resourceFactoriesKey)) {
-    inject.registerSingleton<Map<Type, _ResourceFactory>>(
-      <Type, _ResourceFactory>{},
-      instanceName: _resourceFactoriesKey,
-    );
-  }
-  return inject<Map<Type, _ResourceFactory>>(instanceName: _resourceFactoriesKey);
-}
-
-/// Registers a resource factory for a model type.
-void registerResourceFactory<T extends Model>(Resource<T> Function() factory) {
-  _resourceFactoryMap()[T] = () => factory();
-}
-
-/// Returns true if a resource factory has been registered for the model type.
-bool hasResourceFactoryFor<T extends Model>() {
-  return _resourceFactoryMap().containsKey(T);
-}
-
-/// Builds fresh resource instances using the registered factories.
-List<Resource> buildRegisteredResources() {
-  return _resourceFactoryMap().values.map((factory) => factory()).toList();
-}
-
-/// Clears all registered resource factories.
-void clearResourceFactories() {
-  _resourceFactoryMap().clear();
-}
-
-// ============================================================
-// Additional Schema Registry (for plugins)
-// ============================================================
-
-const _additionalSchemasKey = '__dash_additional_schemas__';
-
-List<TableSchema> _additionalSchemasList() {
-  if (!inject.isRegistered<List<TableSchema>>(instanceName: _additionalSchemasKey)) {
-    inject.registerSingleton<List<TableSchema>>(<TableSchema>[], instanceName: _additionalSchemasKey);
-  }
-  return inject<List<TableSchema>>(instanceName: _additionalSchemasKey);
-}
-
-/// Registers additional table schemas for migrations.
-///
-/// Use this to register schemas for models that aren't tied to resources,
-/// such as internal plugin tables. These schemas will be included when
-/// using [MigrationConfig.fromResources()].
-void registerAdditionalSchemas(List<TableSchema> schemas) {
-  _additionalSchemasList().addAll(schemas);
-}
-
-/// Returns all additional schemas registered via [registerAdditionalSchemas].
-List<TableSchema> getAdditionalSchemas() {
-  return List.unmodifiable(_additionalSchemasList());
-}
-
-/// Clears all registered additional schemas.
-void clearAdditionalSchemas() {
-  _additionalSchemasList().clear();
 }
 
 /// Sets up dependency injection for the Dash framework.

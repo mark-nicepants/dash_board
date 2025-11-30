@@ -1,14 +1,6 @@
 import 'dart:async';
 
-import 'package:dash/src/database/database_config.dart';
-import 'package:dash/src/panel/dev_console.dart';
-import 'package:dash/src/panel/panel_colors.dart';
-import 'package:dash/src/plugin/asset.dart';
-import 'package:dash/src/plugin/navigation_item.dart';
-import 'package:dash/src/plugin/plugin.dart';
-import 'package:dash/src/plugin/render_hook.dart';
-import 'package:dash/src/resource.dart';
-import 'package:dash/src/widgets/widget.dart';
+import 'package:dash/dash.dart';
 import 'package:shelf/shelf.dart';
 
 /// Callback type for request hooks.
@@ -24,8 +16,12 @@ class PanelConfig {
   final List<Resource> _resources = [];
   final List<Widget> _widgets = [];
   final List<DevCommand> _devCommands = [];
-  DatabaseConfig? _databaseConfig;
   PanelColors _colors = PanelColors.defaults;
+
+  DatabaseConfig? _databaseConfig;
+  final List<TableSchema> _additionalSchemas = [];
+
+  List<TableSchema> get additionalSchemas => List.unmodifiable(_additionalSchemas);
 
   // Plugin system
   final Map<String, Plugin> _plugins = {};
@@ -168,6 +164,10 @@ class PanelConfig {
     for (final asset in assets) {
       _assetRegistry.register(asset);
     }
+  }
+
+  void registerAdditionalSchemas(List<TableSchema> schemas) {
+    _additionalSchemas.addAll(schemas);
   }
 
   /// Validates the configuration.

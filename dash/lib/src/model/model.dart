@@ -1,7 +1,9 @@
 import 'package:dash/src/database/database_connector.dart';
+import 'package:dash/src/database/migrations/schema_definition.dart';
 import 'package:dash/src/model/annotations.dart';
 import 'package:dash/src/model/model_query_builder.dart';
 import 'package:dash/src/model/soft_deletes.dart';
+import 'package:dash/src/resource.dart';
 import 'package:dash/src/validation/validation.dart';
 
 /// Base class for all Dash models.
@@ -86,6 +88,10 @@ abstract class Model {
 
   /// The name of the "updated at" column.
   String get updatedAtColumn => 'updated_at';
+
+  Resource get resource {
+    throw UnimplementedError('Model.resource must be overridden in subclasses to return the associated Resource.');
+  }
 
   /// Gets the primary key value of this model instance.
   dynamic getKey();
@@ -446,4 +452,8 @@ abstract class Model {
   String toString() {
     return '$runtimeType(${toMap()})';
   }
+
+  /// Gets the table schema for automatic migrations.
+  /// Must be implemented by generated model classes.
+  TableSchema get schema;
 }

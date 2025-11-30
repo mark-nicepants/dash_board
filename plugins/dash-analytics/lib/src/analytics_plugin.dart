@@ -111,7 +111,7 @@ class AnalyticsPlugin implements Plugin {
   @override
   void register(Panel panel) {
     // Register the metrics table schema for auto-migration
-    panel.registerSchemas([Metric.schema]);
+    panel.registerSchemas([Metric.empty().schema]);
 
     // Register dashboard widgets if enabled
     if (_dashboardWidgetEnabled) {

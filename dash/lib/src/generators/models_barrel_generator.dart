@@ -24,12 +24,6 @@ class ModelsBarrelGenerator {
       final fileName = _toSnakeCase(schema.modelName);
       buffer.writeln("import 'package:$packageName/models/$fileName.dart';");
     }
-
-    // Import resources
-    for (final schema in sortedSchemas) {
-      final fileName = _toSnakeCase(schema.modelName);
-      buffer.writeln("import 'package:$packageName/resources/${fileName}_resource.dart';");
-    }
     buffer.writeln();
 
     // Exports - models
@@ -37,19 +31,13 @@ class ModelsBarrelGenerator {
       final fileName = _toSnakeCase(schema.modelName);
       buffer.writeln("export 'package:$packageName/models/$fileName.dart';");
     }
-
-    // Exports - resources
-    for (final schema in sortedSchemas) {
-      final fileName = _toSnakeCase(schema.modelName);
-      buffer.writeln("export 'package:$packageName/resources/${fileName}_resource.dart';");
-    }
     buffer.writeln();
 
     // registerAllModels function
-    buffer.writeln('/// Registers all generated models with their resources.');
+    buffer.writeln('/// Registers all generated models.');
     buffer.writeln('///');
-    buffer.writeln('/// This function registers each model with its metadata and');
-    buffer.writeln('/// associates it with its corresponding Resource class.');
+    buffer.writeln('/// This function hooks each model into the Dash service locator');
+    buffer.writeln('/// so resources can resolve model instances by slug.');
     buffer.writeln('///');
     buffer.writeln('/// Example:');
     buffer.writeln('/// ```dart');
@@ -62,7 +50,7 @@ class ModelsBarrelGenerator {
 
     for (final schema in sortedSchemas) {
       final modelName = schema.modelName;
-      buffer.writeln('  $modelName.register(${modelName}Resource.new);');
+      buffer.writeln('  $modelName.register();');
     }
 
     buffer.writeln('}');

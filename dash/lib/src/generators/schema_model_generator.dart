@@ -3,8 +3,9 @@ import 'package:dash/src/generators/schema_parser.dart';
 /// Generates Dart model code from a parsed schema.
 class SchemaModelGenerator {
   final ParsedSchema schema;
+  final String packageName;
 
-  SchemaModelGenerator(this.schema);
+  SchemaModelGenerator(this.schema, {required this.packageName});
 
   /// Generate the complete model code.
   String generate() {
@@ -15,6 +16,8 @@ class SchemaModelGenerator {
     buffer.writeln('// Generated from schema: ${schema.modelName.toLowerCase()}');
     buffer.writeln();
     buffer.writeln("import 'package:dash/dash.dart';");
+    final modelFileName = _toSnakeCase(schema.modelName);
+    buffer.writeln("import 'package:$packageName/resources/${modelFileName}_resource.dart';");
     buffer.writeln();
 
     // Class declaration - with Authenticatable mixin if configured
@@ -37,6 +40,12 @@ class SchemaModelGenerator {
     // Timestamps
     buffer.writeln('  @override');
     buffer.writeln('  bool get timestamps => ${schema.config.timestamps};');
+    buffer.writeln();
+
+    // Resource getter for DI lookups
+    final resourceClass = '${schema.modelName}Resource';
+    buffer.writeln('  @override');
+    buffer.writeln('  $resourceClass get resource => $resourceClass();');
     buffer.writeln();
 
     // Fields
@@ -401,6 +410,7 @@ class SchemaModelGenerator {
     final className = schema.modelName;
     final tableName = schema.config.table;
     final pk = schema.primaryKey;
+    final modelSlug = _toSnakeCase(schema.modelName);
 
     // Factory for creating empty instances (used by query builder and registration)
     buffer.writeln('  /// Factory constructor for creating empty instances.');
@@ -433,17 +443,12 @@ class SchemaModelGenerator {
     buffer.writeln();
 
     // Static register() method
-    buffer.writeln('  /// Registers this model and optionally a resource factory.');
-    buffer.writeln('  static void register([Resource<$className> Function()? resourceFactory]) {');
-    buffer.writeln('    registerModelMetadata<$className>(');
-    buffer.writeln('      ModelMetadata<$className>(');
-    buffer.writeln('        modelFactory: $className.empty,');
-    buffer.writeln('        schema: $className.schema,');
-    buffer.writeln('      ),');
-    buffer.writeln('    );');
-    buffer.writeln('    if (resourceFactory != null) {');
-    buffer.writeln('      registerResourceFactory<$className>(resourceFactory);');
-    buffer.writeln('    }');
+    buffer.writeln('  static void register() {');
+    buffer.writeln("    inject.registerFactory<Model>(() => $className.empty(), instanceName: 'model:$modelSlug');");
+    buffer.writeln(
+      "    inject.registerSingleton<Resource>($className.empty().resource, instanceName: 'resource:$modelSlug');",
+    );
+    buffer.writeln("    trackModelSlug('$modelSlug');");
     buffer.writeln('  }');
     buffer.writeln();
 
@@ -492,7 +497,8 @@ class SchemaModelGenerator {
     final tableName = schema.config.table;
 
     buffer.writeln('  /// Gets the table schema for automatic migrations.');
-    buffer.writeln('  static TableSchema get schema {');
+    buffer.writeln('  @override');
+    buffer.writeln('  TableSchema get schema {');
     buffer.writeln('    return const TableSchema(');
     buffer.writeln("      name: '$tableName',");
     buffer.writeln('      columns: [');

@@ -1,5 +1,6 @@
 import 'package:dash/src/database/database_connector.dart';
 import 'package:dash/src/database/migration_config.dart';
+import 'package:dash/src/panel/panel_config.dart';
 
 /// Configuration for database connections.
 ///
@@ -22,11 +23,12 @@ class DatabaseConfig {
   }
 
   /// Establishes the database connection and runs migrations if configured.
-  Future<void> connect() async {
+  Future<void> connect(PanelConfig panelConfig) async {
     await connector.connect();
 
     if (migrationConfig != null && migrationConfig!.autoMigrate) {
-      await connector.runMigrations(migrationConfig!.schemas, verbose: migrationConfig!.verbose);
+      final schemas = migrationConfig!.getSchemas(panelConfig);
+      await connector.runMigrations(schemas, verbose: migrationConfig!.verbose);
     }
   }
 

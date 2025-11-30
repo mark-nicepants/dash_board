@@ -139,7 +139,8 @@ class Metric extends Model {
   ///
   /// This allows the metrics table to be created automatically
   /// using Dash's migration system instead of hardcoded SQL.
-  static TableSchema get schema {
+  @override
+  TableSchema get schema {
     return const TableSchema(
       name: 'dash_metrics',
       columns: [

@@ -8,7 +8,6 @@ import 'package:dash/src/database/migrations/schema_definition.dart';
 import 'package:dash/src/database/query_builder.dart';
 import 'package:dash/src/interactive/component_registry.dart';
 import 'package:dash/src/model/model.dart';
-import 'package:dash/src/model/model_metadata.dart';
 import 'package:dash/src/panel/dev_console.dart';
 import 'package:dash/src/panel/panel_colors.dart';
 import 'package:dash/src/panel/panel_config.dart';
@@ -229,7 +228,7 @@ class Panel {
   /// panel.registerSchemas([Metric.schema]);
   /// ```
   Panel registerSchemas(List<TableSchema> schemas) {
-    registerAdditionalSchemas(schemas);
+    _config.registerAdditionalSchemas(schemas);
     return this;
   }
 
@@ -503,12 +502,10 @@ class Panel {
   ///
   /// This initializes the panel configuration and connects to the database.
   Future<Panel> boot() async {
-    // Pull in any globally registered resources if none were provided manually.
-    if (_config.resources.isEmpty) {
-      final registeredResources = buildRegisteredResources();
-      if (registeredResources.isNotEmpty) {
-        _config.registerResources(registeredResources);
-      }
+    // Auto-register resources from registered models
+    final autoResources = buildRegisteredResources();
+    if (autoResources.isNotEmpty) {
+      _config.registerResources(autoResources);
     }
 
     // Validate configuration
@@ -516,7 +513,7 @@ class Panel {
 
     // Connect to database if configured
     if (_config.databaseConfig != null) {
-      await _config.databaseConfig!.connect();
+      await _config.databaseConfig!.connect(_config);
       // Set the static connector on Model class so all models can access it
       Model.setConnector(_config.databaseConfig!.connector);
 
@@ -562,9 +559,15 @@ class Panel {
       throw StateError('No auth model type configured');
     }
 
-    // Get model metadata to access the factory
-    final metadata = getModelMetadataByName(_authModelType.toString());
-    if (metadata == null) {
+    // Convert model type to slug (e.g., "User" -> "user")
+    final typeString = _authModelType.toString();
+    final modelSlug = _toSnakeCase(typeString);
+
+    // Try to get the model instance from DI to verify it's registered
+    Model instance;
+    try {
+      instance = modelInstanceFromSlug<Model>(modelSlug);
+    } catch (_) {
       throw StateError(
         'Model $_authModelType not registered. '
         'Make sure to call $_authModelType.register() before Panel.boot().',
@@ -572,33 +575,40 @@ class Panel {
     }
 
     // Create user resolver using model's query builder
-    final userResolver = _customUserResolver ?? _createDefaultUserResolver(metadata);
+    final userResolver = _customUserResolver ?? _createDefaultUserResolver(modelSlug, instance);
 
     _authService = AuthService<Model>(userResolver: userResolver, panelId: _config.id, sessionStore: _sessionStore);
   }
 
+  /// Converts a string to snake_case.
+  String _toSnakeCase(String input) {
+    return input
+        .replaceAllMapped(RegExp(r'[A-Z]'), (match) => '_${match.group(0)!.toLowerCase()}')
+        .replaceFirst(RegExp(r'^_'), '');
+  }
+
   /// Creates a default user resolver that queries by the auth identifier field.
-  UserResolver<Model> _createDefaultUserResolver(ModelMetadata<Model> metadata) {
+  UserResolver<Model> _createDefaultUserResolver(String modelSlug, Model templateInstance) {
     return (String identifier) async {
-      // Create instance to get auth identifier field name
-      final instance = metadata.modelFactory();
-      if (instance is! Authenticatable) {
-        throw StateError('Model ${instance.runtimeType} must implement Authenticatable mixin');
+      // Use template instance to get auth identifier field name
+      if (templateInstance is! Authenticatable) {
+        throw StateError('Model ${templateInstance.runtimeType} must implement Authenticatable mixin');
       }
-      final identifierField = instance.getAuthIdentifierName();
+      final identifierField = templateInstance.getAuthIdentifierName();
 
       // Query database for user
       final connector = _config.databaseConfig!.connector;
-      final results = await connector.query('SELECT * FROM ${instance.table} WHERE $identifierField = ? LIMIT 1', [
-        identifier,
-      ]);
+      final results = await connector.query(
+        'SELECT * FROM ${templateInstance.table} WHERE $identifierField = ? LIMIT 1',
+        [identifier],
+      );
 
       if (results.isEmpty) {
         return null;
       }
 
       // Create and populate model instance
-      final user = metadata.modelFactory();
+      final user = modelInstanceFromSlug<Model>(modelSlug);
       user.fromMap(results.first);
       return user;
     };

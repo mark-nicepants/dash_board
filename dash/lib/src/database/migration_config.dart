@@ -1,5 +1,5 @@
 import 'package:dash/src/database/migrations/schema_definition.dart';
-import 'package:dash/src/service_locator.dart';
+import 'package:dash/src/panel/panel_config.dart';
 
 /// Configuration for automatic database migrations.
 ///
@@ -10,12 +10,52 @@ class MigrationConfig {
   final bool autoMigrate;
 
   /// The table schemas to migrate.
-  final List<TableSchema> schemas;
+  /// If null, schemas will be resolved from PanelConfig during boot.
+  final List<TableSchema>? _schemas;
 
   /// Whether to log migration statements.
   final bool verbose;
 
-  const MigrationConfig({this.autoMigrate = false, this.schemas = const [], this.verbose = false});
+  /// Whether to resolve schemas from PanelConfig at boot time.
+  final bool _resolveFromConfig;
+
+  const MigrationConfig({this.autoMigrate = false, List<TableSchema>? schemas, this.verbose = false})
+    : _schemas = schemas,
+      _resolveFromConfig = false;
+
+  const MigrationConfig._deferred({required this.autoMigrate, required this.verbose})
+    : _schemas = null,
+      _resolveFromConfig = true;
+
+  /// Gets the schemas, resolving from config if needed.
+  List<TableSchema> getSchemas(PanelConfig config) {
+    if (_resolveFromConfig) {
+      final schemas = <TableSchema>[];
+
+      // Gather schemas from registered resources
+      for (final resource in config.resources) {
+        schemas.add(resource.schema);
+      }
+
+      // Include additional schemas registered by plugins
+      schemas.addAll(config.additionalSchemas);
+
+      if (verbose) {
+        if (schemas.isEmpty) {
+          print('⚠️  No schemas discovered from registered resources');
+        } else {
+          final resourceCount = schemas.length - config.additionalSchemas.length;
+          print('📋 Loaded $resourceCount schema(s) from resources');
+          if (config.additionalSchemas.isNotEmpty) {
+            print('📋 Loaded ${config.additionalSchemas.length} additional schema(s) from plugins');
+          }
+        }
+      }
+
+      return schemas;
+    }
+    return _schemas ?? [];
+  }
 
   /// Creates a migration config with auto-migration enabled.
   factory MigrationConfig.enable({required List<TableSchema> schemas, bool verbose = false}) {
@@ -27,13 +67,10 @@ class MigrationConfig {
     return const MigrationConfig(autoMigrate: false);
   }
 
-  /// Creates a migration config from a list of resources.
+  /// Creates a migration config that resolves schemas from registered resources at boot time.
   ///
-  /// Automatically extracts table schemas from each resource's model.
-  /// Also includes additional schemas registered via [registerAdditionalSchemas],
-  /// which is useful for plugins that need their own tables.
-  ///
-  /// This is the easiest way to set up migrations - just pass your resources!
+  /// This is the recommended way to set up migrations when using the config loader,
+  /// as resources may not be registered yet when the config is loaded.
   ///
   /// Example:
   /// ```dart
@@ -42,42 +79,11 @@ class MigrationConfig {
   ///   ..database(
   ///     DatabaseConfig.using(
   ///       SqliteConnector('app.db'),
-  ///       migrations: MigrationConfig.fromResources(
-  ///         [UserResource(), PostResource()],
-  ///         verbose: true,
-  ///       ),
+  ///       migrations: MigrationConfig.fromResources(verbose: true),
   ///     ),
   ///   );
   /// ```
   factory MigrationConfig.fromResources({bool verbose = false}) {
-    final schemas = <TableSchema>[];
-
-    // Gather schemas from registered resources
-    for (final resource in buildRegisteredResources()) {
-      final schema = resource.schema();
-      if (schema != null) {
-        schemas.add(schema);
-      } else if (verbose) {
-        print('⚠️  No schema provided for ${resource.model}');
-      }
-    }
-
-    // Include additional schemas registered by plugins
-    final additionalSchemas = getAdditionalSchemas();
-    schemas.addAll(additionalSchemas);
-
-    if (verbose) {
-      if (schemas.isEmpty) {
-        print('⚠️  No schemas discovered from registered resources');
-      } else {
-        final resourceCount = schemas.length - additionalSchemas.length;
-        print('📋 Loaded $resourceCount schema(s) from resources');
-        if (additionalSchemas.isNotEmpty) {
-          print('📋 Loaded ${additionalSchemas.length} additional schema(s) from plugins');
-        }
-      }
-    }
-
-    return MigrationConfig(autoMigrate: true, schemas: schemas, verbose: verbose);
+    return MigrationConfig._deferred(autoMigrate: true, verbose: verbose);
   }
 }

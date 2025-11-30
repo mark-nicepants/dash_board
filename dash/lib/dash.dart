@@ -92,7 +92,7 @@ export 'src/plugin/plugin.dart';
 export 'src/plugin/render_hook.dart';
 export 'src/resource.dart';
 // Service Locator
-export 'src/service_locator.dart' show inject, registerResourceFactory, registerAdditionalSchemas, getAdditionalSchemas;
+export 'src/service_locator.dart' show inject, modelInstanceFromSlug, trackModelSlug, buildRegisteredResources;
 // Storage
 export 'src/storage/storage.dart';
 // Table

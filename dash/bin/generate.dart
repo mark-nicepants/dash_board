@@ -30,17 +30,21 @@ void main(List<String> args) async {
   }
 
   final schemasDir = args[0];
-  final outputDir = args.length > 1 ? args[1] : 'lib';
+  final outputDirArg = args.length > 1 ? args[1] : 'lib';
+  final resolvedOutputDir = path.normalize(path.absolute(outputDirArg));
 
   if (!Directory(schemasDir).existsSync()) {
     print('❌ Error: Schemas directory not found: $schemasDir');
     exit(1);
   }
 
-  // Get package name from pubspec.yaml
-  final packageName = _getPackageName();
+  // Determine package root based on the output directory so generated files import the correct package
+  final packageRootPath = _determinePackageRoot(resolvedOutputDir);
+
+  // Get package name from pubspec.yaml in the detected package root
+  final packageName = _getPackageName(packageRootPath);
   if (packageName == null) {
-    print('❌ Error: Could not find package name in pubspec.yaml');
+    print('❌ Error: Could not find package name in pubspec.yaml at $packageRootPath');
     exit(1);
   }
   print('📦 Package: $packageName');
@@ -62,13 +66,13 @@ void main(List<String> args) async {
   print('');
 
   // Create output directory
-  final modelsDir = Directory(path.join(outputDir, 'models'));
+  final modelsDir = Directory(path.join(resolvedOutputDir, 'models'));
   if (!modelsDir.existsSync()) {
     modelsDir.createSync(recursive: true);
   }
 
   // Create resources directory
-  final resourcesDir = Directory(path.join(outputDir, 'resources'));
+  final resourcesDir = Directory(path.join(resolvedOutputDir, 'resources'));
   if (!resourcesDir.existsSync()) {
     resourcesDir.createSync(recursive: true);
   }
@@ -84,7 +88,7 @@ void main(List<String> args) async {
     try {
       final schema = parser.parseFile(schemaFile.path);
       parsedSchemas.add(schema);
-      final modelGenerator = SchemaModelGenerator(schema);
+      final modelGenerator = SchemaModelGenerator(schema, packageName: packageName);
 
       // Generate model class file
       final modelContent = modelGenerator.generate();
@@ -145,9 +149,20 @@ String _toSnakeCase(String input) {
       .replaceFirst(RegExp(r'^_'), '');
 }
 
-/// Reads the package name from pubspec.yaml in the current directory.
-String? _getPackageName() {
-  final pubspecFile = File('pubspec.yaml');
+/// Determines the package root directory based on the resolved output lib path.
+String _determinePackageRoot(String resolvedOutputLibPath) {
+  // If the output path points to a lib directory, use its parent as the package root
+  if (path.basename(resolvedOutputLibPath) == 'lib') {
+    return path.dirname(resolvedOutputLibPath);
+  }
+
+  // Fallback to the current working directory
+  return Directory.current.path;
+}
+
+/// Reads the package name from pubspec.yaml in the detected package root directory.
+String? _getPackageName(String packageRootPath) {
+  final pubspecFile = File(path.join(packageRootPath, 'pubspec.yaml'));
   if (!pubspecFile.existsSync()) {
     return null;
   }

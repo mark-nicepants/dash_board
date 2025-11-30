@@ -11,8 +11,8 @@ import 'package:dash/src/database/migrations/schema_definition.dart';
 import 'package:dash/src/form/form_schema.dart';
 import 'package:dash/src/model/annotations.dart';
 import 'package:dash/src/model/model.dart';
-import 'package:dash/src/model/model_metadata.dart';
 import 'package:dash/src/model/model_query_builder.dart';
+import 'package:dash/src/service_locator.dart';
 import 'package:dash/src/table/table.dart';
 import 'package:dash/src/utils/sanitization.dart';
 import 'package:jaspr/jaspr.dart';
@@ -40,6 +40,8 @@ abstract class Resource<T extends Model> {
   /// The model class associated with this resource. Defaults to [T].
   Type get model => T;
 
+  T get modelInstance => modelInstanceFromSlug<Model>(slug) as T;
+
   /// The plural label for this resource (e.g., "Users").
   /// Defaults to the model name with an 's' suffix.
   String get label => '${_modelName}s';
@@ -66,8 +68,15 @@ abstract class Resource<T extends Model> {
   bool get shouldRegisterNavigation => true;
 
   /// The URL slug for this resource (e.g., "users").
-  /// Defaults to lowercase plural label with spaces replaced by hyphens.
-  String get slug => label.toLowerCase().replaceAll(' ', '-');
+  /// Derived from the model name in snake_case.
+  String get slug => _toSnakeCase(_modelName);
+
+  /// Converts a string to snake_case.
+  String _toSnakeCase(String input) {
+    return input
+        .replaceAllMapped(RegExp(r'[A-Z]'), (match) => '_${match.group(0)!.toLowerCase()}')
+        .replaceFirst(RegExp(r'^_'), '');
+  }
 
   /// Defines the table configuration for this resource.
   ///
@@ -209,25 +218,13 @@ abstract class Resource<T extends Model> {
   }
 
   /// Creates a new instance of the model.
-  /// Uses generated metadata when available, otherwise subclasses must override.
+  /// Uses the DI-registered model factory.
   T newModelInstance() {
-    final metadata = getModelMetadata<T>();
-    if (metadata != null) {
-      return metadata.modelFactory();
-    }
-
-    throw StateError(
-      'No model factory registered for ${T.toString()}. '
-      'Override newModelInstance() in ${runtimeType.toString()} to provide one.',
-    );
+    return modelInstance;
   }
 
   /// Gets the table schema for this resource's model.
-  /// Defaults to the generated schema when available.
-  TableSchema? schema() {
-    final metadata = getModelMetadata<T>();
-    return metadata?.schema;
-  }
+  TableSchema get schema => modelInstance.schema;
 
   /// Creates a query builder for the model.
   /// Uses the model instance to configure the query.
@@ -427,8 +424,17 @@ abstract class Resource<T extends Model> {
   /// Loads a BelongsTo relationship for a list of records.
   /// Uses a single query to fetch all related records efficiently.
   Future<void> _loadBelongsToRelation(List<T> records, RelationshipMeta meta) async {
-    final relatedMetadata = getModelMetadataByName(meta.relatedModelType);
-    if (relatedMetadata == null) return;
+    // Convert model type name to slug (e.g., "User" -> "user")
+    final relatedSlug = _toSnakeCase(meta.relatedModelType);
+
+    // Try to get the related model instance from DI
+    Model relatedModel;
+    try {
+      relatedModel = modelInstanceFromSlug<Model>(relatedSlug);
+    } catch (_) {
+      // Model not registered, skip relationship loading
+      return;
+    }
 
     // Collect all foreign key values
     final foreignKeyValues = <dynamic>{};
@@ -442,10 +448,9 @@ abstract class Resource<T extends Model> {
     if (foreignKeyValues.isEmpty) return;
 
     // Fetch all related records in a single query
-    final relatedModel = relatedMetadata.modelFactory();
     final relatedRecords = await ModelQueryBuilder<Model>(
       Model.connector,
-      modelFactory: relatedMetadata.modelFactory,
+      modelFactory: () => modelInstanceFromSlug<Model>(relatedSlug),
       modelTable: relatedModel.table,
       modelPrimaryKey: relatedModel.primaryKey,
     ).whereIn(meta.relatedKey, foreignKeyValues.toList()).get();

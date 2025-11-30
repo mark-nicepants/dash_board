@@ -6,7 +6,7 @@ import 'package:dash_example/models/models.dart';
 Future<void> main() async {
   print('🚀 Dash Example Admin Panel\n');
 
-  // Register all models with their resources
+  // Register all models (resources are auto-registered)
   registerAllModels();
 
   // Create and configure the admin panel

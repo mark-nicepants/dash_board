@@ -445,7 +445,7 @@ class SchemaModelGenerator {
 
     // Static register() method
     buffer.writeln('  static void register() {');
-    buffer.writeln("    inject.registerFactory<Model>(() => $className.empty(), instanceName: 'model:$modelSlug');");
+    buffer.writeln("    inject.registerFactory<Model>($className.empty, instanceName: 'model:$modelSlug');");
     buffer.writeln(
       "    inject.registerSingleton<Resource>($className.empty().resource, instanceName: 'resource:$modelSlug');",
     );

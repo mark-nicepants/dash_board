@@ -17,6 +17,7 @@ export 'src/actions/prebuilt/create_action.dart';
 export 'src/actions/prebuilt/delete_action.dart';
 export 'src/actions/prebuilt/edit_action.dart';
 export 'src/actions/prebuilt/save_action.dart';
+export 'src/actions/prebuilt/toggle_boolean_action.dart';
 export 'src/actions/prebuilt/view_action.dart';
 // Auth
 export 'src/auth/auth_service.dart' show AuthService, Session;

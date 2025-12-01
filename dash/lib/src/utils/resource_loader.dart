@@ -48,8 +48,6 @@ class ResourceLoader {
   static Future<ResourceLoader> initialize() async {
     final useMinified = Platform.environment['DASH_ENV'] == 'production';
 
-    print('🔧 Initializing ResourceLoader (${useMinified ? 'production' : 'development'} mode)...');
-
     final resourcesDir = await _findResourcesDir();
     if (resourcesDir == null) {
       throw StateError(
@@ -58,13 +56,9 @@ class ResourceLoader {
       );
     }
 
-    print('📂 Found resources at: $resourcesDir');
-
     final htmlTemplate = await _loadHtmlTemplate(resourcesDir);
     final css = await _loadCss(resourcesDir, useMinified);
     final js = await _loadAppJs(resourcesDir, useMinified);
-
-    print('✅ Resources loaded successfully');
 
     return ResourceLoader._(
       htmlTemplate: htmlTemplate,

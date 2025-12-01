@@ -182,16 +182,8 @@ class PanelConfig {
     }
 
     // Validate all resource table configurations
-    print('🔍 Validating resource configurations...');
     for (final resource in _resources) {
-      try {
-        resource.validateTableConfiguration();
-        print('  ✅ ${resource.runtimeType}');
-      } catch (e) {
-        print('  ❌ ${resource.runtimeType}');
-        rethrow;
-      }
+      resource.validateTableConfiguration();
     }
-    print('✅ All resource configurations are valid\n');
   }
 }

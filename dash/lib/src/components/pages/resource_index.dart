@@ -5,6 +5,7 @@ import 'package:dash/src/actions/handler/action_context.dart';
 import 'package:dash/src/actions/handler/action_handler_registry.dart';
 import 'package:dash/src/actions/prebuilt/delete_action.dart';
 import 'package:dash/src/actions/prebuilt/edit_action.dart';
+import 'package:dash/src/actions/prebuilt/toggle_boolean_action.dart';
 import 'package:dash/src/components/partials/breadcrumbs.dart';
 import 'package:dash/src/components/partials/page_scaffold.dart';
 import 'package:dash/src/components/partials/pagination.dart';
@@ -201,6 +202,13 @@ class ResourceIndex<T extends Model> extends InteractiveComponent {
         action.registerHandler(resourceSlug);
       }
     }
+
+    // Register the toggle-boolean handler for clickable columns
+    ActionHandlerRegistry.register(
+      resourceSlug: resourceSlug,
+      actionName: 'toggle-boolean',
+      handler: ToggleBooleanHandler<T>(),
+    );
   }
 
   String _buildCurrentUrl() {

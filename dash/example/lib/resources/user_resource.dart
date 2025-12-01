@@ -57,6 +57,7 @@ class UserResource extends Resource<User> {
           BooleanColumn.make('is_active') //
               .label('Active')
               .sortable()
+              .clickable()
               .toggleable(),
 
           TextColumn.make('created_at') //

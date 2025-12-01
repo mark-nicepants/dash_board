@@ -1,7 +1,8 @@
+import 'package:dash/src/components/partials/heroicon.dart';
 import 'package:dash/src/model/model.dart';
 import 'package:dash/src/table/columns/column.dart';
 
-/// A column that displays an icon.
+/// A column that displays a Heroicon.
 ///
 /// This column type is useful for displaying visual indicators,
 /// status icons, or boolean values as icons.
@@ -11,7 +12,7 @@ import 'package:dash/src/table/columns/column.dart';
 /// IconColumn.make('status')
 ///   .icon((Model record) {
 ///     final status = record.toMap()['status'];
-///     return status == 'active' ? 'check' : 'x';
+///     return status == 'active' ? HeroIcons.check : HeroIcons.xMark;
 ///   })
 ///   .color((Model record) {
 ///     final status = record.toMap()['status'];
@@ -35,16 +36,19 @@ class IconColumn extends TableColumn {
   bool _isBoolean = false;
 
   /// Icon to display for true values (when boolean).
-  String _trueIcon = 'check-circle';
+  HeroIcons _trueIcon = HeroIcons.checkCircle;
 
   /// Icon to display for false values (when boolean).
-  String _falseIcon = 'x-circle';
+  HeroIcons _falseIcon = HeroIcons.xCircle;
 
   /// Color for true values (when boolean).
   String _trueColor = 'success';
 
   /// Color for false values (when boolean).
   String _falseColor = 'danger';
+
+  /// The action name for clickable columns (triggers wire:click).
+  String? _clickAction;
 
   IconColumn(super.name);
 
@@ -146,14 +150,14 @@ class IconColumn extends TableColumn {
   // ============================================================
 
   /// Sets the icon to display.
-  /// Can be a string or a function that returns a string based on the record.
+  /// Can be a HeroIcons value or a function that returns a HeroIcons based on the record.
   IconColumn icon(dynamic icon) {
     _icon = icon;
     return this;
   }
 
   /// Gets the icon for a specific record.
-  String? getIcon(Model record) {
+  HeroIcons? getIcon(Model record) {
     // Handle boolean mode
     if (_isBoolean) {
       final state = getState(record);
@@ -162,9 +166,9 @@ class IconColumn extends TableColumn {
     }
 
     if (_icon == null) return null;
-    if (_icon is String) return _icon as String;
+    if (_icon is HeroIcons) return _icon as HeroIcons;
     if (_icon is Function) {
-      return (_icon as String? Function(Model))(record);
+      return (_icon as HeroIcons? Function(Model))(record);
     }
     return null;
   }
@@ -203,7 +207,7 @@ class IconColumn extends TableColumn {
   IconSize getSize() => _size;
 
   /// Configures the column as a boolean column.
-  IconColumn boolean({String? trueIcon, String? falseIcon, String? trueColor, String? falseColor}) {
+  IconColumn boolean({HeroIcons? trueIcon, HeroIcons? falseIcon, String? trueColor, String? falseColor}) {
     _isBoolean = true;
     if (trueIcon != null) _trueIcon = trueIcon;
     if (falseIcon != null) _falseIcon = falseIcon;
@@ -214,6 +218,31 @@ class IconColumn extends TableColumn {
 
   /// Checks if this is a boolean column.
   bool isBoolean() => _isBoolean;
+
+  /// Makes the column clickable, triggering a wire:click action.
+  ///
+  /// When clicked, the action will be executed with the record ID.
+  /// The action name defaults to 'toggle-boolean' which uses the built-in
+  /// [ToggleBooleanHandler] to toggle the field value.
+  ///
+  /// Example:
+  /// ```dart
+  /// BooleanColumn.make('is_active')
+  ///   .clickable(), // Uses default 'toggle-boolean' action
+  ///
+  /// IconColumn.make('status')
+  ///   .clickable('change-status'), // Custom action name
+  /// ```
+  IconColumn clickable([String action = 'toggle-boolean']) {
+    _clickAction = action;
+    return this;
+  }
+
+  /// Checks if the column is clickable.
+  bool isClickable() => _clickAction != null;
+
+  /// Gets the click action name.
+  String? getClickAction() => _clickAction;
 
   /// Parses a value as a boolean.
   bool _parseBool(dynamic value) {

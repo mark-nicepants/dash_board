@@ -1,3 +1,4 @@
+import 'package:dash/src/components/partials/heroicon.dart';
 import 'package:dash/src/model/model.dart';
 import 'package:dash/src/table/columns/column.dart';
 import 'package:dash/src/table/columns/icon_column.dart';
@@ -13,8 +14,8 @@ import 'package:dash/src/table/columns/icon_column.dart';
 ///   .sortable(),
 ///
 /// BooleanColumn.make('is_verified')
-///   .trueIcon('shield-check')
-///   .falseIcon('shield-exclamation')
+///   .trueIcon(HeroIcons.shieldCheck)
+///   .falseIcon(HeroIcons.shieldExclamation)
 ///   .trueColor('success')
 ///   .falseColor('warning'),
 /// ```
@@ -122,13 +123,13 @@ class BooleanColumn extends IconColumn {
   // ============================================================
 
   /// Sets the icon for true values.
-  BooleanColumn trueIcon(String icon) {
+  BooleanColumn trueIcon(HeroIcons icon) {
     boolean(trueIcon: icon);
     return this;
   }
 
   /// Sets the icon for false values.
-  BooleanColumn falseIcon(String icon) {
+  BooleanColumn falseIcon(HeroIcons icon) {
     boolean(falseIcon: icon);
     return this;
   }
@@ -142,6 +143,12 @@ class BooleanColumn extends IconColumn {
   /// Sets the color for false values.
   BooleanColumn falseColor(String color) {
     boolean(falseColor: color);
+    return this;
+  }
+
+  @override
+  BooleanColumn clickable([String action = 'toggle-boolean']) {
+    super.clickable(action);
     return this;
   }
 }

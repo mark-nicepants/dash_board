@@ -1,7 +1,7 @@
 # yaml-language-server: $schema=../../../schemas/dash-model.schema.json
 
-model: Post
-table: posts
+model: Tag
+table: tags
 timestamps: true
 
 fields:
@@ -10,11 +10,12 @@ fields:
     primaryKey: true
     autoIncrement: true
 
-  title:
+  name:
     type: string
     required: true
+    unique: true
     min: 1
-    max: 255
+    max: 50
 
   slug:
     type: string
@@ -22,24 +23,7 @@ fields:
     unique: true
     pattern: "^[a-z0-9-]+$"
 
-  content:
+  description:
     type: string
-
-  isPublished:
-    type: bool
-    default: false
-
-  publishedAt:
-    type: datetime
-
-  author:
-    type: int
-    required: true
-    belongsTo: User
-    foreignKey: author_id
-    as: author
-
-  tags:
-    type: int
-    hasMany: Tag
-    as: tags
+    nullable: true
+    max: 255

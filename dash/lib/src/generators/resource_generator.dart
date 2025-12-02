@@ -6,11 +6,7 @@ class ResourceGenerator {
   final String packageName;
   final String importPathPrefix;
 
-  ResourceGenerator(
-    this.schema, {
-    required this.packageName,
-    this.importPathPrefix = '',
-  });
+  ResourceGenerator(this.schema, {required this.packageName, this.importPathPrefix = ''});
 
   /// Generate the resource class code.
   String generate() {
@@ -67,7 +63,7 @@ class ResourceGenerator {
     // Form configuration
     buffer.writeln('  @override');
     buffer.writeln('  FormSchema<$modelName> form(FormSchema<$modelName> form) {');
-    buffer.writeln('    return form.schema([');
+    buffer.writeln('    return form.fields([');
 
     // Generate form fields for each field
     for (final field in schema.fields) {

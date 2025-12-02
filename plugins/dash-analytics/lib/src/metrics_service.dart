@@ -227,11 +227,11 @@ class MetricQuery {
     _ensureDateRange();
 
     var query = Metric.query()
-        .where('name', _name)
+        .where('name', '=', _name)
         .whereBetween('recorded_at', _startDate!.toIso8601String(), _endDate!.toIso8601String());
 
     if (_type != null) {
-      query = query.where('type', _type!.name);
+      query = query.where('type', '=', _type!.name);
     }
 
     // Apply tag filters using JSON path extraction

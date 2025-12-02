@@ -1,10 +1,4 @@
-import 'package:dash/src/actions/handler/action_context.dart';
-import 'package:dash/src/actions/handler/action_handler_registry.dart';
-import 'package:dash/src/components/layout.dart';
-import 'package:dash/src/components/pages/dashboard_page.dart';
-import 'package:dash/src/components/pages/login_page.dart';
-import 'package:dash/src/panel/panel_config.dart';
-import 'package:dash/src/plugin/asset.dart';
+import 'package:dash/dash.dart';
 import 'package:dash/src/utils/resource_loader.dart';
 import 'package:jaspr/server.dart';
 
@@ -48,6 +42,11 @@ class PanelRouter {
     final method = request.method;
 
     // Try Dash internal routes first (admin UI, resources, login, etc.)
+
+    // Handle relationship search API requests
+    if (path.startsWith('dash/relationship-search/')) {
+      return await _handleRelationshipSearch(request, path);
+    }
 
     // Handle form submissions (POST/PUT/DELETE) for Dash resources
     if (path.startsWith(_config.path.replaceFirst('/', ''))) {
@@ -279,6 +278,23 @@ class PanelRouter {
       final basePath = '${_config.path}/resources/${resource.slug}';
       return Response.found(basePath);
     }
+  }
+
+  /// Handles relationship search API requests.
+  ///
+  /// Path format: /dash/relationship-search/{modelSlug}
+  Future<Response> _handleRelationshipSearch(Request request, String path) async {
+    final handler = RelationshipSearchHandler();
+
+    // Extract model slug from path
+    final parts = path.split('/');
+    final searchIndex = parts.indexOf('relationship-search');
+    if (searchIndex == -1 || searchIndex + 1 >= parts.length) {
+      return Response.badRequest(body: 'Invalid relationship search path');
+    }
+    final modelSlug = parts[searchIndex + 1];
+
+    return handler.handle(request, modelSlug);
   }
 
   /// Validates form data against the resource's form schema.

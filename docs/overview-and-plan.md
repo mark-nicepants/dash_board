@@ -77,7 +77,7 @@ Dash is a modern, full-featured admin panel framework for Dart, inspired by Fila
 - ✅ **Table Class**: Fluent API for configuring data tables
 - ✅ **Column Types**: `TextColumn`, `IconColumn`, `BooleanColumn` with full feature set
 - ✅ **Sorting**: Configurable sortable columns with default sort and direction
-- ✅ **Searching**: Searchable columns with HTMX-powered live search
+- ✅ **Searching**: Searchable columns with DashWire-powered live search
 - ✅ **Pagination**: Configurable records per page with page size options
 - ✅ **Column Visibility Toggle**: Alpine.js dropdown with localStorage persistence per resource
 - ✅ **Toggleable Columns**: Mark columns as toggleable with optional hidden-by-default
@@ -95,6 +95,7 @@ Dash is a modern, full-featured admin panel framework for Dart, inspired by Fila
 - ✅ **Checkbox Field**: Boolean toggle with accepted validation
 - ✅ **Toggle Field**: Styled switch with on/off labels and colors
 - ✅ **DatePicker Field**: Date, time, datetime-local with min/max constraints
+- ✅ **RelationshipSelect Field**: BelongsTo relationships with async search, preloading
 - ✅ **FieldGroup**: Organize fields with collapsible sections
 - ✅ **FormRenderer**: Renders form schema with grid layout and buttons
 - ✅ **Field Validation**: Required, Email, MinLength, MaxLength, Regex, URL, InList, etc.
@@ -112,7 +113,7 @@ Dash is a modern, full-featured admin panel framework for Dart, inspired by Fila
 - ✅ **Form Repopulation**: Old input preserved on validation errors
 - ✅ **Route Handling**: Full routing for index, create, edit, store, update, delete
 - ✅ **Method Spoofing**: PUT/PATCH/DELETE via POST with `_method` field
-- ✅ **HTMX Integration**: HX-Redirect header for post-submission redirects
+- ✅ **DashWire Integration**: Wire directives for post-submission redirects
 
 ### 🧭 Navigation & Layout
 - ✅ **Breadcrumbs Component**: Full breadcrumb navigation with links
@@ -318,7 +319,7 @@ class User extends Model with _$UserModelMixin {
 - [ ] Rich text editor integration
 - [x] File upload component
 - [ ] Multi-select with search (Select.multiple().searchable())
-- [ ] Relationship select (async search)
+- [x] Relationship select (async search) - RelationshipSelect field
 - [ ] Repeater field (dynamic lists)
 - [ ] Key-value field
 - [ ] Color picker
@@ -332,12 +333,12 @@ class User extends Model with _$UserModelMixin {
 - [x] Implement Column system (TextColumn, IconColumn, BooleanColumn)
 - [x] Build pagination component
 - [x] Create sort functionality
-- [x] Implement server-side data loading (HTMX)
-- [x] Add loading states (HTMX indicators)
+- [x] Implement server-side data loading (DashWire)
+- [x] Add loading states (DashWire indicators)
 
 #### 3.2 Table Features
 - [ ] Filter system architecture
-- [x] Search functionality (HTMX live search)
+- [x] Search functionality (DashWire live search)
 - [ ] Bulk selection
 - [ ] Bulk actions
 - [x] Column visibility toggle
@@ -371,14 +372,14 @@ class User extends Model with _$UserModelMixin {
 - [x] List page (with table) - ResourceIndex component with row actions
 - [x] Create page (with form) - ResourceCreate component
 - [x] Edit page (with form) - ResourceEdit component
-- [ ] View page (read-only display)
+- [x] View page (read-only display)
 - [ ] Custom actions on pages
 - [ ] Page hooks for customization
 
 #### 4.3 Relationships
 - [x] Define relationship types (@BelongsTo, @HasMany annotations)
 - [ ] HasMany display and management
-- [ ] BelongsTo select handling
+- [x] BelongsTo select handling (RelationshipSelect field with async search)
 - [ ] ManyToMany with pivot tables
 - [ ] Relationship eager loading
 - [ ] Nested resource creation
@@ -395,7 +396,7 @@ class User extends Model with _$UserModelMixin {
 #### 5.2 Core Widgets
 - [x] Stats widget (Stat with trends, sparklines)
 - [x] StatsOverviewWidget (multi-stat grid)
-- [ ] Chart widget (line, bar, pie) - Chart.js integration
+- [x] Chart widget (line, bar, pie) - Chart.js integration
 - [ ] Table widget (embedded resource table)
 - [ ] List widget
 - [ ] Text/HTML widget
@@ -433,27 +434,26 @@ class User extends Model with _$UserModelMixin {
 - [ ] Role resource
 - [ ] Permission resource
 - [ ] User profile page
-- [ ] Team/tenant switching (multi-tenancy)
 
 ### Phase 7: UI Components & Polish (Weeks 25-28)
 
 #### 7.1 Action System
-- [ ] Create Action class
-- [ ] Implement action modals
-- [ ] Add confirmation dialogs
+- [x] Create Action class
+- [x] Implement action modals
+- [x] Add confirmation dialogs
 - [ ] Build action forms
 - [ ] Create bulk actions
-- [ ] Add action notifications
+- [x] Add action notifications
 
 #### 7.2 Notification System
-- [ ] Toast notifications
+- [x] Toast notifications
 - [ ] Notification center
 - [ ] Database notifications
 - [ ] Real-time notifications (optional)
 - [ ] Email notifications integration
 
 #### 7.3 Additional Components
-- [ ] Modal component
+- [x] Modal component
 - [ ] Dropdown component
 - [ ] Tabs component
 - [ ] Accordion component
@@ -482,9 +482,9 @@ class User extends Model with _$UserModelMixin {
 ### Phase 9: Developer Experience (Weeks 33-36)
 
 #### 9.1 CLI Tool
-- [ ] Create dash CLI package
+- [x] Create schema generator CLI (`dart run dash:generate`)
 - [ ] Add `init` command for new panels
-- [ ] Add `make:resource` command
+- [x] Add `make:resource` command (via generator)
 - [ ] Add `make:widget` command
 - [ ] Add `make:page` command
 - [ ] Add development server command
@@ -701,17 +701,14 @@ class MyComponent extends StatelessComponent {
 - **Component classes** (ResourceIndex, DashboardPage) handle rendering
 - **Service classes** (AuthService, PanelRouter) handle business logic
 
-#### Server-Side Rendering with HTMX
-Use HTMX for partial page updates, not SPA patterns:
+#### Server-Side Rendering with DashWire
+Use DashWire for partial page updates, not SPA patterns:
 
 ```dart
-// ✅ DO: Use HTMX attributes for interactivity
+// ✅ DO: Use DashWire attributes for interactivity
 input(
   attributes: {
-    'hx-get': '/search',
-    'hx-trigger': 'keyup changed delay:300ms',
-    'hx-target': '#results',
-    'hx-swap': 'outerHTML',
+    'wire:model.debounce.300ms': 'search',
   },
 )
 ```
@@ -814,8 +811,8 @@ Avoid client-side routing and state management:
 // ❌ DON'T: Client-side navigation
 button(attributes: {'onclick': 'navigate("/users")'}, [...]);
 
-// ✅ DO: Server-side with HTMX
-a(href: '/users', attributes: {'hx-boost': 'true'}, [...]);
+// ✅ DO: Server-side with traditional links
+a(href: '/users', [...]);
 ```
 
 #### Don't Bypass the Panel Registration

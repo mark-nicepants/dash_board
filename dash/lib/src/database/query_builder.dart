@@ -56,16 +56,16 @@ class QueryBuilder {
   }
 
   /// Adds a WHERE clause.
-  QueryBuilder where(String column, dynamic value, [String operator = '=']) {
+  QueryBuilder where(String column, String operator, dynamic value) {
     _wheres.add('$column $operator ?');
     _bindings.add(value);
     return this;
   }
 
   /// Adds an OR WHERE clause.
-  QueryBuilder orWhere(String column, dynamic value, [String operator = '=']) {
+  QueryBuilder orWhere(String column, String operator, dynamic value) {
     if (_wheres.isEmpty) {
-      return where(column, value, operator);
+      return where(column, operator, value);
     }
     final lastIndex = _wheres.length - 1;
     _wheres[lastIndex] = '${_wheres[lastIndex]} OR $column $operator ?';

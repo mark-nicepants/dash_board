@@ -97,7 +97,7 @@ class ModelQueryBuilder<T extends Model> {
     final model = _modelFactory();
     final primaryKey = _modelPrimaryKey ?? model.primaryKey;
 
-    where(primaryKey, id);
+    where(primaryKey, '=', id);
     return await first();
   }
 
@@ -120,13 +120,13 @@ class ModelQueryBuilder<T extends Model> {
     return this;
   }
 
-  ModelQueryBuilder<T> where(String column, dynamic value, [String operator = '=']) {
-    _query.where(column, value, operator);
+  ModelQueryBuilder<T> where(String column, String operator, dynamic value) {
+    _query.where(column, operator, value);
     return this;
   }
 
-  ModelQueryBuilder<T> orWhere(String column, dynamic value, [String operator = '=']) {
-    _query.orWhere(column, value, operator);
+  ModelQueryBuilder<T> orWhere(String column, String operator, dynamic value) {
+    _query.orWhere(column, operator, value);
     return this;
   }
 

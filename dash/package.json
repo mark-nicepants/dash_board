@@ -23,6 +23,8 @@
     "tailwindcss": "^4.1.17"
   },
   "dependencies": {
+    "@alpinejs/collapse": "^3.15.2",
+    "alpinejs": "^3.15.2",
     "idiomorph": "^0.7.4"
   }
 }

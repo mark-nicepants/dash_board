@@ -141,7 +141,7 @@ void main() {
       test('where() adds basic condition', () async {
         connector.mockResults = [];
 
-        await builder.table('users').where('status', 'active').get();
+        await builder.table('users').where('status', '=', 'active').get();
 
         expect(connector.executedQueries.last, contains('WHERE status = ?'));
         expect(connector.executedBindings.last, contains('active'));
@@ -150,7 +150,7 @@ void main() {
       test('where() with custom operator', () async {
         connector.mockResults = [];
 
-        await builder.table('users').where('age', 18, '>=').get();
+        await builder.table('users').where('age', '>=', 18).get();
 
         expect(connector.executedQueries.last, contains('WHERE age >= ?'));
         expect(connector.executedBindings.last, contains(18));
@@ -159,7 +159,7 @@ void main() {
       test('multiple where() creates AND conditions', () async {
         connector.mockResults = [];
 
-        await builder.table('users').where('status', 'active').where('age', 18, '>=').get();
+        await builder.table('users').where('status', '=', 'active').where('age', '>=', 18).get();
 
         expect(connector.executedQueries.last, contains('WHERE status = ? AND age >= ?'));
       });
@@ -167,7 +167,7 @@ void main() {
       test('orWhere() adds OR condition', () async {
         connector.mockResults = [];
 
-        await builder.table('users').where('status', 'active').orWhere('role', 'admin').get();
+        await builder.table('users').where('status', '=', 'active').orWhere('role', '=', 'admin').get();
 
         expect(connector.executedQueries.last, contains('status = ? OR role = ?'));
       });
@@ -175,7 +175,7 @@ void main() {
       test('orWhere() on first call acts as where()', () async {
         connector.mockResults = [];
 
-        await builder.table('users').orWhere('status', 'active').get();
+        await builder.table('users').orWhere('status', '=', 'active').get();
 
         expect(connector.executedQueries.last, contains('WHERE status = ?'));
       });
@@ -335,7 +335,7 @@ void main() {
           {'email': 'test@example.com'},
         ];
 
-        final email = await builder.table('users').where('id', 1).value<String>('email');
+        final email = await builder.table('users').where('id', '=', 1).value<String>('email');
 
         expect(email, equals('test@example.com'));
       });
@@ -410,7 +410,7 @@ void main() {
       });
 
       test('update() updates records', () async {
-        final affected = await builder.table('users').where('id', 1).update({'name': 'Jane Doe'});
+        final affected = await builder.table('users').where('id', '=', 1).update({'name': 'Jane Doe'});
 
         expect(affected, equals(1));
         expect(connector.executedQueries.last, contains('UPDATE users SET'));
@@ -418,7 +418,7 @@ void main() {
       });
 
       test('delete() deletes records', () async {
-        final affected = await builder.table('users').where('id', 1).delete();
+        final affected = await builder.table('users').where('id', '=', 1).delete();
 
         expect(affected, equals(1));
         expect(connector.executedQueries.last, contains('DELETE FROM users'));
@@ -449,7 +449,13 @@ void main() {
         connector.mockResults = [];
 
         // Build a complex query
-        builder.table('users').select(['id', 'name']).where('status', 'active').orderBy('name').limit(10).offset(5);
+        builder
+            .table('users')
+            .select(['id', 'name'])
+            .where('status', '=', 'active')
+            .orderBy('name')
+            .limit(10)
+            .offset(5);
 
         // Reset
         builder.reset();
@@ -466,7 +472,7 @@ void main() {
         await builder
             .table('orders')
             .select(['customer_id', 'SUM(total) as total_spent'])
-            .where('status', 'completed')
+            .where('status', '=', 'completed')
             .whereNotNull('paid_at')
             .groupBy('customer_id')
             .having('total_spent', 100, '>')

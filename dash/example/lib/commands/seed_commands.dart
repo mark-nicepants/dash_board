@@ -15,7 +15,7 @@ DevCommand seedUsersCommand() => DevCommand(
     print('\n🌱 Seeding $count users...\n');
 
     // Always create an admin user first if none exists
-    final existingAdmin = await User.query().where('email', 'admin@example.com').first();
+    final existingAdmin = await User.query().where('email', '=', 'admin@example.com').first();
     if (existingAdmin == null) {
       final admin = User(
         name: 'Admin User',

@@ -63,7 +63,7 @@ class PostResource extends Resource<Post> {
           .description('Basic information about the blog post')
           .icon('document-text')
           .collapsible()
-          .columns(2)
+          .columns(1)
           .schema([
             TextInput.make('title') //
                 .minLength(1)
@@ -87,18 +87,29 @@ class PostResource extends Resource<Post> {
                 .columnSpanFull(),
           ]),
 
-      Section.make(
-        'Publishing Options',
-      ).description('Control when and how your post is published').icon('calendar').collapsible().columns(2).schema([
-        Toggle.make('is_published') //
-            .label('Published')
-            .helperText('When enabled, this post will be visible to the public')
-            .defaultValue(false),
+      Section.make('Publishing Options') //
+          .description('Control when and how your post is published')
+          .icon('calendar')
+          .collapsible()
+          .columns(1)
+          .schema([
+            RelationshipSelect.make('author')
+                .relationship('author', 'User')
+                .label('Author')
+                .displayColumn('name')
+                .searchColumns(['name', 'email'])
+                .preload(limit: 10)
+                .required(),
 
-        DatePicker.make('published_at') //
-            .withTime()
-            .label('Publish Date'),
-      ]),
+            Toggle.make('is_published') //
+                .label('Published')
+                .helperText('When enabled, this post will be visible to the public')
+                .defaultValue(false),
+
+            DatePicker.make('published_at') //
+                .withTime()
+                .label('Publish Date'),
+          ]),
     ]);
   }
 }

@@ -115,7 +115,7 @@ export function initFileUpload() {
       },
 
       /**
-       * Upload a file via HTMX/fetch
+       * Upload a file via DashWire/fetch
        */
       async uploadFile(file) {
         this.uploading = true;

@@ -331,9 +331,9 @@ abstract class Resource<T extends Model> {
           for (var i = 0; i < searchableColumns.length; i++) {
             final column = searchableColumns[i];
             if (i == 0) {
-              q = q.where(column, '%$sanitized%', 'LIKE');
+              q = q.where(column, 'LIKE', '%$sanitized%');
             } else {
-              q = q.orWhere(column, '%$sanitized%', 'LIKE');
+              q = q.orWhere(column, 'LIKE', '%$sanitized%');
             }
           }
         }
@@ -389,9 +389,9 @@ abstract class Resource<T extends Model> {
           for (var i = 0; i < searchableColumns.length; i++) {
             final column = searchableColumns[i];
             if (i == 0) {
-              q = q.where(column, '%$sanitized%', 'LIKE');
+              q = q.where(column, 'LIKE', '%$sanitized%');
             } else {
-              q = q.orWhere(column, '%$sanitized%', 'LIKE');
+              q = q.orWhere(column, 'LIKE', '%$sanitized%');
             }
           }
         }
@@ -568,6 +568,15 @@ abstract class Resource<T extends Model> {
     final formSchema = form(FormSchema<T>());
     final fields = formSchema.getFields();
 
+    // Get relationship metadata from the model to map relation names to foreign keys
+    final relationships = model.getRelationships();
+    final relationForeignKeys = <String, String>{};
+    for (final rel in relationships) {
+      if (rel.type == RelationshipType.belongsTo) {
+        relationForeignKeys[rel.name] = rel.foreignKey;
+      }
+    }
+
     // Build a map of converted values
     final convertedData = <String, dynamic>{};
 
@@ -579,7 +588,13 @@ abstract class Resource<T extends Model> {
         value = _convertFieldValue(field, value);
         // Then apply any dehydration (e.g., password hashing)
         value = field.dehydrateValue(value);
-        convertedData[fieldName] = value;
+
+        // Check if this field maps to a belongsTo relationship's foreign key
+        if (relationForeignKeys.containsKey(fieldName)) {
+          convertedData[relationForeignKeys[fieldName]!] = value;
+        } else {
+          convertedData[fieldName] = value;
+        }
       }
     }
 

@@ -82,11 +82,7 @@ class LocalStorage extends Storage {
   /// Default visibility for new files.
   final String defaultVisibility;
 
-  LocalStorage({
-    required this.basePath,
-    this.urlPrefix = '/storage',
-    this.defaultVisibility = 'public',
-  });
+  LocalStorage({required this.basePath, this.urlPrefix = '/storage', this.defaultVisibility = 'public'});
 
   @override
   Future<String> put(String filePath, Uint8List data) async {

@@ -283,6 +283,21 @@ class DatePicker extends FormField {
     return this;
   }
 
+  /// Converts form input to DateTime value for database storage.
+  @override
+  dynamic dehydrateValue(dynamic value) {
+    // First apply any custom dehydration callback
+    final result = super.dehydrateValue(value);
+
+    // Then convert to DateTime
+    if (result == null || (result is String && result.isEmpty)) return null;
+    if (result is DateTime) return result;
+    if (result is String) {
+      return DateTime.tryParse(result);
+    }
+    return null;
+  }
+
   @override
   Component build(BuildContext context) {
     final inputId = getId();

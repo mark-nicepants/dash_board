@@ -623,6 +623,9 @@ abstract class Resource<T extends Model> {
 
   /// Applies form data to a model instance.
   /// Maps form field names to model fields.
+  ///
+  /// Each field is responsible for converting its value to the appropriate
+  /// database type via its `dehydrateValue()` method.
   void _applyDataToModel(T model, Map<String, dynamic> data) {
     // Get the form schema to understand field mappings
     final formSchema = form(FormSchema<T>());
@@ -643,11 +646,11 @@ abstract class Resource<T extends Model> {
     for (final field in fields) {
       final fieldName = field.getName();
       if (data.containsKey(fieldName)) {
-        var value = data[fieldName];
-        // First convert the field value to the appropriate type
-        value = _convertFieldValue(field, value);
-        // Then apply any dehydration (e.g., password hashing)
-        value = field.dehydrateValue(value);
+        // Set the record on the field so it can access the schema for type conversion
+        field.record = model;
+
+        // Apply dehydration - each field type handles its own type conversion
+        final value = field.dehydrateValue(data[fieldName]);
 
         // Check if this field maps to a belongsTo relationship's foreign key
         if (relationForeignKeys.containsKey(fieldName)) {
@@ -662,43 +665,5 @@ abstract class Resource<T extends Model> {
     final existingData = model.toMap();
     final mergedData = {...existingData, ...convertedData};
     model.fromMap(mergedData);
-  }
-
-  /// Converts a form field value to the appropriate type.
-  dynamic _convertFieldValue(dynamic field, dynamic value) {
-    if (value == null || (value is String && value.isEmpty)) {
-      return null;
-    }
-
-    // Handle different field types
-    final fieldType = field.runtimeType.toString();
-
-    if (fieldType.contains('Checkbox') || fieldType.contains('Toggle')) {
-      // Boolean fields
-      if (value is bool) return value;
-      if (value is String) {
-        return value == 'true' || value == '1' || value == 'on';
-      }
-      return false;
-    }
-
-    if (fieldType.contains('DatePicker')) {
-      // DateTime fields
-      if (value is DateTime) return value;
-      if (value is String) {
-        return DateTime.tryParse(value);
-      }
-      return null;
-    }
-
-    if (fieldType.contains('Select') && field.isMultiple()) {
-      // Multiple select - return list
-      if (value is List) return value;
-      if (value is String) return [value];
-      return [];
-    }
-
-    // Default - return as-is (usually String)
-    return value;
   }
 }

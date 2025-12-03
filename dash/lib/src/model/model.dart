@@ -1,3 +1,4 @@
+import 'package:collection/collection.dart';
 import 'package:dash/src/database/database_connector.dart';
 import 'package:dash/src/database/migrations/schema_definition.dart';
 import 'package:dash/src/model/annotations.dart';
@@ -114,19 +115,43 @@ abstract class Model {
   /// This is generated automatically by the @DashModel annotation.
   List<String> getFields();
 
+  /// Stores loaded relationship models.
+  final Map<String, Model> _loadedRelations = {};
+
   /// Returns the value of a relationship by name.
   /// Override this in generated code to provide relationship access.
   /// Returns null if the relationship doesn't exist or isn't loaded.
-  Model? getRelation(String name) => null;
+  Model? getRelation(String name) => _loadedRelations[name];
+
+  /// Sets a loaded relationship by name.
+  void setRelation(String name, Model value) {
+    _loadedRelations[name] = value;
+  }
 
   /// Returns metadata about relationships defined on this model.
   /// Override this in generated code to provide relationship metadata.
   List<RelationshipMeta> getRelationships() => [];
 
-  Future<T> loadRelationship<T extends Model>(String modelName, dynamic modelId) async {
-    final resource = resourceFromSlug(modelName) as Resource<T>;
-    final relation = await resource.query().find(modelId);
-    return relation as T;
+  Future<T?> loadRelationship<T extends Model>(String relationName, dynamic relationId) async {
+    final relationShipMeta = getRelationships().firstWhereOrNull((rel) => rel.name == relationName);
+    if (relationShipMeta == null) {
+      throw StateError('Relationship "$relationName" not defined on model $runtimeType.');
+    }
+
+    final cache = getRelation(relationName);
+    if (cache != null) {
+      return cache as T;
+    }
+
+    final resource = resourceFromSlug(relationShipMeta.relatedModelType) as Resource<T>;
+    final relation = await resource.query().find(relationId);
+    if (relation != null) {
+      setRelation(relationName, relation);
+
+      return relation;
+    }
+
+    return null;
   }
 
   // ===== Helper Methods for Subclasses =====

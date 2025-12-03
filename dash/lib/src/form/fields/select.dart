@@ -291,6 +291,24 @@ class Select extends FormField {
     return this;
   }
 
+  /// Converts form input value for database storage.
+  /// For multiple select, ensures the value is a list.
+  @override
+  dynamic dehydrateValue(dynamic value) {
+    // First apply any custom dehydration callback
+    final result = super.dehydrateValue(value);
+
+    // Handle multiple select
+    if (_multiple) {
+      if (result == null) return [];
+      if (result is List) return result;
+      if (result is String) return [result];
+      return [];
+    }
+
+    return result;
+  }
+
   @override
   Component build(BuildContext context) {
     final inputId = getId();

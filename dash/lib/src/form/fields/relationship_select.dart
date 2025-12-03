@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:dash/src/components/partials/forms/form_components.dart';
+import 'package:dash/src/database/migrations/schema_definition.dart';
 import 'package:dash/src/form/fields/field.dart';
 import 'package:dash/src/model/annotations.dart';
 import 'package:dash/src/panel/panel_config.dart';
@@ -390,6 +391,56 @@ class RelationshipSelect extends FormField {
 
   /// Gets the currently selected option.
   RelationshipOption? getSelectedOption() => _selectedOption;
+
+  /// RelationshipSelect is always single-select (for belongsTo relationships).
+  /// This method exists for compatibility with the Select field interface.
+  bool isMultiple() => false;
+
+  /// Converts form input to the appropriate type for the foreign key column.
+  /// Uses the model's schema to determine the correct column type.
+  @override
+  dynamic dehydrateValue(dynamic value) {
+    // First apply any custom dehydration callback
+    final result = super.dehydrateValue(value);
+
+    if (result == null || (result is String && result.isEmpty)) return null;
+
+    // Try to get the column type from the model's schema
+    final foreignKey = _foreignKey ?? '${_relationName}_id';
+    ColumnType? columnType;
+
+    if (record != null) {
+      try {
+        final column = record!.schema.getColumn(foreignKey);
+        columnType = column?.type;
+      } catch (_) {
+        // Schema not available, fall through to type inference
+      }
+    }
+
+    // Convert based on column type or infer from value
+    switch (columnType) {
+      case ColumnType.integer:
+        if (result is int) return result;
+        if (result is String) return int.tryParse(result);
+        return null;
+      case ColumnType.text:
+        return result.toString();
+      case ColumnType.real:
+        if (result is double) return result;
+        if (result is String) return double.tryParse(result);
+        return null;
+      default:
+        // No schema available or unknown type - try to infer
+        // If it looks like a number, convert it
+        if (result is int) return result;
+        if (result is String) {
+          final asInt = int.tryParse(result);
+          if (asInt != null) return asInt;
+        }
+        return result;
+    }
+  }
 
   /// Creates metadata for this relationship field.
   RelationshipMeta? getRelationshipMeta() {

@@ -277,7 +277,7 @@ class FormSchema<T extends Model> {
         // This field maps to a relationship - use the foreign key value
         value = recordData[relationship.foreignKey];
         // Load the related model for display purposes
-        await _record!.loadRelationship(relationship.relatedModelType, value);
+        await _record!.loadRelationship(name, value);
       } else if (recordData.containsKey(name)) {
         value = recordData[name];
       }

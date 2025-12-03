@@ -239,6 +239,22 @@ class Toggle extends FormField {
   /// Gets the off value.
   String getOffValue() => _offValue;
 
+  /// Converts form input to boolean value for database storage.
+  @override
+  dynamic dehydrateValue(dynamic value) {
+    // First apply any custom dehydration callback
+    final result = super.dehydrateValue(value);
+
+    // Then convert to boolean
+    if (result == null) return false;
+    if (result is bool) return result;
+    if (result is String) {
+      return result == 'true' || result == '1' || result == 'on' || result == _onValue;
+    }
+    if (result is int) return result == 1;
+    return false;
+  }
+
   @override
   Component build(BuildContext context) {
     final inputId = getId();

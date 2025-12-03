@@ -44,7 +44,7 @@ Before building many of these plugins, the following core features need to be ad
 | **API Route Generation** | Automatic REST/GraphQL API generation from resources | API Plugin, Mobile SDKs, Headless CMS | ❌ Not Started |
 | **Background Jobs** | Queue system for deferred processing | Email, Backup, Import/Export, Media Processing | ❌ Not Started |
 | **Role/Permission System** | Fine-grained RBAC beyond simple auth | Most plugins need permission checks | ❌ Not Started |
-| **Settings Storage** | Key-value store for plugin configuration | All plugins need configuration persistence | ❌ Not Started |
+| ~~**Settings Storage**~~ | ~~Key-value store for plugin configuration~~ | ~~All plugins need configuration persistence~~ | ✅ Complete |
 
 ### Already Available Core Features
 
@@ -58,6 +58,8 @@ Before building many of these plugins, the following core features need to be ad
 ✅ Database migrations via schema  
 ✅ Session management  
 ✅ File storage abstraction  
+✅ Settings storage (key-value store with type-safe access)  
+✅ Custom pages with form data handling  
 
 ---
 
@@ -1137,15 +1139,15 @@ Based on dependencies and strategic value:
 
 Before any plugins, enhance the core:
 
-1. **Custom Pages System**
-   - Register arbitrary pages beyond resources
-   - Page components with layout integration
-   - Breadcrumb support for custom pages
+1. ✅ ~~**Custom Pages System**~~
+    - ~~Register arbitrary pages beyond resources~~
+    - ~~Page components with layout integration~~
+    - ~~Breadcrumb support for custom pages~~
 
-2. **Settings Storage**
-   - Key-value store API
-   - Type-safe setting access
-   - Cache layer
+2. ✅ ~~**Settings Storage**~~
+   - ~~Key-value store API~~
+   - ~~Type-safe setting access~~
+   - ~~Cache layer~~
 
 3. **Enhanced Event System**
    - Named events beyond model hooks

@@ -19,6 +19,7 @@ import 'package:dash/src/plugin/plugin.dart';
 import 'package:dash/src/plugin/render_hook.dart';
 import 'package:dash/src/resource.dart';
 import 'package:dash/src/service_locator.dart';
+import 'package:dash/src/settings/settings_service.dart';
 import 'package:dash/src/storage/storage.dart';
 import 'package:dash/src/utils/resource_loader.dart';
 import 'package:dash/src/widgets/widget.dart' as dash;
@@ -88,6 +89,28 @@ class Panel {
   /// Throws [StateError] if no auth model has been configured.
   AuthService<Model> get authService {
     return _authManager.authService;
+  }
+
+  /// The settings service for key-value configuration storage.
+  ///
+  /// Returns the registered [SettingsService] instance for storing
+  /// and retrieving application and plugin settings.
+  ///
+  /// Throws [StateError] if the service is not registered (call after boot).
+  ///
+  /// Example:
+  /// ```dart
+  /// // Get a string setting
+  /// final appName = await panel.settings.getString('app.name');
+  ///
+  /// // Set a value
+  /// await panel.settings.set('app.debug', true);
+  /// ```
+  SettingsService get settings {
+    if (!inject.isRegistered<SettingsService>()) {
+      throw StateError('SettingsService not registered. Call boot() first.');
+    }
+    return inject<SettingsService>();
   }
 
   /// Configures the user model for authentication.
@@ -520,6 +543,9 @@ class Panel {
 
     // Connect to database if configured
     if (_config.databaseConfig != null) {
+      // Register core Dash schemas before migrations run
+      _config.registerAdditionalSchemas([SettingsService.schema]);
+
       await _config.databaseConfig!.connect(_config);
       // Set the static connector on Model class so all models can access it
       Model.setConnector(_config.databaseConfig!.connector);

@@ -76,6 +76,28 @@ class PanelRouter {
     final formData = await _parseFormData(request);
     final method = formData['_method']?.toString().toUpperCase() ?? 'POST';
 
+    // Handle custom page POST submissions
+    if (path.contains('pages/')) {
+      final parts = path.split('/');
+      final pagesIndex = parts.indexOf('pages');
+      final pageSlug = pagesIndex + 1 < parts.length ? parts[pagesIndex + 1] : '';
+
+      // Find the matching page by slug
+      final page = _config.pages.firstWhere(
+        (p) => p.slug == pageSlug,
+        orElse: () => throw Exception('Page not found: $pageSlug'),
+      );
+
+      // Pass the request and parsed form data to the page's build method
+      final pageContent = await page.build(request, _config.path, formData: formData);
+
+      // Collect page-specific assets if any
+      final pageAssets = page.assets;
+
+      final wrapped = _wrapInLayout(title: page.title, child: pageContent, pageAssets: pageAssets);
+      return await _renderPage(wrapped.page, pageAssets: wrapped.assets);
+    }
+
     if (path.contains('resources/')) {
       final parts = path.split('/');
       final resourceIndex = parts.indexOf('resources');

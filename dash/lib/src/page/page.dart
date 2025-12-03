@@ -97,12 +97,13 @@ abstract class Page {
 
   /// Builds the page content.
   ///
-  /// This method receives the current [request] for accessing query parameters
-  /// and the [basePath] for constructing URLs.
+  /// This method receives the current [request] for accessing query parameters,
+  /// the [basePath] for constructing URLs, and optionally [formData] when
+  /// handling a POST request (the form data has already been parsed by the router).
   ///
   /// Return a Jaspr [Component] representing the page content.
   /// The content will be wrapped in the admin layout automatically.
-  FutureOr<Component> build(Request request, String basePath);
+  FutureOr<Component> build(Request request, String basePath, {Map<String, dynamic>? formData});
 
   /// Optional page-specific assets.
   ///

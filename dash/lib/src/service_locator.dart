@@ -87,6 +87,7 @@ String getStorageUrl(String path, {String? disk}) {
 /// - PanelConfig: The panel configuration
 /// - DatabaseConnector: The database connection
 /// - ResourceLoader: Static asset loader
+/// - SettingsService: Key-value settings storage
 ///
 /// Call this during Panel.boot() before starting the server.
 Future<void> setupServiceLocator({required PanelConfig config, required DatabaseConnector connector}) async {
@@ -104,6 +105,13 @@ Future<void> setupServiceLocator({required PanelConfig config, required Database
   if (!inject.isRegistered<ResourceLoader>()) {
     final resourceLoader = await ResourceLoader.initialize();
     inject.registerSingleton<ResourceLoader>(resourceLoader);
+  }
+
+  // Create and register SettingsService (schema already registered in Panel.boot)
+  if (!inject.isRegistered<SettingsService>()) {
+    final settingsService = SettingsService(connector);
+    await settingsService.init();
+    inject.registerSingleton<SettingsService>(settingsService);
   }
 }
 

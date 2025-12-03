@@ -24,12 +24,12 @@ class TestPage extends Page {
 
   @override
   List<BreadCrumbItem> breadcrumbs(String basePath) => [
-        BreadCrumbItem(label: 'Dashboard', url: basePath),
-        const BreadCrumbItem(label: 'Test Page'),
-      ];
+    BreadCrumbItem(label: 'Dashboard', url: basePath),
+    const BreadCrumbItem(label: 'Test Page'),
+  ];
 
   @override
-  FutureOr<Component> build(Request request, String basePath) {
+  FutureOr<Component> build(Request request, String basePath, {Map<String, dynamic>? formData}) {
     return div([text('Test Page Content')]);
   }
 
@@ -45,12 +45,10 @@ class AnotherTestPage extends Page {
   String get title => 'Another Page';
 
   @override
-  List<BreadCrumbItem> breadcrumbs(String basePath) => [
-        const BreadCrumbItem(label: 'Another'),
-      ];
+  List<BreadCrumbItem> breadcrumbs(String basePath) => [const BreadCrumbItem(label: 'Another')];
 
   @override
-  FutureOr<Component> build(Request request, String basePath) {
+  FutureOr<Component> build(Request request, String basePath, {Map<String, dynamic>? formData}) {
     return div([text('Another Page Content')]);
   }
 
@@ -68,12 +66,10 @@ class NoNavPage extends Page {
   // navigationGroup is null by default, so this won't be in nav
 
   @override
-  List<BreadCrumbItem> breadcrumbs(String basePath) => [
-        const BreadCrumbItem(label: 'No Nav'),
-      ];
+  List<BreadCrumbItem> breadcrumbs(String basePath) => [const BreadCrumbItem(label: 'No Nav')];
 
   @override
-  FutureOr<Component> build(Request request, String basePath) {
+  FutureOr<Component> build(Request request, String basePath, {Map<String, dynamic>? formData}) {
     return div([text('No Nav Page')]);
   }
 
@@ -238,10 +234,12 @@ void main() {
 
     test('registerPages works with plugins', () {
       var pageCount = 0;
-      final plugin = _TestPagesPlugin(onRegister: (panel) {
-        panel.registerPages([TestPage.make()]);
-        pageCount = 1;
-      });
+      final plugin = _TestPagesPlugin(
+        onRegister: (panel) {
+          panel.registerPages([TestPage.make()]);
+          pageCount = 1;
+        },
+      );
 
       Panel().plugin(plugin);
 
@@ -257,7 +255,7 @@ void main() {
     });
 
     test('creates item with label and url', () {
-      final item = BreadCrumbItem(label: 'Home', url: '/admin');
+      final item = const BreadCrumbItem(label: 'Home', url: '/admin');
       expect(item.label, equals('Home'));
       expect(item.url, equals('/admin'));
     });

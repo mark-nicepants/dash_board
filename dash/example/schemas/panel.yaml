@@ -4,18 +4,19 @@ panel:
   id: admin
   path: /admin
 
-storage:
-  basePath: storage
-  defaultDisk: public
-  disks:
-    public:
-      driver: local
-      path: public
-      urlPrefix: /admin/storage/public
-    local:
-      driver: local
-      path: app
-      urlPrefix: /admin/storage/local
+# Example storage configuration
+# storage:
+#   basePath: storage
+#   defaultDisk: public
+#   disks:
+#     public:
+#       driver: local
+#       path: public
+#       urlPrefix: /admin/storage/public
+#     local:
+#       driver: local
+#       path: app
+#       urlPrefix: /admin/storage/local
 
 session:
   driver: file

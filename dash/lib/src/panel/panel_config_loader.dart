@@ -219,11 +219,13 @@ extension PanelConfigExtension on Panel {
       sessionStore(store);
     }
 
-    // Configure storage disks
-    if (config.storage != null) {
-      final storageConfig = StorageConfig()..defaultDisk = config.storage!.defaultDisk;
+    // Configure storage disks (always configure, using defaults if not specified)
+    String storageDefaultDisk = 'public';
+    final Map<String, Storage> storageDisks = {};
 
-      final disks = <String, Storage>{};
+    if (config.storage != null) {
+      storageDefaultDisk = config.storage!.defaultDisk;
+
       for (final entry in config.storage!.disks.entries) {
         final diskName = entry.key;
         final diskConfig = entry.value;
@@ -231,15 +233,22 @@ extension PanelConfigExtension on Panel {
 
         if (diskConfig.driver == 'local') {
           final urlPrefix = diskConfig.urlPrefix ?? '/${config.path}/storage/$diskName';
-          disks[diskName] = LocalStorage(basePath: diskPath, urlPrefix: urlPrefix);
+          storageDisks[diskName] = LocalStorage(basePath: diskPath, urlPrefix: urlPrefix);
         } else {
           throw StateError('Unknown storage driver: ${diskConfig.driver}');
         }
       }
-
-      storageConfig.disks = disks;
-      storage(storageConfig);
     }
+
+    final storageConfig = StorageConfig(
+      defaultDisk: storageDefaultDisk,
+      disks: storageDisks,
+      basePath: basePath,
+      panelPath: config.path,
+    );
+
+    // Always apply storage config - it will create default disks if none are configured
+    storage(storageConfig);
 
     // Configure database
     if (config.database != null) {

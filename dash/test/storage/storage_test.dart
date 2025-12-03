@@ -258,12 +258,13 @@ void main() {
     });
 
     test('createManager creates manager with configured disks', () {
-      final config = StorageConfig()
-        ..defaultDisk = 'public'
-        ..disks = {
+      final config = StorageConfig(
+        defaultDisk: 'public',
+        disks: {
           'local': LocalStorage(basePath: p.join(tempDir.path, 'local')),
           'public': LocalStorage(basePath: p.join(tempDir.path, 'public'), urlPrefix: '/storage'),
-        };
+        },
+      );
 
       final manager = config.createManager();
 
@@ -275,7 +276,7 @@ void main() {
     test('default values', () {
       final config = StorageConfig();
 
-      expect(config.defaultDisk, equals('local'));
+      expect(config.defaultDisk, equals('public'));
       expect(config.disks, isEmpty);
     });
   });

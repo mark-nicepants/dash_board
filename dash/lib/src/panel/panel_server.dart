@@ -46,12 +46,13 @@ class PanelServer {
   ///
   /// Example:
   /// ```dart
-  /// server.configureStorage(StorageConfig()
-  ///   ..defaultDisk = 'public'
-  ///   ..disks = {
+  /// server.configureStorage(StorageConfig(
+  ///   defaultDisk: 'public',
+  ///   disks: {
   ///     'local': LocalStorage(basePath: 'storage/app'),
   ///     'public': LocalStorage(basePath: 'storage/public', urlPrefix: '/storage'),
-  ///   });
+  ///   },
+  /// ));
   /// ```
   void configureStorage(StorageConfig config) {
     _storageManager = config.createManager();

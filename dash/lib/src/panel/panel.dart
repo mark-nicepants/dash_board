@@ -167,12 +167,13 @@ class Panel {
   /// Example:
   /// ```dart
   /// final panel = Panel()
-  ///   ..storage(StorageConfig()
-  ///     ..defaultDisk = 'public'
-  ///     ..disks = {
+  ///   ..storage(StorageConfig(
+  ///     defaultDisk: 'public',
+  ///     disks: {
   ///       'local': LocalStorage(basePath: 'storage/app'),
   ///       'public': LocalStorage(basePath: 'storage/public', urlPrefix: '/admin/storage/public'),
-  ///     });
+  ///     },
+  ///   ));
   /// ```
   Panel storage(StorageConfig config) {
     _storageManager.configure(config);

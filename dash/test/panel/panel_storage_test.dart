@@ -20,12 +20,13 @@ void main() {
 
     test('configure accepts StorageConfig with disks', () {
       final manager = PanelStorageManager();
-      final config = StorageConfig()
-        ..defaultDisk = 'public'
-        ..disks = {
+      final config = StorageConfig(
+        defaultDisk: 'public',
+        disks: {
           'local': LocalStorage(basePath: '/tmp/local'),
           'public': LocalStorage(basePath: '/tmp/public', urlPrefix: '/storage'),
-        };
+        },
+      );
 
       manager.configure(config);
 

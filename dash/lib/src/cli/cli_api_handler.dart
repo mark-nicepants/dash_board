@@ -1,7 +1,10 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
 import 'package:dash/src/panel/panel_config.dart';
+import 'package:dash/src/service_locator.dart';
+import 'package:dash/src/storage/storage.dart';
 import 'package:shelf/shelf.dart';
 
 /// HTTP API handler for CLI commands.
@@ -31,16 +34,69 @@ class CliApiHandler {
   ///
   /// [level] can be: 'debug', 'info', 'warning', 'error', 'request', 'query'
   void log(String message, {String level = 'info'}) {
-    _logs.add({
-      'timestamp': DateTime.now().toIso8601String(),
-      'level': level,
-      'message': message,
-    });
+    final timestamp = DateTime.now();
+    final entry = {'timestamp': timestamp.toIso8601String(), 'level': level, 'message': message};
+
+    _logs.add(entry);
+
+    // Write to file if enabled
+    unawaited(_logToFile(timestamp, level, message));
 
     // Trim old logs
     while (_logs.length > _maxLogs) {
       _logs.removeAt(0);
     }
+  }
+
+  /// Writes a log entry to a daily log file.
+  ///
+  /// Log files are stored in the 'logs' disk as `dash_YYYYMMDD.log`.
+  Future<void> _logToFile(DateTime timestamp, String level, String message) async {
+    try {
+      final storage = inject<StorageManager>();
+      if (!storage.hasDisk('logs')) {
+        return;
+      }
+
+      final logsDisk = storage.disk('logs');
+      final fileName = _getLogFileName(timestamp);
+      final logLine = _formatLogLine(timestamp, level, message);
+
+      // Get the full file path and append to the file
+      final filePath = logsDisk.path(fileName);
+      final file = File(filePath);
+
+      // Create directory if it doesn't exist
+      final dir = file.parent;
+      if (!await dir.exists()) {
+        await dir.create(recursive: true);
+      }
+
+      // Append log line to file
+      await file.writeAsString(logLine, mode: FileMode.append);
+    } catch (e) {
+      // Silently ignore file logging errors to not disrupt the application
+      // The in-memory logs will still be available
+    }
+  }
+
+  /// Generates the log file name for a given timestamp.
+  ///
+  /// Format: `dash_YYYYMMDD.log`
+  String _getLogFileName(DateTime timestamp) {
+    final year = timestamp.year.toString();
+    final month = timestamp.month.toString().padLeft(2, '0');
+    final day = timestamp.day.toString().padLeft(2, '0');
+    return 'dash_$year$month$day.log';
+  }
+
+  /// Formats a log entry as a single line for the log file.
+  ///
+  /// Format: `[YYYY-MM-DD HH:MM:SS] [LEVEL] message\n`
+  String _formatLogLine(DateTime timestamp, String level, String message) {
+    final date = timestamp.toIso8601String().replaceFirst('T', ' ').split('.').first;
+    final levelPadded = level.toUpperCase().padRight(7);
+    return '[$date] [$levelPadded] $message\n';
   }
 
   /// Get the current log entries.
@@ -64,9 +120,7 @@ class CliApiHandler {
       return null;
     }
 
-    final endpoint = path.substring(
-      cliIndex + 5,
-    ); // Remove everything up to and including '_cli/'
+    final endpoint = path.substring(cliIndex + 5); // Remove everything up to and including '_cli/'
 
     switch (endpoint) {
       case 'status':
@@ -87,9 +141,7 @@ class CliApiHandler {
   Response _handleStatus(Request request) {
     final uptime = DateTime.now().difference(_startTime);
 
-    final resourceList = _config.resources
-        .map((r) => {'name': r.singularLabel, 'slug': r.slug})
-        .toList();
+    final resourceList = _config.resources.map((r) => {'name': r.singularLabel, 'slug': r.slug}).toList();
 
     final data = {
       'status': 'running',
@@ -98,16 +150,10 @@ class CliApiHandler {
       'resources': _config.resources.length,
       'database': _config.databaseConfig != null,
       'resourceList': resourceList,
-      'memory': {
-        'heapUsed': ProcessInfo.currentRss,
-        'heapTotal': ProcessInfo.maxRss,
-      },
+      'memory': {'heapUsed': ProcessInfo.currentRss, 'heapTotal': ProcessInfo.maxRss},
     };
 
-    return Response.ok(
-      jsonEncode(data),
-      headers: {'content-type': 'application/json'},
-    );
+    return Response.ok(jsonEncode(data), headers: {'content-type': 'application/json'});
   }
 
   /// GET /_cli/logs - Query logs with optional filtering.
@@ -148,17 +194,11 @@ class CliApiHandler {
       logs = logs.sublist(logs.length - lines);
     }
 
-    return Response.ok(
-      jsonEncode({'logs': logs}),
-      headers: {'content-type': 'application/json'},
-    );
+    return Response.ok(jsonEncode({'logs': logs}), headers: {'content-type': 'application/json'});
   }
 
   /// GET /_cli/health - Simple health check endpoint.
   Response _handleHealth(Request request) {
-    return Response.ok(
-      jsonEncode({'status': 'ok'}),
-      headers: {'content-type': 'application/json'},
-    );
+    return Response.ok(jsonEncode({'status': 'ok'}), headers: {'content-type': 'application/json'});
   }
 }

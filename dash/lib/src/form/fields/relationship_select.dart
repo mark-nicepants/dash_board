@@ -410,12 +410,8 @@ class RelationshipSelect extends FormField {
     ColumnType? columnType;
 
     if (record != null) {
-      try {
-        final column = record!.schema.getColumn(foreignKey);
-        columnType = column?.type;
-      } catch (_) {
-        // Schema not available, fall through to type inference
-      }
+      final column = record!.schema.getColumn(foreignKey);
+      columnType = column?.type;
     }
 
     // Convert based on column type or infer from value

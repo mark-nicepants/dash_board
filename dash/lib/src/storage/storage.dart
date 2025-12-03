@@ -266,28 +266,64 @@ class StorageManager {
 ///
 /// Configures storage disks and default settings.
 ///
+/// By default, the following disks are registered if not explicitly configured:
+/// - `public`: For publicly accessible files (uploads, images, etc.)
+/// - `logs`: For application log files
+///
 /// Example:
 /// ```dart
-/// final config = StorageConfig()
-///   ..defaultDisk = 'public'
-///   ..disks = {
+/// final config = StorageConfig(
+///   defaultDisk: 'public',
+///   basePath: 'storage',
+///   panelPath: '/admin',
+///   disks: {
 ///     'local': LocalStorage(basePath: 'storage/app'),
 ///     'public': LocalStorage(basePath: 'storage/public', urlPrefix: '/storage'),
-///   };
+///   },
+/// );
 /// ```
 class StorageConfig {
   /// The default disk to use.
-  String defaultDisk = 'local';
+  final String defaultDisk;
 
   /// Configured storage disks.
-  Map<String, Storage> disks = {};
+  final Map<String, Storage> disks;
+
+  /// The base storage path (used for default disk creation).
+  final String basePath;
+
+  /// The panel path (used for URL prefix generation).
+  final String panelPath;
+
+  StorageConfig({
+    this.defaultDisk = 'public',
+    this.disks = const {},
+    this.basePath = 'storage',
+    this.panelPath = '/admin',
+  });
 
   /// Creates a StorageManager from this configuration.
+  ///
+  /// Automatically registers default disks (public, logs) if not explicitly configured.
   StorageManager createManager() {
     final manager = StorageManager();
 
+    // Register explicitly configured disks
     for (final entry in disks.entries) {
       manager.registerDisk(entry.key, entry.value);
+    }
+
+    // Register default 'public' disk if not configured
+    if (!disks.containsKey('public')) {
+      manager.registerDisk(
+        'public',
+        LocalStorage(basePath: '$basePath/public', urlPrefix: '$panelPath/storage/public'),
+      );
+    }
+
+    // Register default 'logs' disk if not configured
+    if (!disks.containsKey('logs')) {
+      manager.registerDisk('logs', LocalStorage(basePath: '$basePath/logs', urlPrefix: '$panelPath/storage/logs'));
     }
 
     manager.setDefaultDisk(defaultDisk);

@@ -56,16 +56,45 @@ note: Sessions are saved between server restarts. So a simple refresh of the pag
 ### Bug Fixing Approach
 
 1. **Reproduce the bug** - Use Playwright to navigate and trigger the issue
-2. **Add debug output** - Print statements in key locations (router, resource methods)
-3. **Trace the flow** - Follow data through: Form submission → Resource → Model → Database
-4. **Identify the layer** - Is it presentation, application, domain, or infrastructure?
-5. **Fix at the right level** - Each layer has specific responsibilities:
+2. **Check the logs** - Read `storage/logs/dash_YYYYMMDD.log` for errors and debug info
+3. **Add debug output** - Print statements in key locations (router, resource methods)
+4. **Trace the flow** - Follow data through: Form submission → Resource → Model → Database
+5. **Identify the layer** - Is it presentation, application, domain, or infrastructure?
+6. **Fix at the right level** - Each layer has specific responsibilities:
    - **FormField.dehydrateValue()** - Type conversion for database storage
    - **FormField.hydrateValue()** - Value transformation for display
    - **Resource._applyDataToModel()** - Maps form fields to model properties
    - **Model.fromMap()/toMap()** - Database serialization
-6. **Test the fix** - Use Playwright to verify, then write unit tests
-7. **Clean up debug output** - Remove print statements before committing
+7. **Test the fix** - Use Playwright to verify, then write unit tests
+8. **Clean up debug output** - Remove print statements before committing
+
+### Reading Application Logs
+
+Dash writes logs to daily log files in `storage/logs/`. Always check these logs when debugging:
+
+```bash
+# Read today's logs
+cat storage/logs/dash_$(date +%Y%m%d).log
+
+# Tail the logs for real-time monitoring
+tail -f storage/logs/dash_$(date +%Y%m%d).log
+
+# Search for errors
+grep -i error storage/logs/dash_*.log
+
+# Show last 50 lines of today's log
+tail -50 storage/logs/dash_$(date +%Y%m%d).log
+```
+
+**Log format:** `[YYYY-MM-DD HH:MM:SS] [LEVEL  ] message`
+
+**Log levels:** `debug`, `info`, `warning`, `error`, `request`, `query`
+
+The logs contain:
+- HTTP request/response info (method, path, status code, duration)
+- Database queries (when query logging is enabled)
+- Errors and exceptions
+- Application events
 
 ### Field Value Conversion
 

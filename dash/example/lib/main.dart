@@ -1,6 +1,7 @@
 import 'package:dash/dash.dart';
 import 'package:dash_analytics/dash_analytics.dart';
 import 'package:dash_example/models/models.dart';
+import 'package:dash_example/pages/settings_page.dart';
 
 Future<void> main() async {
   print('🚀 Dash Example Admin Panel\n');
@@ -12,6 +13,7 @@ Future<void> main() async {
   await Panel()
       .applyConfig('schemas/panel.yaml')
       .authModel<User>()
+      .registerPages([SettingsPage.make()])
       .plugin(
         AnalyticsPlugin.make() //
             .enableDashboardWidget(true)

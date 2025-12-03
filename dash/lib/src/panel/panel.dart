@@ -7,6 +7,7 @@ import 'package:dash/src/database/database_config.dart';
 import 'package:dash/src/database/migrations/schema_definition.dart';
 import 'package:dash/src/database/query_builder.dart';
 import 'package:dash/src/model/model.dart';
+import 'package:dash/src/page/page.dart';
 import 'package:dash/src/panel/panel_auth.dart';
 import 'package:dash/src/panel/panel_colors.dart';
 import 'package:dash/src/panel/panel_config.dart';
@@ -198,6 +199,27 @@ class Panel {
   /// Registers resources with this panel.
   Panel registerResources(List<Resource> resources) {
     _config.registerResources(resources);
+    return this;
+  }
+
+  /// Registers custom pages with this panel.
+  ///
+  /// Pages are arbitrary non-CRUD pages that integrate with the admin layout.
+  /// They are accessible at `/admin/pages/{slug}`.
+  ///
+  /// Example:
+  /// ```dart
+  /// final panel = Panel()
+  ///   ..registerPages([
+  ///     SettingsPage.make(),
+  ///     AboutPage.make(),
+  ///   ]);
+  /// ```
+  ///
+  /// Pages can optionally register themselves in the sidebar navigation
+  /// by setting [Page.navigationGroup].
+  Panel registerPages(List<Page> pages) {
+    _config.registerPages(pages);
     return this;
   }
 

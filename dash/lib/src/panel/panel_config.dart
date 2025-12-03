@@ -17,6 +17,7 @@ class PanelConfig {
   String _id = 'admin';
   String _path = '/admin';
   final List<Resource> _resources = [];
+  final List<Page> _pages = [];
   final List<Widget> _widgets = [];
   PanelColors _colors = PanelColors.defaults;
 
@@ -39,6 +40,9 @@ class PanelConfig {
 
   /// The registered resources in this panel.
   List<Resource> get resources => List.unmodifiable(_resources);
+
+  /// The registered custom pages in this panel.
+  List<Page> get pages => List.unmodifiable(_pages);
 
   /// The registered widgets in this panel.
   List<Widget> get widgets => List.unmodifiable(_widgets);
@@ -118,6 +122,30 @@ class PanelConfig {
         _resources.add(resource);
 
         ComponentRegistry.registerFactory('resource-index-${resource.slug}', resource.indexComponentFactory);
+      }
+    }
+  }
+
+  /// Registers custom pages with this panel.
+  ///
+  /// Pages with [Page.shouldRegisterNavigation] set to true will also
+  /// be added to the sidebar navigation.
+  void registerPages(List<Page> pages) {
+    for (final page in pages) {
+      final alreadyExists = _pages.any((existing) => existing.slug == page.slug);
+      if (!alreadyExists) {
+        _pages.add(page);
+
+        // Auto-register navigation item if page wants it
+        if (page.shouldRegisterNavigation) {
+          _navigationItems.add(
+            NavigationItem.make(page.title)
+                .url('/pages/${page.slug}')
+                .group(page.navigationGroup!)
+                .sort(page.navigationSort)
+                .icon(page.icon ?? HeroIcons.document),
+          );
+        }
       }
     }
   }

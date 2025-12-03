@@ -368,6 +368,27 @@ class PanelRouter {
       return _PageWithAssets(LoginPage(basePath: _config.path));
     }
 
+    // Handle custom pages: /admin/pages/{slug}
+    if (path.contains('pages/')) {
+      final parts = path.split('/');
+      final pagesIndex = parts.indexOf('pages');
+      final pageSlug = pagesIndex + 1 < parts.length ? parts[pagesIndex + 1] : '';
+
+      // Find the matching page by slug
+      final page = _config.pages.firstWhere(
+        (p) => p.slug == pageSlug,
+        orElse: () => throw Exception('Page not found: $pageSlug'),
+      );
+
+      // Build the page content
+      final pageContent = await page.build(request, _config.path);
+
+      // Collect page-specific assets if any
+      final pageAssets = page.assets;
+
+      return _wrapInLayout(title: page.title, child: pageContent, pageAssets: pageAssets);
+    }
+
     if (path.contains('resources/')) {
       final parts = path.split('/');
       final resourceIndex = parts.indexOf('resources');

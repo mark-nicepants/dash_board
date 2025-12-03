@@ -13,11 +13,22 @@ import 'package:jaspr/jaspr.dart';
 /// Uses the form schema defined on the resource in disabled/view mode
 /// to display the record's data in a consistent layout.
 ///
+/// The [formSchema] parameter should be a pre-configured FormSchema with:
+/// - Fields populated with record data
+/// - Operation set to view mode
+/// - All fields disabled (read-only)
+/// - Form actions set
+///
+/// This design ensures the schema is prepared once in [Resource.buildViewPage]
+/// and passed through, avoiding duplicate schema creation which would lose
+/// populated field values.
+///
 /// Example:
 /// ```dart
 /// ResourceView<User>(
 ///   resource: userResource,
 ///   record: user,
+///   formSchema: preparedSchema,
 /// )
 /// ```
 class ResourceView<T extends Model> extends StatelessComponent {
@@ -26,9 +37,12 @@ class ResourceView<T extends Model> extends StatelessComponent {
   /// The record being viewed.
   final T record;
 
+  /// The pre-configured form schema with fields already populated.
+  final FormSchema<T> formSchema;
+
   String get basePath => '${inject<PanelConfig>().path}/resources/${resource.slug}';
 
-  const ResourceView({required this.resource, required this.record, super.key});
+  const ResourceView({required this.resource, required this.record, required this.formSchema, super.key});
 
   @override
   Component build(BuildContext context) {
@@ -76,38 +90,6 @@ class ResourceView<T extends Model> extends StatelessComponent {
   }
 
   Component _buildViewCard() {
-    final recordId = _getRecordId();
-
-    // Build the form schema in view mode
-    final formSchema = resource.form(FormSchema<T>());
-
-    formSchema
-        .operation(FormOperation.view)
-        .record(record)
-        .disabled(true) // All fields are disabled in view mode
-        .showCancelButton(false); // No cancel button in view mode
-
-    // Pre-populate fields with record values
-    _populateFieldsFromRecord(formSchema);
-
-    // Set view-specific form actions (Edit, Back buttons)
-    formSchema.formActions(resource.viewFormActions(recordId));
-
     return FormRenderer(schema: formSchema);
-  }
-
-  /// Populates form fields with values from the record.
-  void _populateFieldsFromRecord(FormSchema<T> formSchema) {
-    final recordData = record.toMap();
-
-    for (final field in formSchema.getFields()) {
-      final name = field.getName();
-      if (recordData.containsKey(name)) {
-        final value = recordData[name];
-        if (value != null) {
-          field.defaultValue(value);
-        }
-      }
-    }
   }
 }

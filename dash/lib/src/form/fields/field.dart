@@ -1,4 +1,4 @@
-import 'package:dash/src/validation/validation.dart';
+import 'package:dash/dash.dart';
 import 'package:jaspr/jaspr.dart';
 
 // Re-export validation rules for convenience
@@ -96,6 +96,9 @@ abstract class FormField {
 
   /// Tab index for keyboard navigation.
   int? _tabindex;
+
+  /// Model instance associated with this field.
+  Model? record;
 
   /// Callback to transform value before saving to the database.
   /// Used to process field values (e.g., hashing passwords, formatting dates).

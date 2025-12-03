@@ -4,6 +4,7 @@ import 'package:dash/src/model/annotations.dart';
 import 'package:dash/src/model/model_query_builder.dart';
 import 'package:dash/src/model/soft_deletes.dart';
 import 'package:dash/src/resource.dart';
+import 'package:dash/src/service_locator.dart';
 import 'package:dash/src/validation/validation.dart';
 
 /// Base class for all Dash models.
@@ -121,6 +122,12 @@ abstract class Model {
   /// Returns metadata about relationships defined on this model.
   /// Override this in generated code to provide relationship metadata.
   List<RelationshipMeta> getRelationships() => [];
+
+  Future<T> loadRelationship<T extends Model>(String modelName, dynamic modelId) async {
+    final resource = resourceFromSlug(modelName) as Resource<T>;
+    final relation = await resource.query().find(modelId);
+    return relation as T;
+  }
 
   // ===== Helper Methods for Subclasses =====
 

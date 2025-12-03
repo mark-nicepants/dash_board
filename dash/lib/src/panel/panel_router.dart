@@ -178,7 +178,7 @@ class PanelRouter {
 
       if (errors.isNotEmpty) {
         // Re-render edit page with errors
-        final page = resource.buildEditPage(record: record, errors: errors, oldInput: formData);
+        final page = await resource.buildEditPage(record: record, errors: errors, oldInput: formData);
         final wrapped = _wrapInLayout(title: 'Edit ${resource.singularLabel}', child: page);
         return await _renderPage(wrapped.page, pageAssets: wrapped.assets);
       }
@@ -365,7 +365,7 @@ class PanelRouter {
           throw Exception('Record not found: $recordId');
         }
 
-        final editPage = resource.buildEditPage(record: record);
+        final editPage = await resource.buildEditPage(record: record);
         return _wrapInLayout(title: 'Edit ${resource.singularLabel}', child: editPage);
       }
 

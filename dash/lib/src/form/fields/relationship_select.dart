@@ -590,8 +590,9 @@ class RelationshipSelect extends FormField {
         : '[${_options.map((o) => '{"value":"${o.value}","label":"${_escapeJs(o.label)}"}').join(',')}]';
 
     // Build selected option
-    final selectedVal = defaultVal?.toString() ?? '';
-    final selectedLbl = _selectedOption?.label ?? '';
+    final selectedVal = _selectedOption?.value ?? defaultVal?.toString() ?? '';
+    final selectedLbl =
+        _selectedOption?.label ?? record?.getRelation(_relationName ?? '')?.toMap()[_displayColumn]?.toString() ?? '';
 
     return '''
       {

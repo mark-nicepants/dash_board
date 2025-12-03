@@ -1,3 +1,4 @@
+import 'package:collection/collection.dart';
 import 'package:dash/src/actions/action.dart';
 import 'package:dash/src/actions/prebuilt/cancel_action.dart';
 import 'package:dash/src/actions/prebuilt/create_action.dart';
@@ -13,6 +14,7 @@ import 'package:dash/src/interactive/component_registry.dart';
 import 'package:dash/src/model/annotations.dart';
 import 'package:dash/src/model/model.dart';
 import 'package:dash/src/model/model_query_builder.dart';
+import 'package:dash/src/panel/panel_config.dart';
 import 'package:dash/src/service_locator.dart';
 import 'package:dash/src/table/table.dart';
 import 'package:dash/src/utils/sanitization.dart';
@@ -216,6 +218,11 @@ abstract class Resource<T extends Model> {
   /// ```
   List<Action<T>> viewFormActions(dynamic recordId) {
     return [CancelAction.make<T>().label('Back')];
+  }
+
+  /// Gets the base path for this resource's routes.
+  String _getBasePath() {
+    return '${inject<PanelConfig>().path}/resources/$slug';
   }
 
   /// Creates a factory for the ResourceIndex component.
@@ -509,18 +516,71 @@ abstract class Resource<T extends Model> {
   }
 
   /// Creates a ResourceForm component for creating a new record.
+  ///
+  /// This method prepares a [FormSchema] with:
+  /// - Operation set to create mode
+  /// - Form action and method configured
   Component buildCreatePage({Map<String, List<String>>? errors, Map<String, dynamic>? oldInput}) {
-    return ResourceForm<T>(resource: this, errors: errors, oldInput: oldInput);
+    final formSchema = form(FormSchema<T>());
+
+    formSchema.operation(FormOperation.create).action('${_getBasePath()}/store').method(FormSubmitMethod.post);
+
+    // Set form actions from resource
+    formSchema.formActions(formActions(FormOperation.create));
+
+    return ResourceForm<T>(resource: this, formSchema: formSchema, errors: errors, oldInput: oldInput);
   }
 
   /// Creates a ResourceForm component for editing an existing record.
-  Component buildEditPage({required T record, Map<String, List<String>>? errors, Map<String, dynamic>? oldInput}) {
-    return ResourceForm<T>(resource: this, record: record, errors: errors, oldInput: oldInput);
+  ///
+  /// This method prepares a [FormSchema] with:
+  /// - The record data populated into fields
+  /// - Relationships loaded for related fields
+  /// - Operation set to edit mode
+  /// - Form action and method configured
+  Future<Component> buildEditPage({
+    required T record,
+    Map<String, List<String>>? errors,
+    Map<String, dynamic>? oldInput,
+  }) async {
+    // Build and populate the form schema
+    final formSchema = form(FormSchema<T>());
+    final recordId = record.toMap()[record.primaryKey];
+
+    formSchema
+        .operation(FormOperation.edit)
+        .record(record)
+        .action('${_getBasePath()}/$recordId')
+        .method(FormSubmitMethod.put);
+
+    // Populate fields from the record (including relationship loading)
+    await formSchema.fillAsync();
+
+    // Set form actions from resource
+    formSchema.formActions(formActions(FormOperation.edit));
+
+    return ResourceForm<T>(resource: this, record: record, formSchema: formSchema, errors: errors, oldInput: oldInput);
   }
 
   /// Creates a ResourceView component for viewing an existing record.
+  ///
+  /// This method prepares a [FormSchema] with:
+  /// - The record data populated into fields
+  /// - Operation set to view mode
+  /// - All fields disabled (read-only)
   Component buildViewPage({required T record}) {
-    return ResourceView<T>(resource: this, record: record);
+    final formSchema = form(FormSchema<T>());
+    final recordId = record.toMap()[record.primaryKey];
+
+    formSchema.operation(FormOperation.view).record(record).disabled(true).showCancelButton(false);
+
+    // Populate fields from the record (sync version is fine for view)
+    formSchema.fill();
+
+    // Set view-specific form actions
+    formSchema.formActions(viewFormActions(recordId));
+
+    return ResourceView<T>(resource: this, record: record, formSchema: formSchema);
   }
 
   /// Creates a new FormSchema instance for this resource.

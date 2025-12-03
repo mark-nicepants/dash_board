@@ -1,3 +1,4 @@
+import 'package:collection/collection.dart';
 import 'package:dash/src/actions/action.dart';
 import 'package:dash/src/form/fields/field.dart';
 import 'package:dash/src/form/fields/section.dart';
@@ -229,6 +230,7 @@ class FormSchema<T extends Model> {
   bool hasFormActions() => _formActions != null && _formActions!.isNotEmpty;
 
   /// Fills the form with data from the record.
+  /// Note: This does not handle relationship loading. Use [fillAsync] for that.
   void fill() {
     if (_record == null) return;
 
@@ -237,6 +239,50 @@ class FormSchema<T extends Model> {
       final name = field.getName();
       if (data.containsKey(name)) {
         field.defaultValue(data[name]);
+      }
+    }
+  }
+
+  /// Fills the form with data from the record, including relationship loading.
+  ///
+  /// This method properly handles:
+  /// - Simple field values from the record
+  /// - BelongsTo relationship fields (loads related model via foreign key)
+  /// - Applies hydration callbacks if defined on fields
+  ///
+  /// Example:
+  /// ```dart
+  /// final schema = resource.form(FormSchema<User>())
+  ///   ..record(user)
+  ///   ..operation(FormOperation.edit);
+  /// await schema.fillAsync();
+  /// ```
+  Future<void> fillAsync() async {
+    if (_record == null) return;
+
+    final recordData = _record!.toMap();
+    final relationships = _record!.getRelationships();
+
+    for (final field in getFields()) {
+      field.record = _record;
+
+      final name = field.getName();
+      final relationship = relationships.where((rel) => rel.name == name).firstOrNull;
+
+      dynamic value;
+      if (relationship != null && recordData.containsKey(relationship.foreignKey)) {
+        // This field maps to a relationship - use the foreign key value
+        value = recordData[relationship.foreignKey];
+        // Load the related model for display purposes
+        await _record!.loadRelationship(relationship.relatedModelType, value);
+      } else if (recordData.containsKey(name)) {
+        value = recordData[name];
+      }
+
+      if (value != null) {
+        // Apply hydration if defined
+        value = field.hydrateValue(value);
+        field.defaultValue(value);
       }
     }
   }

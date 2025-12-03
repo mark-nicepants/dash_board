@@ -277,6 +277,61 @@ void main() {
         expect(fields[2].getDefaultValue(), equals('Hello'));
       });
 
+      test('fill() does nothing when record is null', () {
+        final form = FormSchema<TestModel>().fields([TextInput.make('name').defaultValue('default')]);
+
+        form.fill();
+
+        final fields = form.getFields();
+        expect(fields[0].getDefaultValue(), equals('default'));
+      });
+
+      test('fill() only populates fields that exist in record', () {
+        final model = TestModel(id: 1, name: 'John', email: 'john@test.com');
+        final form = FormSchema<TestModel>()
+            .fields([TextInput.make('name'), TextInput.make('nonexistent')])
+            .record(model);
+
+        form.fill();
+
+        final fields = form.getFields();
+        expect(fields[0].getDefaultValue(), equals('John'));
+        expect(fields[1].getDefaultValue(), isNull);
+      });
+
+      test('fillAsync() populates field defaults from record', () async {
+        final model = TestModel(id: 1, name: 'John', email: 'john@test.com', bio: 'Hello');
+        final form = FormSchema<TestModel>()
+            .fields([TextInput.make('name'), TextInput.make('email'), Textarea.make('bio')])
+            .record(model);
+
+        await form.fillAsync();
+
+        final fields = form.getFields();
+        expect(fields[0].getDefaultValue(), equals('John'));
+        expect(fields[1].getDefaultValue(), equals('john@test.com'));
+        expect(fields[2].getDefaultValue(), equals('Hello'));
+      });
+
+      test('fillAsync() does nothing when record is null', () async {
+        final form = FormSchema<TestModel>().fields([TextInput.make('name').defaultValue('default')]);
+
+        await form.fillAsync();
+
+        final fields = form.getFields();
+        expect(fields[0].getDefaultValue(), equals('default'));
+      });
+
+      test('fillAsync() sets record reference on fields', () async {
+        final model = TestModel(id: 1, name: 'John', email: 'john@test.com');
+        final form = FormSchema<TestModel>().fields([TextInput.make('name')]).record(model);
+
+        await form.fillAsync();
+
+        final fields = form.getFields();
+        expect(fields[0].record, equals(model));
+      });
+
       test('getInitialData() returns record data', () {
         final model = TestModel(id: 1, name: 'John', email: 'john@test.com');
         final form = FormSchema<TestModel>().record(model);

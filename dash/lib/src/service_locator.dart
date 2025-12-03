@@ -38,7 +38,7 @@ T modelInstanceFromSlug<T extends Model>(String slug) {
 
 /// Gets a resource instance by model slug.
 Resource resourceFromSlug(String slug) {
-  return inject<Resource>(instanceName: 'resource:$slug');
+  return inject<Resource>(instanceName: 'resource:${slug.toLowerCase()}');
 }
 
 /// Builds all registered resources.

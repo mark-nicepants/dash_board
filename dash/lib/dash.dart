@@ -48,10 +48,10 @@ export 'src/database/connectors/sqlite_connector.dart';
 export 'src/database/database_config.dart';
 // Database
 export 'src/database/database_connector.dart';
-export 'src/database/migration_config.dart';
 export 'src/database/migrations/builders/sqlite_migration_builder.dart';
 export 'src/database/migrations/inspectors/sqlite_schema_inspector.dart';
 export 'src/database/migrations/migration_builder.dart';
+export 'src/database/migrations/migration_config.dart';
 export 'src/database/migrations/migration_runner.dart';
 export 'src/database/migrations/schema_definition.dart';
 export 'src/database/migrations/schema_inspector.dart';

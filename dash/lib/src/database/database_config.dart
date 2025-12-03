@@ -1,5 +1,5 @@
 import 'package:dash/src/database/database_connector.dart';
-import 'package:dash/src/database/migration_config.dart';
+import 'package:dash/src/database/migrations/migration_config.dart';
 import 'package:dash/src/panel/panel_config.dart';
 
 /// Configuration for database connections.

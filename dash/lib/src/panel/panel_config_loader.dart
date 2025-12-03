@@ -4,7 +4,7 @@ import 'package:dash/src/auth/session_store.dart';
 import 'package:dash/src/database/connectors/sqlite_connector.dart';
 import 'package:dash/src/database/database_config.dart';
 import 'package:dash/src/database/database_connector.dart';
-import 'package:dash/src/database/migration_config.dart';
+import 'package:dash/src/database/migrations/migration_config.dart';
 import 'package:dash/src/panel/panel.dart';
 import 'package:dash/src/storage/storage.dart';
 import 'package:path/path.dart' as p;

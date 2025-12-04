@@ -4,7 +4,7 @@ import 'dart:math';
 import 'dart:typed_data';
 
 import 'package:dash/src/auth/auth_service.dart';
-import 'package:dash/src/auth/request_session.dart';
+import 'package:dash/src/auth/session_helper.dart';
 import 'package:dash/src/cli/cli_logger.dart';
 import 'package:dash/src/model/model.dart';
 import 'package:dash/src/panel/panel_config.dart';
@@ -75,19 +75,19 @@ class RequestHandler {
     }
 
     // Set session cookie and redirect to dashboard
-    return Response.found(_config.path, headers: {'set-cookie': RequestSession.createSessionCookie(sessionId)});
+    return Response.found(_config.path, headers: {'set-cookie': SessionHelper.createSessionCookie(sessionId)});
   }
 
   /// Handles logout request.
   Response _handleLogout(Request request) {
     // Get session ID from cookie and logout
-    final sessionId = RequestSession.parseSessionId(request);
+    final sessionId = SessionHelper.parseSessionId(request);
     if (sessionId != null) {
       _authService.logout(sessionId);
     }
 
     // Clear cookie and redirect to login
-    return Response.found('${_config.path}/login', headers: {'set-cookie': RequestSession.clearSessionCookie()});
+    return Response.found('${_config.path}/login', headers: {'set-cookie': SessionHelper.clearSessionCookie()});
   }
 
   /// Handles file upload via multipart form data.

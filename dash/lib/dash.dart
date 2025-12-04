@@ -22,11 +22,10 @@ export 'src/actions/prebuilt/view_action.dart';
 // Auth
 export 'src/auth/auth_service.dart' show AuthService, Session;
 export 'src/auth/authenticatable.dart';
-export 'src/auth/request_session.dart';
+export 'src/auth/session_helper.dart';
 export 'src/auth/session_store.dart' show SessionStore, FileSessionStore, InMemorySessionStore, SessionData;
-// Interactive Components (Livewire-like)
-export 'src/components/interactive/interactive.dart';
 // Components
+export 'src/components/interactive/interactive.dart';
 export 'src/components/layout.dart';
 export 'src/components/pages/dashboard_page.dart';
 export 'src/components/pages/login_page.dart';
@@ -44,6 +43,9 @@ export 'src/components/partials/page_header.dart';
 export 'src/components/partials/page_scaffold.dart';
 export 'src/components/partials/table/table_components.dart';
 export 'src/components/partials/user_menu.dart';
+// Context (Request-scoped state via Zones)
+export 'src/context/request_context.dart';
+// Database
 export 'src/database/connectors/sqlite/sqlite_connector.dart';
 export 'src/database/database_config.dart';
 // Database
@@ -56,6 +58,8 @@ export 'src/database/migrations/schema_definition.dart';
 export 'src/database/migrations/schema_inspector.dart';
 export 'src/database/query_builder.dart';
 export 'src/database/schema_builder.dart';
+// Events
+export 'src/events/events.dart';
 export 'src/form/fields/checkbox.dart';
 export 'src/form/fields/date_picker.dart';
 export 'src/form/fields/field.dart';

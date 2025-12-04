@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:dash/dash.dart';
 import 'package:dash/src/utils/resource_loader.dart';
 import 'package:jaspr/server.dart';
@@ -40,6 +42,11 @@ class PanelRouter {
   Future<Response> route(Request request) async {
     final path = request.url.path;
     final method = request.method;
+
+    // Handle Server-Sent Events endpoint for real-time updates
+    if (path == 'dash/events/stream' || path.endsWith('/events/stream')) {
+      return _handleSSE(request);
+    }
 
     // Try Dash internal routes first (admin UI, resources, login, etc.)
 
@@ -521,5 +528,48 @@ class PanelRouter {
     );
 
     return Response.ok(html, headers: {'content-type': 'text/html; charset=utf-8'});
+  }
+
+  /// Handles Server-Sent Events (SSE) connections for real-time updates.
+  ///
+  /// This endpoint streams events from the EventDispatcher to connected
+  /// frontend clients. Events with `broadcastToFrontend=true` will be
+  /// sent to clients with matching session IDs.
+  ///
+  /// The response format follows the SSE specification:
+  /// ```
+  /// data: {"name":"users.created","payload":{...},"timestamp":"..."}
+  ///
+  /// ```
+  Response _handleSSE(Request request) {
+    final dispatcher = EventDispatcher.instance;
+
+    // Parse session ID from cookie for session-scoped events
+    final sessionId = SessionHelper.parseSessionId(request);
+
+    // Create a stream controller for this connection
+    final stream = dispatcher.createSSEStream(sessionId: sessionId);
+
+    // Transform events to SSE format and encode as UTF-8 bytes
+    // Shelf expects Stream<List<int>> for the response body
+    final sseStream = stream.map((event) {
+      final data = jsonEncode({
+        'name': event.name,
+        'payload': event.toPayload(),
+        'timestamp': event.timestamp.toIso8601String(),
+      });
+      // Encode the SSE message as UTF-8 bytes
+      return utf8.encode('data: $data\n\n');
+    });
+
+    return Response.ok(
+      sseStream,
+      headers: {
+        'Content-Type': 'text/event-stream; charset=utf-8',
+        'Cache-Control': 'no-cache, no-store, must-revalidate',
+        'Connection': 'keep-alive',
+        'X-Accel-Buffering': 'no', // Disable nginx buffering
+      },
+    );
   }
 }

@@ -11,6 +11,8 @@ dependencies:
     path: ../
   dash_analytics:
     path: ../../plugins/dash-analytics
+  dash_activity_log:
+    path: ../../plugins/dash-activity-log
   faker: ^2.2.0
   jaspr: ^0.21.7
   shelf: ^1.4.0

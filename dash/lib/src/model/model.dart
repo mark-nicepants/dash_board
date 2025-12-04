@@ -1,6 +1,8 @@
 import 'package:collection/collection.dart';
+import 'package:dash/src/context/request_context.dart';
 import 'package:dash/src/database/database_connector.dart';
 import 'package:dash/src/database/migrations/schema_definition.dart';
+import 'package:dash/src/events/events.dart';
 import 'package:dash/src/model/annotations.dart';
 import 'package:dash/src/model/model_query_builder.dart';
 import 'package:dash/src/model/soft_deletes.dart';
@@ -455,15 +457,40 @@ abstract class Model {
     return model;
   }
 
+  /// Dispatches an event with the current request's session ID attached.
+  ///
+  /// This method reads the session ID from the current [RequestContext] zone,
+  /// ensuring that events are properly attributed to the user/session that
+  /// caused them. This is critical for:
+  /// - Session-scoped SSE broadcasting (events only go to the right user)
+  /// - Activity logging (tracking who made changes)
+  /// - Security (preventing cross-session data leakage)
+  Future<void> _dispatchWithSession(Event event) async {
+    await EventDispatcher.instance.dispatch(event, RequestContext.sessionId!);
+  }
+
   /// Saves the model to the database.
+  ///
+  /// This method dispatches the following events:
+  /// - [ModelCreatingEvent] / [ModelUpdatingEvent] before the operation
+  /// - [ModelCreatedEvent] / [ModelUpdatedEvent] after the operation
+  /// - [ModelSavedEvent] after any save operation
   Future<bool> save() async {
     await onSaving();
 
     final isCreating = getKey() == null;
 
+    // Capture state before update for change tracking
+    Map<String, dynamic>? beforeState;
+    if (!isCreating) {
+      beforeState = Map<String, dynamic>.from(toMap());
+    }
+
     if (isCreating) {
+      await _dispatchWithSession(ModelCreatingEvent(this));
       await onCreating();
     } else {
+      await _dispatchWithSession(ModelUpdatingEvent(this, beforeState!));
       await onUpdating();
     }
 
@@ -491,6 +518,8 @@ abstract class Model {
       }
       await onCreated();
       await onSaved();
+      await _dispatchWithSession(ModelCreatedEvent(this));
+      await _dispatchWithSession(ModelSavedEvent(this, wasCreating: true));
       return true;
     } else {
       // Update
@@ -499,13 +528,38 @@ abstract class Model {
       if (success) {
         await onUpdated();
         await onSaved();
+
+        // Compute changes for the event
+        final changes = _computeChanges(beforeState!, toMap());
+        await _dispatchWithSession(ModelUpdatedEvent(this, changes: changes, beforeState: beforeState));
+        await _dispatchWithSession(ModelSavedEvent(this, wasCreating: false));
       }
       return success;
     }
   }
 
+  /// Computes the differences between two maps.
+  Map<String, dynamic> _computeChanges(Map<String, dynamic> before, Map<String, dynamic> after) {
+    final changes = <String, dynamic>{};
+
+    for (final key in after.keys) {
+      final beforeValue = before[key];
+      final afterValue = after[key];
+
+      if (beforeValue != afterValue) {
+        changes[key] = {'before': beforeValue, 'after': afterValue};
+      }
+    }
+
+    return changes;
+  }
+
   /// Deletes the model from the database.
   /// If the model uses SoftDeletes, performs a soft delete instead.
+  ///
+  /// This method dispatches the following events:
+  /// - [ModelDeletingEvent] before the operation
+  /// - [ModelDeletedEvent] after the operation
   Future<bool> delete() async {
     if (getKey() == null) {
       throw StateError('Cannot delete a model without a primary key value.');
@@ -516,6 +570,11 @@ abstract class Model {
       return (this as dynamic).softDelete();
     }
 
+    // Capture data before deletion for the event
+    final deletedData = Map<String, dynamic>.from(toMap());
+    final modelId = getKey();
+
+    await _dispatchWithSession(ModelDeletingEvent(this));
     await onDeleting();
 
     final deleted = await connector.delete(table, where: '$primaryKey = ?', whereArgs: [getKey()]);
@@ -523,17 +582,29 @@ abstract class Model {
     final success = deleted > 0;
     if (success) {
       await onDeleted();
+      await _dispatchWithSession(
+        ModelDeletedEvent(table: table, modelId: modelId, deletedData: deletedData, modelType: runtimeType.toString()),
+      );
     }
     return success;
   }
 
   /// Performs a soft delete (sets deleted_at timestamp).
   /// Only available if the model uses SoftDeletes mixin.
+  ///
+  /// This method dispatches the following events:
+  /// - [ModelDeletingEvent] before the operation
+  /// - [ModelDeletedEvent] after the operation
   Future<bool> softDelete() async {
     if (this is! SoftDeletes) {
       throw StateError('Model does not use SoftDeletes mixin.');
     }
 
+    // Capture data before deletion for the event
+    final deletedData = Map<String, dynamic>.from(toMap());
+    final modelId = getKey();
+
+    await _dispatchWithSession(ModelDeletingEvent(this));
     await onDeleting();
 
     final mixin = this as SoftDeletes;
@@ -545,6 +616,9 @@ abstract class Model {
     final success = updated > 0;
     if (success) {
       await onDeleted();
+      await _dispatchWithSession(
+        ModelDeletedEvent(table: table, modelId: modelId, deletedData: deletedData, modelType: runtimeType.toString()),
+      );
     }
     return success;
   }

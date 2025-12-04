@@ -17,7 +17,7 @@ class DeactivateUserHandler extends ActionHandler {
     final user = context.record as User;
 
     // Check if trying to deactivate the currently logged-in user
-    final currentUser = RequestSession.instance().getUser<User>();
+    final currentUser = RequestContext.user as User?;
     if (currentUser != null && currentUser.id == user.id) {
       return ActionResult.failure('You cannot deactivate your own account');
     }

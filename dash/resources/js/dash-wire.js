@@ -988,6 +988,130 @@ export function initDashWire() {
     }
   }
 
+  // ============================================================
+  // Server-Sent Events (SSE) for Real-Time Updates
+  // ============================================================
+
+  let sseConnection = null;
+  let sseReconnectAttempts = 0;
+  const SSE_MAX_RECONNECT_ATTEMPTS = 5;
+  const SSE_RECONNECT_DELAY = 3000;
+
+  /**
+   * Initialize Server-Sent Events connection for real-time updates.
+   * Automatically connects to the server's event stream and broadcasts
+   * received events to listening components.
+   */
+  function initSSE() {
+    // Don't initialize if SSE is disabled
+    if (window.DashWireConfig?.disableSSE) {
+      log('SSE disabled via config');
+      return;
+    }
+
+    // Use adminBasePath for SSE (not the wire path)
+    const adminPath = window.DashWireConfig?.adminBasePath || '/admin';
+    const sseUrl = `${adminPath}/events/stream`;
+
+    log('Connecting to SSE:', sseUrl);
+
+    try {
+      sseConnection = new EventSource(sseUrl);
+
+      sseConnection.onopen = () => {
+        log('SSE connection established');
+        sseReconnectAttempts = 0;
+      };
+
+      sseConnection.onmessage = (event) => {
+        try {
+          const data = JSON.parse(event.data);
+          handleServerEvent(data);
+        } catch (e) {
+          console.error('[DashWire] Failed to parse SSE message:', e);
+        }
+      };
+
+      sseConnection.onerror = (error) => {
+        console.error('[DashWire] SSE connection error:', error);
+        sseConnection.close();
+        sseConnection = null;
+
+        // Attempt reconnection with exponential backoff
+        if (sseReconnectAttempts < SSE_MAX_RECONNECT_ATTEMPTS) {
+          sseReconnectAttempts++;
+          const delay = SSE_RECONNECT_DELAY * sseReconnectAttempts;
+          log(`SSE reconnecting in ${delay}ms (attempt ${sseReconnectAttempts})`);
+          setTimeout(initSSE, delay);
+        } else {
+          console.warn('[DashWire] SSE max reconnect attempts reached');
+        }
+      };
+    } catch (e) {
+      console.error('[DashWire] Failed to initialize SSE:', e);
+    }
+  }
+
+  /**
+   * Handle an event received from the server via SSE.
+   * @param {object} event - The event object with name, payload, and timestamp
+   */
+  function handleServerEvent(event) {
+    log('Server event received:', event.name, event.payload);
+
+    // Dispatch to listening components via the existing broadcast system
+    broadcastEvents([{ name: event.name, payload: event.payload }], null);
+
+    // Show toast notifications for model events
+    if (event.name.endsWith('.created')) {
+      const table = event.payload?.table || 'Record';
+      showToast(`${capitalize(table)} created`, 'success', 3000);
+    } else if (event.name.endsWith('.updated')) {
+      const table = event.payload?.table || 'Record';
+      showToast(`${capitalize(table)} updated`, 'success', 3000);
+    } else if (event.name.endsWith('.deleted')) {
+      const table = event.payload?.table || 'Record';
+      showToast(`${capitalize(table)} deleted`, 'success', 3000);
+    }
+  }
+
+  /**
+   * Capitalize the first letter of a string.
+   * @param {string} str - The string to capitalize
+   * @returns {string} The capitalized string
+   */
+  function capitalize(str) {
+    if (!str) return '';
+    return str.charAt(0).toUpperCase() + str.slice(1);
+  }
+
+  /**
+   * Disconnect from SSE server.
+   */
+  function disconnectSSE() {
+    if (sseConnection) {
+      sseConnection.close();
+      sseConnection = null;
+      log('SSE connection closed');
+    }
+  }
+
+  /**
+   * Check if SSE is connected.
+   * @returns {boolean} True if connected
+   */
+  function isSSEConnected() {
+    return sseConnection && sseConnection.readyState === EventSource.OPEN;
+  }
+
+  // Initialize SSE connection when the page loads
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initSSE);
+  } else {
+    // DOM already loaded, initialize immediately
+    setTimeout(initSSE, 100);
+  }
+
   // Expose global API
   window.DashWire = {
     config,
@@ -997,6 +1121,12 @@ export function initDashWire() {
     getComponentData,
     dispatch: dispatchEvent,
     broadcast: broadcastEvents,
+    // Server-Sent Events
+    sse: {
+      connect: initSSE,
+      disconnect: disconnectSSE,
+      isConnected: isSSEConnected,
+    },
     // LocalStorage utilities
     storage: {
       load: storageLoad,

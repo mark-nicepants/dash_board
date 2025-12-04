@@ -4769,6 +4769,82 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       } catch (_) {
       }
     }
+    let sseConnection = null;
+    let sseReconnectAttempts = 0;
+    const SSE_MAX_RECONNECT_ATTEMPTS = 5;
+    const SSE_RECONNECT_DELAY = 3e3;
+    function initSSE() {
+      if (window.DashWireConfig?.disableSSE) {
+        log("SSE disabled via config");
+        return;
+      }
+      const adminPath = window.DashWireConfig?.adminBasePath || "/admin";
+      const sseUrl = `${adminPath}/events/stream`;
+      log("Connecting to SSE:", sseUrl);
+      try {
+        sseConnection = new EventSource(sseUrl);
+        sseConnection.onopen = () => {
+          log("SSE connection established");
+          sseReconnectAttempts = 0;
+        };
+        sseConnection.onmessage = (event) => {
+          try {
+            const data2 = JSON.parse(event.data);
+            handleServerEvent(data2);
+          } catch (e) {
+            console.error("[DashWire] Failed to parse SSE message:", e);
+          }
+        };
+        sseConnection.onerror = (error2) => {
+          console.error("[DashWire] SSE connection error:", error2);
+          sseConnection.close();
+          sseConnection = null;
+          if (sseReconnectAttempts < SSE_MAX_RECONNECT_ATTEMPTS) {
+            sseReconnectAttempts++;
+            const delay = SSE_RECONNECT_DELAY * sseReconnectAttempts;
+            log(`SSE reconnecting in ${delay}ms (attempt ${sseReconnectAttempts})`);
+            setTimeout(initSSE, delay);
+          } else {
+            console.warn("[DashWire] SSE max reconnect attempts reached");
+          }
+        };
+      } catch (e) {
+        console.error("[DashWire] Failed to initialize SSE:", e);
+      }
+    }
+    function handleServerEvent(event) {
+      log("Server event received:", event.name, event.payload);
+      broadcastEvents([{ name: event.name, payload: event.payload }], null);
+      if (event.name.endsWith(".created")) {
+        const table = event.payload?.table || "Record";
+        showToast(`${capitalize2(table)} created`, "success", 3e3);
+      } else if (event.name.endsWith(".updated")) {
+        const table = event.payload?.table || "Record";
+        showToast(`${capitalize2(table)} updated`, "success", 3e3);
+      } else if (event.name.endsWith(".deleted")) {
+        const table = event.payload?.table || "Record";
+        showToast(`${capitalize2(table)} deleted`, "success", 3e3);
+      }
+    }
+    function capitalize2(str) {
+      if (!str) return "";
+      return str.charAt(0).toUpperCase() + str.slice(1);
+    }
+    function disconnectSSE() {
+      if (sseConnection) {
+        sseConnection.close();
+        sseConnection = null;
+        log("SSE connection closed");
+      }
+    }
+    function isSSEConnected() {
+      return sseConnection && sseConnection.readyState === EventSource.OPEN;
+    }
+    if (document.readyState === "loading") {
+      document.addEventListener("DOMContentLoaded", initSSE);
+    } else {
+      setTimeout(initSSE, 100);
+    }
     window.DashWire = {
       config,
       sendRequest: sendWireRequest,
@@ -4777,6 +4853,12 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
       getComponentData,
       dispatch: dispatchEvent,
       broadcast: broadcastEvents,
+      // Server-Sent Events
+      sse: {
+        connect: initSSE,
+        disconnect: disconnectSSE,
+        isConnected: isSSEConnected
+      },
       // LocalStorage utilities
       storage: {
         load: storageLoad,

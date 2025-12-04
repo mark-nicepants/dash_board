@@ -29,10 +29,11 @@ class DashLayout extends StatelessComponent {
   @override
   Component build(BuildContext context) {
     // Get user info from RequestSession
-    final session = RequestSession.instance();
+    final user = RequestContext.user as Authenticatable?;
 
-    final userName = session.userName;
-    final userAvatarUrl = session.userAvatarUrl;
+    final userName = user?.getDisplayName();
+    final userAvatarUrl =
+        user?.toMap()['avatarUrl'] as String?; // Improve via schema update and expose via Authenticatable
 
     return div(classes: 'flex h-screen bg-gray-900 overflow-hidden', [
       // Sidebar (fixed)
@@ -67,7 +68,7 @@ class DashLayout extends StatelessComponent {
       // Main content area
       div(classes: 'flex-1 flex flex-col h-screen overflow-hidden', [
         // Top header with user menu (sticky)
-        if (session.isAuthenticated)
+        if (user != null)
           header(classes: 'flex items-center justify-end px-8 bg-gray-800 border-b border-gray-700 h-[60px] shrink-0', [
             UserMenu(name: userName!, avatarUrl: userAvatarUrl, basePath: basePath),
           ]),

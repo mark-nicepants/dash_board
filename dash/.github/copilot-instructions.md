@@ -36,11 +36,8 @@ cd /path/to/dash && dart run bin/generate.dart example/schemas/models example/li
 
 When fixing bugs or testing features interactively:
 
-1. **Start the server** (background process):
-   ```bash
-   lsof -ti :8080 | xargs kill -9 2>/dev/null; sleep 1
-   cd /path/to/dash && dart run example/lib/main.dart
-   ```
+1. **Start the server with the example project** (VSCode run configuration):
+   - You cant use `dart run example/lib/main.dart` directly because it blocks the terminal. Use the VSCode run config instead which supports hot reload.
 
 2. **Use Playwright browser tools** to navigate and interact:
    - Navigate: `browser_navigate` to `http://localhost:8080/admin/login`

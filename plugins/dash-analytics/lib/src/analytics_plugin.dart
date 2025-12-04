@@ -161,16 +161,26 @@ class AnalyticsPlugin implements Plugin {
 
     // Register model event hooks for tracking
     if (_trackModelEvents) {
-      panel.onModelCreated((model) async {
-        await _metricsService!.modelCreated(model.runtimeType.toString());
+      // Use EventDispatcher directly so we can filter out the metrics table
+      // to prevent infinite recursion
+      final dispatcher = EventDispatcher.instance;
+
+      dispatcher.listen<ModelCreatedEvent>((event) async {
+        if (event.model.table != 'dash_metrics') {
+          await _metricsService!.modelCreated(event.model.runtimeType.toString());
+        }
       });
 
-      panel.onModelUpdated((model) async {
-        await _metricsService!.modelUpdated(model.runtimeType.toString());
+      dispatcher.listen<ModelUpdatedEvent>((event) async {
+        if (event.model.table != 'dash_metrics') {
+          await _metricsService!.modelUpdated(event.model.runtimeType.toString());
+        }
       });
 
-      panel.onModelDeleted((model) async {
-        await _metricsService!.modelDeleted(model.runtimeType.toString());
+      dispatcher.listen<ModelDeletedEvent>((event) async {
+        if (event.table != 'dash_metrics') {
+          await _metricsService!.modelDeleted(event.table);
+        }
       });
     }
 

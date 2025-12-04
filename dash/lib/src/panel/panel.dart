@@ -6,6 +6,7 @@ import 'package:dash/src/components/interactive/component_registry.dart';
 import 'package:dash/src/database/database_config.dart';
 import 'package:dash/src/database/migrations/schema_definition.dart';
 import 'package:dash/src/database/query_builder.dart';
+import 'package:dash/src/events/events.dart';
 import 'package:dash/src/model/model.dart';
 import 'package:dash/src/page/page.dart';
 import 'package:dash/src/panel/panel_auth.dart';
@@ -475,6 +476,9 @@ class Panel {
 
   /// Registers a callback to be called when a model is created.
   ///
+  /// This uses the EventDispatcher internally for consistency.
+  /// For more control, use `EventDispatcher.instance.listen<ModelCreatedEvent>()`.
+  ///
   /// Example:
   /// ```dart
   /// panel.onModelCreated((model) async {
@@ -482,23 +486,40 @@ class Panel {
   /// });
   /// ```
   Panel onModelCreated(ModelCallback callback) {
+    EventDispatcher.instance.listen<ModelCreatedEvent>((event) async {
+      await callback(event.model);
+    });
+    // Also add to legacy callbacks for backward compatibility
     _modelCreatedCallbacks.add(callback);
     return this;
   }
 
   /// Registers a callback to be called when a model is updated.
+  ///
+  /// This uses the EventDispatcher internally for consistency.
+  /// For more control, use `EventDispatcher.instance.listen<ModelUpdatedEvent>()`.
   Panel onModelUpdated(ModelCallback callback) {
+    EventDispatcher.instance.listen<ModelUpdatedEvent>((event) async {
+      await callback(event.model);
+    });
+    // Also add to legacy callbacks for backward compatibility
     _modelUpdatedCallbacks.add(callback);
     return this;
   }
 
   /// Registers a callback to be called when a model is deleted.
+  ///
+  /// This uses the EventDispatcher internally for consistency.
+  /// For more control, use `EventDispatcher.instance.listen<ModelDeletedEvent>()`.
   Panel onModelDeleted(ModelCallback callback) {
+    // Note: ModelDeletedEvent doesn't have a model reference (it was deleted)
+    // So we need a special wrapper that extracts model info from the event
     _modelDeletedCallbacks.add(callback);
     return this;
   }
 
   /// Fires model created callbacks.
+  @Deprecated('Model events are now dispatched automatically via EventDispatcher')
   Future<void> fireModelCreated(Model model) async {
     for (final callback in _modelCreatedCallbacks) {
       await callback(model);
@@ -506,6 +527,7 @@ class Panel {
   }
 
   /// Fires model updated callbacks.
+  @Deprecated('Model events are now dispatched automatically via EventDispatcher')
   Future<void> fireModelUpdated(Model model) async {
     for (final callback in _modelUpdatedCallbacks) {
       await callback(model);
@@ -513,11 +535,27 @@ class Panel {
   }
 
   /// Fires model deleted callbacks.
+  @Deprecated('Model events are now dispatched automatically via EventDispatcher')
   Future<void> fireModelDeleted(Model model) async {
     for (final callback in _modelDeletedCallbacks) {
       await callback(model);
     }
   }
+
+  /// Returns the EventDispatcher instance for direct event handling.
+  ///
+  /// Use this for more advanced event handling:
+  /// ```dart
+  /// panel.events.listen<ModelCreatedEvent>((event) {
+  ///   print('Created: ${event.model.table}');
+  ///   print('Changes: ${event.toPayload()}');
+  /// });
+  ///
+  /// panel.events.listenTo('users.created', (event) {
+  ///   sendWelcomeEmail(event);
+  /// });
+  /// ```
+  EventDispatcher get events => EventDispatcher.instance;
 
   /// Creates a new query builder for database operations.
   /// Throws [StateError] if no database is configured.

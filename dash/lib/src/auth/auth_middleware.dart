@@ -1,17 +1,31 @@
 import 'package:dash/src/auth/auth_service.dart';
-import 'package:dash/src/auth/request_session.dart';
+import 'package:dash/src/auth/session_helper.dart';
+import 'package:dash/src/context/request_context.dart';
 import 'package:dash/src/model/model.dart';
 import 'package:shelf/shelf.dart';
 
 /// Middleware to protect routes that require authentication.
 ///
 /// Checks for a valid session cookie and redirects to login if not authenticated.
-/// Initializes [RequestSession] with the authenticated user for downstream handlers.
+/// Runs all downstream handlers within a [RequestContext] zone to provide
+/// request-scoped access to session and user data.
+///
+/// ## Request Isolation
+///
+/// Each request runs in its own Dart Zone with isolated context values.
+/// This ensures that concurrent requests cannot interfere with each other's
+/// session or user data - a critical security feature.
+///
+/// ## Accessing Context
+///
+/// Downstream code can access the context anywhere:
+/// ```dart
+/// final sessionId = RequestContext.sessionId;
+/// final user = RequestContext.user;
+/// ```
 Middleware authMiddleware(AuthService<Model> authService, {required String basePath}) {
-  // Ensure RequestSession is registered
-  RequestSession.register();
-
   final baseSegment = basePath.startsWith('/') ? basePath.substring(1) : basePath;
+
   return (Handler innerHandler) {
     return (Request request) async {
       // Skip auth for login page and login POST
@@ -21,7 +35,7 @@ Middleware authMiddleware(AuthService<Model> authService, {required String baseP
       }
 
       // Parse session ID from cookie
-      final sessionId = RequestSession.parseSessionId(request);
+      final sessionId = SessionHelper.parseSessionId(request);
 
       // Check if authenticated (loads from file if not in memory)
       if (!await authService.isAuthenticated(sessionId)) {
@@ -29,11 +43,14 @@ Middleware authMiddleware(AuthService<Model> authService, {required String baseP
         return Response.found('$basePath/login');
       }
 
-      // Get the authenticated user and initialize RequestSession
+      // Get the authenticated user
       final user = await authService.getUser(sessionId);
-      RequestSession.instance().initFromRequest(request, user: user);
 
-      return innerHandler(request);
+      // Run the rest of the request within a zone that carries the context
+      // This ensures sessionId and user are available throughout the request
+      // via RequestContext.sessionId and RequestContext.user, even through
+      // async operations and deep call stacks.
+      return RequestContext.run(sessionId: sessionId, user: user, callback: () async => innerHandler(request));
     };
   };
 }

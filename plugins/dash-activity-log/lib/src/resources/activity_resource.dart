@@ -19,6 +19,9 @@ class ActivityResource extends Resource<Activity> {
   Activity get modelInstance => Activity();
 
   @override
+  bool get shouldRegisterNavigation => false;
+
+  @override
   Table<Activity> table(Table<Activity> table) {
     return table
         .columns([

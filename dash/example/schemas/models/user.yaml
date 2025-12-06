@@ -49,3 +49,15 @@ fields:
   isActive:
     type: bool
     default: true
+
+  # Roles relation - creates user_role pivot table
+  roles:
+    type: int
+    hasMany: Role
+    as: roles
+
+  # Direct permissions relation - creates user_permission pivot table
+  permissions:
+    type: int
+    hasMany: Permission
+    as: permissions

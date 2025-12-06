@@ -87,13 +87,22 @@ export 'src/page/page.dart';
 export 'src/panel/middleware/security_headers_middleware.dart';
 // Panel
 export 'src/panel/middleware_stack.dart';
-export 'src/panel/panel.dart' show Panel, RequestCallback, CustomRouteHandler, ModelCallback;
+export 'src/panel/panel.dart' show Panel, RequestCallback, CustomRouteHandler;
 export 'src/panel/panel_colors.dart';
 export 'src/panel/panel_config.dart';
 export 'src/panel/panel_config_loader.dart';
 export 'src/panel/panel_router.dart';
 export 'src/panel/panel_server.dart';
 export 'src/panel/request_handler.dart';
+// Permissions & Authorization
+export 'src/permissions/authorizable.dart';
+export 'src/permissions/models/permission.dart';
+export 'src/permissions/models/role.dart';
+export 'src/permissions/permission_service.dart';
+export 'src/permissions/policy.dart';
+export 'src/permissions/policy_registry.dart';
+export 'src/permissions/resources/permission_resource.dart';
+export 'src/permissions/resources/role_resource.dart';
 // Plugins
 export 'src/plugin/asset.dart';
 export 'src/plugin/navigation_item.dart';

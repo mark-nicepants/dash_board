@@ -46,134 +46,6 @@ Before building many of these plugins, the following core features need to be ad
 | **Role/Permission System** | Fine-grained RBAC beyond simple auth | Most plugins need permission checks | ❌ Not Started |
 | ~~**Settings Storage**~~ | ~~Key-value store for plugin configuration~~ | ~~All plugins need configuration persistence~~ | ✅ Complete |
 
-### Middleware Stack Implementation Guide
-
-**Status:** ✅ Complete (December 2025)
-
-The current request pipeline is assembled in `dash/lib/src/panel/panel_server.dart`. The refactored middleware stack uses a `MiddlewareStack` abstraction that provides ordered, configurable middleware with plugin integration.
-
-#### Architecture Overview
-
-**MiddlewareStage** - Defines the high-level stages in the request pipeline:
-```dart
-enum MiddlewareStage {
-  errorHandling,  // Stage 0: Catch exceptions from all downstream middleware
-  security,       // Stage 1: Add security headers (CORS, CSP, etc.)
-  logging,        // Stage 2: Request logging  
-  asset,          // Stage 3: Serve static assets (before auth to avoid redirects)
-  cli,            // Stage 4: Handle CLI API requests (before auth for CLI tool access)
-  auth,           // Stage 5: Authentication and session management
-  application,    // Stage 6: Application-level middleware (routing, custom handlers)
-}
-```
-
-**MiddlewareEntry** - Represents a single middleware with ordering metadata:
-```dart
-class MiddlewareEntry {
-  final String? id;           // Optional identifier for debugging
-  final MiddlewareStage stage;
-  final int priority;         // Lower runs first within a stage (default: 500)
-  final Middleware middleware;
-  final String? pluginId;     // Which plugin registered this (null for built-in)
-}
-```
-
-**MiddlewareStack** - Manages and builds the middleware pipeline:
-```dart
-class MiddlewareStack {
-  // Add middleware at a specific stage
-  void add(MiddlewareEntry entry);
-  
-  // Convenience methods for common patterns
-  void addBefore(MiddlewareStage stage, Middleware middleware, {String? id});
-  void addAfter(MiddlewareStage stage, Middleware middleware, {String? id});
-  
-  // Build the final handler chain
-  Handler build(Handler innerHandler);
-  
-  // Inspection
-  List<MiddlewareEntry> get entries;
-}
-```
-
-#### Built-in Middleware and Default Priorities
-
-| Stage | Middleware | Default Priority | Description |
-|-------|-----------|-----------------|-------------|
-| `errorHandling` | Error handler | 500 | Catches unhandled exceptions |
-| `security` | Security headers | 500 | Adds OWASP security headers |
-| `logging` | Request logger | 500 | Logs requests (excludes CLI) |
-| `asset` | Static assets | 400 | Serves CSS/JS/images |
-| `asset` | Storage assets | 600 | Serves uploaded files |
-| `cli` | CLI API handler | 500 | Handles /_cli/* endpoints |
-| `auth` | Auth middleware | 500 | Session validation, redirects |
-| `application` | Request handler | 500 | Routes to resources/pages |
-
-#### Plugin Integration API
-
-Plugins can register middleware during `register()` or `boot()`:
-
-```dart
-class RateLimitPlugin implements Plugin {
-  @override
-  void register(Panel panel) {
-    // Add before auth to rate limit all requests including login
-    panel.middleware(
-      MiddlewareEntry.make(
-        id: 'rate-limiter',
-        stage: MiddlewareStage.auth,
-        priority: 100,  // Runs before default auth (500)
-        middleware: rateLimitMiddleware(),
-      ),
-    );
-  }
-}
-
-class TenantPlugin implements Plugin {
-  @override  
-  void register(Panel panel) {
-    // Resolve tenant after auth but before application routing
-    panel.middleware(
-      MiddlewareEntry.make(
-        id: 'tenant-resolver',
-        stage: MiddlewareStage.application,
-        priority: 100,  // Runs before request handler (500)
-        middleware: tenantResolverMiddleware(),
-      ),
-    );
-  }
-}
-
-class AuditLogPlugin implements Plugin {
-  @override
-  void register(Panel panel) {
-    // Wrap application stage to log requests and responses
-    panel.middleware(
-      MiddlewareEntry.make(
-        id: 'audit-log',
-        stage: MiddlewareStage.application,
-        priority: 200,  // After tenant, before routing
-        middleware: auditLogMiddleware(),
-      ),
-    );
-  }
-}
-```
-
-#### Design Decisions
-
-1. **Shelf Middleware Compatibility**: Uses standard Shelf `Middleware` type (`Handler Function(Handler)`) for seamless integration with existing shelf middleware.
-
-2. **RequestContext Zone**: The `authMiddleware` establishes the `RequestContext` zone. Plugin middleware in the `application` stage runs inside this zone and can access `RequestContext.user` and `RequestContext.sessionId`.
-
-3. **Stage-based Ordering**: Middleware is sorted first by stage enum index, then by priority within each stage. This ensures predictable ordering while allowing fine-grained control.
-
-4. **Priority Convention**: Default priority is 500. Use < 500 to run before built-in middleware in a stage, > 500 to run after.
-
-5. **Early Response**: Middleware can return a response directly to short-circuit the chain (e.g., rate limiting returns 429, auth returns redirect to login).
-
-6. **No Context Before Auth**: Middleware in stages before `auth` cannot access `RequestContext` as it hasn't been established yet.
-
 ### Already Available Core Features
 
 ✅ Plugin lifecycle (register/boot)  
@@ -251,7 +123,7 @@ panel.plugin(SettingsPlugin.make()
 
 ---
 
-### 2. **dash-rbac** - Roles & Permissions
+### 2. **dash-roles-and-permissions** - Roles & Permissions
 
 **Value Proposition:** Fine-grained access control is essential for enterprise use. Every multi-user admin panel needs roles and permissions.
 
@@ -265,7 +137,7 @@ panel.plugin(SettingsPlugin.make()
 
 **Implementation:**
 ```dart
-class RBACPlugin implements Plugin {
+class RolesAndPermissionsPlugin implements Plugin {
   @override
   void register(Panel panel) {
     panel.registerResources([RoleResource(), PermissionResource()]);

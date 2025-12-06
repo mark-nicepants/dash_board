@@ -314,39 +314,6 @@ void main() {
         expect(panel, isNotNull);
         expect(callbackCalled, isFalse);
       });
-
-      test('onModelCreated registers model created callback', () {
-        var callbackCalled = false;
-        final panel = Panel()
-          ..onModelCreated((_) async {
-            callbackCalled = true;
-          });
-
-        expect(panel, isNotNull);
-        expect(callbackCalled, isFalse);
-      });
-
-      test('onModelUpdated registers model updated callback', () {
-        var callbackCalled = false;
-        final panel = Panel()
-          ..onModelUpdated((_) async {
-            callbackCalled = true;
-          });
-
-        expect(panel, isNotNull);
-        expect(callbackCalled, isFalse);
-      });
-
-      test('onModelDeleted registers model deleted callback', () {
-        var callbackCalled = false;
-        final panel = Panel()
-          ..onModelDeleted((_) async {
-            callbackCalled = true;
-          });
-
-        expect(panel, isNotNull);
-        expect(callbackCalled, isFalse);
-      });
     });
 
     group('auth', () {

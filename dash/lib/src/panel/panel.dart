@@ -1,37 +1,16 @@
 import 'dart:async';
 
+import 'package:dash/dash.dart';
 import 'package:dash/src/auth/auth_service.dart';
-import 'package:dash/src/auth/session_store.dart';
-import 'package:dash/src/components/interactive/component_registry.dart';
-import 'package:dash/src/database/database_config.dart';
-import 'package:dash/src/database/migrations/schema_definition.dart';
-import 'package:dash/src/database/query_builder.dart';
-import 'package:dash/src/events/events.dart';
-import 'package:dash/src/model/model.dart';
-import 'package:dash/src/page/page.dart';
-import 'package:dash/src/panel/middleware_stack.dart';
 import 'package:dash/src/panel/panel_auth.dart';
-import 'package:dash/src/panel/panel_colors.dart';
-import 'package:dash/src/panel/panel_config.dart';
-import 'package:dash/src/panel/panel_server.dart';
 import 'package:dash/src/panel/panel_storage.dart';
-import 'package:dash/src/plugin/asset.dart';
-import 'package:dash/src/plugin/navigation_item.dart';
-import 'package:dash/src/plugin/plugin.dart';
-import 'package:dash/src/plugin/render_hook.dart';
-import 'package:dash/src/resource.dart';
 import 'package:dash/src/service_locator.dart';
-import 'package:dash/src/settings/settings_service.dart';
-import 'package:dash/src/storage/storage.dart';
 import 'package:dash/src/utils/resource_loader.dart';
 import 'package:dash/src/widgets/widget.dart' as dash;
 import 'package:jaspr/jaspr.dart';
 
 // Re-export callback types from panel_config for external use
 export 'package:dash/src/panel/panel_config.dart' show RequestCallback, CustomRouteHandler;
-
-/// Callback type for model event hooks.
-typedef ModelCallback = FutureOr<void> Function(Model model);
 
 /// The main entry point for a Dash admin panel.
 ///
@@ -64,11 +43,6 @@ class Panel {
   PanelServer? _server;
   final PanelAuthManager _authManager = PanelAuthManager();
   final PanelStorageManager _storageManager = PanelStorageManager();
-
-  // Event hooks (model callbacks still stored here, request callbacks moved to PanelConfig)
-  final List<ModelCallback> _modelCreatedCallbacks = [];
-  final List<ModelCallback> _modelUpdatedCallbacks = [];
-  final List<ModelCallback> _modelDeletedCallbacks = [];
 
   Panel() {
     _config = PanelConfig();
@@ -547,74 +521,6 @@ class Panel {
     return this;
   }
 
-  /// Registers a callback to be called when a model is created.
-  ///
-  /// This uses the EventDispatcher internally for consistency.
-  /// For more control, use `EventDispatcher.instance.listen<ModelCreatedEvent>()`.
-  ///
-  /// Example:
-  /// ```dart
-  /// panel.onModelCreated((model) async {
-  ///   await metrics.modelCreated(model.runtimeType.toString());
-  /// });
-  /// ```
-  Panel onModelCreated(ModelCallback callback) {
-    EventDispatcher.instance.listen<ModelCreatedEvent>((event) async {
-      await callback(event.model);
-    });
-    // Also add to legacy callbacks for backward compatibility
-    _modelCreatedCallbacks.add(callback);
-    return this;
-  }
-
-  /// Registers a callback to be called when a model is updated.
-  ///
-  /// This uses the EventDispatcher internally for consistency.
-  /// For more control, use `EventDispatcher.instance.listen<ModelUpdatedEvent>()`.
-  Panel onModelUpdated(ModelCallback callback) {
-    EventDispatcher.instance.listen<ModelUpdatedEvent>((event) async {
-      await callback(event.model);
-    });
-    // Also add to legacy callbacks for backward compatibility
-    _modelUpdatedCallbacks.add(callback);
-    return this;
-  }
-
-  /// Registers a callback to be called when a model is deleted.
-  ///
-  /// This uses the EventDispatcher internally for consistency.
-  /// For more control, use `EventDispatcher.instance.listen<ModelDeletedEvent>()`.
-  Panel onModelDeleted(ModelCallback callback) {
-    // Note: ModelDeletedEvent doesn't have a model reference (it was deleted)
-    // So we need a special wrapper that extracts model info from the event
-    _modelDeletedCallbacks.add(callback);
-    return this;
-  }
-
-  /// Fires model created callbacks.
-  @Deprecated('Model events are now dispatched automatically via EventDispatcher')
-  Future<void> fireModelCreated(Model model) async {
-    for (final callback in _modelCreatedCallbacks) {
-      await callback(model);
-    }
-  }
-
-  /// Fires model updated callbacks.
-  @Deprecated('Model events are now dispatched automatically via EventDispatcher')
-  Future<void> fireModelUpdated(Model model) async {
-    for (final callback in _modelUpdatedCallbacks) {
-      await callback(model);
-    }
-  }
-
-  /// Fires model deleted callbacks.
-  @Deprecated('Model events are now dispatched automatically via EventDispatcher')
-  Future<void> fireModelDeleted(Model model) async {
-    for (final callback in _modelDeletedCallbacks) {
-      await callback(model);
-    }
-  }
-
   /// Returns the EventDispatcher instance for direct event handling.
   ///
   /// Use this for more advanced event handling:
@@ -643,6 +549,10 @@ class Panel {
   ///
   /// This initializes the panel configuration and connects to the database.
   Future<Panel> boot() async {
+    // Register
+    Role.register();
+    Permission.register();
+
     // Auto-register resources from registered models
     final autoResources = buildRegisteredResources();
     if (autoResources.isNotEmpty) {

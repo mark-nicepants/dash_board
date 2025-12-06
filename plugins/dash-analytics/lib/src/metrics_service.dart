@@ -160,17 +160,6 @@ class MetricsService {
     );
     return result;
   }
-
-  /// Creates the metrics table if it doesn't exist.
-  ///
-  /// **Deprecated:** The metrics table is now created automatically via
-  /// Dash's migration system when [Metric.schema] is registered.
-  /// This method is kept for backwards compatibility but does nothing.
-  @Deprecated('Table creation is now handled by auto-migrations via Metric.schema')
-  Future<void> ensureTable() async {
-    // No-op: Table creation is handled by Dash's migration system.
-    // The Metric.schema is registered in AnalyticsPlugin.register().
-  }
 }
 
 /// A fluent query builder for metrics.

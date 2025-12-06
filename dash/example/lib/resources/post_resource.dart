@@ -96,21 +96,13 @@ class PostResource extends Resource<Post> {
             .columnSpan(1) // Takes 1 of 3 columns (smaller)
             .columns(1)
             .schema([
-              RelationshipSelect.make('author')
-                  .relationship('author', 'User')
-                  .label('Author')
-                  .displayColumn('name')
-                  .searchColumns(['name', 'email'])
-                  .preload(limit: 10)
-                  .required(),
+              RelationshipSelect.make(
+                'author',
+              ).label('Author').displayColumn('name').searchColumns(['name', 'email']).preload(limit: 10).required(),
 
-              HasManySelect.make('tags')
-                  .relationship('tags', 'Tag')
-                  .label('Tags')
-                  .displayColumn('name')
-                  .searchColumns(['name'])
-                  .preload(limit: 20)
-                  .helperText('Select tags for this post'),
+              HasManySelect.make(
+                'tags',
+              ).label('Tags').displayColumn('name').preload(limit: 20).helperText('Select tags for this post'),
 
               Toggle.make('is_published') //
                   .label('Published')

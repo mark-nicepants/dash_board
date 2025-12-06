@@ -10,6 +10,8 @@ import 'package:dash/src/components/pages/resource_index.dart';
 import 'package:dash/src/components/pages/resource_view.dart';
 import 'package:dash/src/components/partials/heroicon.dart';
 import 'package:dash/src/database/migrations/schema_definition.dart';
+import 'package:dash/src/form/fields/has_many_select.dart';
+import 'package:dash/src/form/fields/relationship_select.dart';
 import 'package:dash/src/form/form_schema.dart';
 import 'package:dash/src/model/annotations.dart';
 import 'package:dash/src/model/model.dart';
@@ -507,6 +509,7 @@ abstract class Resource<T extends Model> {
   /// - Form action and method configured
   Component buildCreatePage({Map<String, List<String>>? errors, Map<String, dynamic>? oldInput}) {
     final formSchema = form(FormSchema<T>());
+    _initializeFields(formSchema);
 
     formSchema.operation(FormOperation.create).action('${_getBasePath()}/store').method(FormSubmitMethod.post);
 
@@ -530,6 +533,7 @@ abstract class Resource<T extends Model> {
   }) async {
     // Build and populate the form schema
     final formSchema = form(FormSchema<T>());
+    _initializeFields(formSchema);
     final recordId = record.toMap()[record.primaryKey];
 
     formSchema
@@ -555,6 +559,7 @@ abstract class Resource<T extends Model> {
   /// - All fields disabled (read-only)
   Component buildViewPage({required T record}) {
     final formSchema = form(FormSchema<T>());
+    _initializeFields(formSchema);
     final recordId = record.toMap()[record.primaryKey];
 
     formSchema.operation(FormOperation.view).record(record).disabled(true).showCancelButton(false);
@@ -566,6 +571,23 @@ abstract class Resource<T extends Model> {
     formSchema.formActions(viewFormActions(recordId));
 
     return ResourceView<T>(resource: this, record: record, formSchema: formSchema);
+  }
+
+  void _initializeFields(FormSchema<T> schema) {
+    final relationships = modelInstance.getRelationships();
+    for (final field in schema.getFields()) {
+      if (field is HasManySelect) {
+        final meta = relationships.firstWhereOrNull((r) => r.name == field.getName());
+        if (meta != null) {
+          field.inferFrom(meta);
+        }
+      } else if (field is RelationshipSelect) {
+        final meta = relationships.firstWhereOrNull((r) => r.name == field.getName());
+        if (meta != null) {
+          field.inferFrom(meta);
+        }
+      }
+    }
   }
 
   /// Creates a new FormSchema instance for this resource.

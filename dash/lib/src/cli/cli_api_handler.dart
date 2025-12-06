@@ -2,9 +2,8 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:dash/src/cli/log_writer.dart';
 import 'package:dash/src/panel/panel_config.dart';
-import 'package:dash/src/service_locator.dart';
-import 'package:dash/src/storage/storage.dart';
 import 'package:shelf/shelf.dart';
 
 /// HTTP API handler for CLI commands.
@@ -21,6 +20,7 @@ import 'package:shelf/shelf.dart';
 class CliApiHandler {
   final PanelConfig _config;
   final DateTime _startTime = DateTime.now();
+  final LogWriter _logWriter = LogWriter();
 
   /// List of log entries for the CLI
   final List<Map<String, dynamic>> _logs = [];
@@ -40,7 +40,7 @@ class CliApiHandler {
     _logs.add(entry);
 
     // Write to file if enabled
-    unawaited(_logToFile(timestamp, level, message));
+    _logToFile(timestamp, level, message);
 
     // Trim old logs
     while (_logs.length > _maxLogs) {
@@ -48,46 +48,10 @@ class CliApiHandler {
     }
   }
 
-  /// Writes a log entry to a daily log file.
-  ///
-  /// Log files are stored in the 'logs' disk as `dash_YYYYMMDD.log`.
-  Future<void> _logToFile(DateTime timestamp, String level, String message) async {
-    try {
-      final storage = inject<StorageManager>();
-      if (!storage.hasDisk('logs')) {
-        return;
-      }
-
-      final logsDisk = storage.disk('logs');
-      final fileName = _getLogFileName(timestamp);
-      final logLine = _formatLogLine(timestamp, level, message);
-
-      // Get the full file path and append to the file
-      final filePath = logsDisk.path(fileName);
-      final file = File(filePath);
-
-      // Create directory if it doesn't exist
-      final dir = file.parent;
-      if (!await dir.exists()) {
-        await dir.create(recursive: true);
-      }
-
-      // Append log line to file
-      await file.writeAsString(logLine, mode: FileMode.append);
-    } catch (e) {
-      // Silently ignore file logging errors to not disrupt the application
-      // The in-memory logs will still be available
-    }
-  }
-
-  /// Generates the log file name for a given timestamp.
-  ///
-  /// Format: `dash_YYYYMMDD.log`
-  String _getLogFileName(DateTime timestamp) {
-    final year = timestamp.year.toString();
-    final month = timestamp.month.toString().padLeft(2, '0');
-    final day = timestamp.day.toString().padLeft(2, '0');
-    return 'dash_$year$month$day.log';
+  /// Writes a log entry to the log file via LogWriter.
+  void _logToFile(DateTime timestamp, String level, String message) {
+    final logLine = _formatLogLine(timestamp, level, message);
+    _logWriter.write(logLine);
   }
 
   /// Formats a log entry as a single line for the log file.

@@ -745,6 +745,16 @@ class HasManySelect extends FormField {
   String _escapeJs(String value) {
     return value.replaceAll("'", "\\'").replaceAll('"', '\\"').replaceAll('\n', '\\n');
   }
+
+  /// Infers configuration from relationship metadata.
+  void inferFrom(RelationshipMeta meta) {
+    _relationName ??= meta.name;
+    _relatedModel ??= meta.relatedModelType;
+    // Default search columns to display column if not set
+    if (_searchColumns.isEmpty) {
+      _searchColumns = [_displayColumn];
+    }
+  }
 }
 
 /// Handler for hasMany relationship search requests.

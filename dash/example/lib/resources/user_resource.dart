@@ -179,13 +179,11 @@ class UserResource extends Resource<User> {
 
                 HasManySelect('roles') //
                     .label('Roles')
-                    .helperText('Roles for the user')
-                    .required(),
+                    .helperText('Roles for the user'),
 
                 HasManySelect('permissions') //
                     .label('Permissions')
-                    .helperText('Permissions for the user')
-                    .required(),
+                    .helperText('Permissions for the user'),
               ]),
         ]),
       ]),

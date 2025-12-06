@@ -451,6 +451,17 @@ class RelationshipSelect extends FormField {
     );
   }
 
+  /// Infers configuration from relationship metadata.
+  void inferFrom(RelationshipMeta meta) {
+    _relationName ??= meta.name;
+    _relatedModel ??= meta.relatedModelType;
+    _foreignKey ??= meta.foreignKey;
+    // Default search columns to display column if not set
+    if (_searchColumns.isEmpty) {
+      _searchColumns = [_displayColumn];
+    }
+  }
+
   @override
   Component build(BuildContext context) {
     final inputId = getId();

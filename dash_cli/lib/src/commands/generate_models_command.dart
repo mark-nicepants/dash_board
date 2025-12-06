@@ -167,7 +167,7 @@ class GenerateModelsCommand extends BaseCommand {
           if (verbose) {
             ConsoleUtils.success('Generated resource: ${path.relative(resourceFile.path)}');
           }
-        } else if (verbose) {
+        } else {
           ConsoleUtils.info('Skipped resource: ${path.relative(resourceFile.path)} (exists)');
         }
       } catch (e, stack) {

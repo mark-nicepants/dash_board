@@ -205,6 +205,31 @@ Useful for identifying database performance issues.
       ),
       _handleGetSlowQueries,
     );
+
+    // Generate models tool
+    registerTool(
+      Tool(
+        name: 'generate_models',
+        description: '''
+Generate Dart model and resource classes from YAML schema files.
+This runs the 'dcli generate:models' command in the current working directory.
+
+Use this tool after updating or creating schema YAML files to regenerate the Dart code.
+The generated files include:
+- Model classes with Active Record pattern
+- Resource classes for the admin panel
+- Barrel export file for easy imports
+''',
+        inputSchema: Schema.object(
+          properties: {
+            'schemas_path': Schema.string(description: 'Path to schema YAML files directory (default: schemas/models)'),
+            'output_path': Schema.string(description: 'Output directory for generated code (default: lib)'),
+            'force': Schema.bool(description: 'Overwrite existing resource files (default: false)'),
+          },
+        ),
+      ),
+      _handleGenerateModels,
+    );
   }
 
   /// Build the API URL for a given endpoint.
@@ -492,6 +517,76 @@ Useful for identifying database performance issues.
     }
 
     return CallToolResult(content: [TextContent(text: buffer.toString())]);
+  }
+
+  /// Handle generate_models tool call.
+  Future<CallToolResult> _handleGenerateModels(CallToolRequest request) async {
+    final args = request.arguments ?? {};
+    final schemasPath = args['schemas_path'] as String?;
+    final outputPath = args['output_path'] as String?;
+    final force = args['force'] as bool? ?? false;
+
+    // Build command arguments
+    final commandArgs = <String>['generate:models'];
+    if (schemasPath != null) {
+      commandArgs.addAll(['-s', schemasPath]);
+    }
+    if (outputPath != null) {
+      commandArgs.addAll(['-o', outputPath]);
+    }
+    if (force) {
+      commandArgs.add('--force');
+    }
+
+    try {
+      // Run dcli generate:models command
+      final result = await io.Process.run('dcli', commandArgs, workingDirectory: io.Directory.current.path);
+
+      final buffer = StringBuffer();
+      buffer.writeln('## Generate Models Result');
+      buffer.writeln();
+
+      if (result.exitCode == 0) {
+        buffer.writeln('**Status:** ✅ Success');
+        buffer.writeln();
+        // Strip ANSI codes from output for clean display
+        final output = _stripAnsiCodes(result.stdout as String);
+        if (output.isNotEmpty) {
+          buffer.writeln('```');
+          buffer.writeln(output.trim());
+          buffer.writeln('```');
+        }
+      } else {
+        buffer.writeln('**Status:** ❌ Failed (exit code: ${result.exitCode})');
+        buffer.writeln();
+        final stderr = _stripAnsiCodes(result.stderr as String);
+        final stdout = _stripAnsiCodes(result.stdout as String);
+        if (stderr.isNotEmpty) {
+          buffer.writeln('**Error:**');
+          buffer.writeln('```');
+          buffer.writeln(stderr.trim());
+          buffer.writeln('```');
+        }
+        if (stdout.isNotEmpty) {
+          buffer.writeln('**Output:**');
+          buffer.writeln('```');
+          buffer.writeln(stdout.trim());
+          buffer.writeln('```');
+        }
+      }
+
+      return CallToolResult(
+        isError: result.exitCode != 0,
+        content: [TextContent(text: buffer.toString())],
+      );
+    } catch (e) {
+      return _errorResult('Failed to run generate:models command: $e');
+    }
+  }
+
+  /// Strip ANSI escape codes from a string.
+  String _stripAnsiCodes(String input) {
+    return input.replaceAll(RegExp(r'\x1B\[[0-9;]*[a-zA-Z]'), '');
   }
 
   /// Format log data into a readable result.

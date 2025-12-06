@@ -76,6 +76,7 @@ The MCP server provides these tools for LLMs:
 - `get_all_logs` - Combined log querying
 - `get_slow_requests` - Find performance bottlenecks
 - `get_slow_queries` - Identify slow database queries
+- `generate_models` - Generate Dart models from YAML schemas
 
 **Usage:**
 ```bash
@@ -346,6 +347,7 @@ dcli mcp-server --url http://localhost:3000 --path /admin
 - `get_all_logs` - Combined log querying
 - `get_slow_requests` - Find performance bottlenecks
 - `get_slow_queries` - Identify slow database queries
+- `generate_models` - Generate Dart models from YAML schemas
 
 ### Shell Completion
 

@@ -5,6 +5,12 @@
       "args": [
         "mcp-server"
       ]
+    },
+    "playwright": {
+      "command": "npx",
+      "args": [
+        "@playwright/mcp@latest"
+      ]
     }
   }
 }

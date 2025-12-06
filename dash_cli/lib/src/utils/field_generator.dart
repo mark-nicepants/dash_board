@@ -62,8 +62,112 @@ class FieldGenerator {
     return value.toString();
   }
 
+  /// Generate a value for a database column based on its info.
+  ///
+  /// [column] - Column info map with: name, type, nullable, primaryKey, defaultValue
+  /// [tableName] - The table name (for context-aware generation)
+  /// [hashPasswords] - Whether to hash password fields with bcrypt (default: true)
+  ///
+  /// Returns a generated value appropriate for the column.
+  dynamic generateValueForColumn(Map<String, dynamic> column, String tableName, {bool hashPasswords = true}) {
+    final name = column['name'] as String;
+    final type = (column['type'] as String?)?.toUpperCase() ?? 'TEXT';
+    final isPrimaryKey = column['primaryKey'] as bool? ?? false;
+    final defaultValue = column['defaultValue'];
+
+    // Skip primary keys (auto-increment)
+    if (isPrimaryKey) return null;
+
+    // Skip timestamp fields (let DB handle them)
+    if (_isTimestampColumn(name)) return null;
+
+    // Use default value sometimes (30% chance)
+    if (defaultValue != null && _random.nextDouble() < 0.3) {
+      return defaultValue;
+    }
+
+    // Generate based on SQLite type
+    return _generateByColumnType(name, type, hashPasswords: hashPasswords);
+  }
+
+  /// Generate a default value for interactive prompts (database column version).
+  String generateDefaultForColumnPrompt(Map<String, dynamic> column) {
+    final name = column['name'] as String;
+    final type = (column['type'] as String?)?.toUpperCase() ?? 'TEXT';
+    final value = _generateByColumnType(name, type, hashPasswords: false);
+    if (value == null) return '';
+    return value.toString();
+  }
+
+  /// Parse user input into the appropriate type for a database column.
+  ///
+  /// [input] - The user's input string
+  /// [column] - Column info map
+  /// [hashPasswords] - Whether to hash password fields
+  ///
+  /// Returns the parsed value in the correct type for database storage.
+  dynamic parseInputForColumn(String input, Map<String, dynamic> column, {bool hashPasswords = true}) {
+    if (input.isEmpty) return null;
+
+    final name = column['name'] as String;
+    final type = (column['type'] as String?)?.toUpperCase() ?? 'TEXT';
+
+    // Boolean-like columns (SQLite uses INTEGER for bools) - check first
+    if (_isBooleanColumn(name) && type.contains('INT')) {
+      final lower = input.toLowerCase();
+      if (lower == 'true' || lower == '1' || lower == 'yes' || lower == 'y') {
+        return 1;
+      }
+      if (lower == 'false' || lower == '0' || lower == 'no' || lower == 'n') {
+        return 0;
+      }
+      return null;
+    }
+
+    // INTEGER type
+    if (type.contains('INT')) {
+      return int.tryParse(input);
+    }
+
+    // REAL/DOUBLE type
+    if (type.contains('REAL') || type.contains('DOUBLE') || type.contains('FLOAT')) {
+      return double.tryParse(input);
+    }
+
+    // TEXT type - default
+    if (name.toLowerCase().contains('password') && hashPasswords && !PasswordUtils.isBcryptHash(input)) {
+      return PasswordUtils.hash(input);
+    }
+    return input;
+  }
+
   bool _isTimestampField(String name) {
     return name == 'createdAt' || name == 'updatedAt' || name == 'deletedAt';
+  }
+
+  bool _isTimestampColumn(String name) {
+    final lower = name.toLowerCase();
+    return lower == 'created_at' || lower == 'updated_at' || lower == 'deleted_at';
+  }
+
+  bool _isBooleanColumn(String name) {
+    final lower = name.toLowerCase();
+    return lower.startsWith('is_') ||
+        lower.startsWith('has_') ||
+        lower.contains('_is_') ||
+        lower.contains('active') ||
+        lower.contains('enabled') ||
+        lower.contains('published') ||
+        lower.contains('deleted') ||
+        lower.contains('archived') ||
+        lower.contains('hidden') ||
+        lower.contains('verified') ||
+        lower.contains('default');
+  }
+
+  bool _isForeignKeyColumn(String name) {
+    final lower = name.toLowerCase();
+    return lower.endsWith('_id') && lower != 'id';
   }
 
   dynamic _generateByType(SchemaField field, String modelName, {bool hashPasswords = true}) {
@@ -102,6 +206,142 @@ class FieldGenerator {
     return null;
   }
 
+  /// Generate value based on SQLite column type.
+  dynamic _generateByColumnType(String columnName, String sqliteType, {bool hashPasswords = true}) {
+    final name = columnName.toLowerCase();
+
+    // Check for boolean-like INTEGER columns
+    if (sqliteType.contains('INT') && _isBooleanColumn(name)) {
+      return _generateBoolValue(name) ? 1 : 0;
+    }
+
+    // INTEGER type
+    if (sqliteType.contains('INT')) {
+      return _random.nextInt(1000);
+    }
+
+    // REAL/DOUBLE type
+    if (sqliteType.contains('REAL') || sqliteType.contains('DOUBLE') || sqliteType.contains('FLOAT')) {
+      return _random.nextDouble() * 1000;
+    }
+
+    // TEXT type - generate string based on column name hints
+    if (sqliteType.contains('TEXT') || sqliteType.contains('VARCHAR') || sqliteType.contains('CHAR')) {
+      return _generateStringValueFromColumnName(name, hashPasswords: hashPasswords);
+    }
+
+    // BLOB type
+    if (sqliteType.contains('BLOB')) {
+      return null; // Skip blob fields
+    }
+
+    // Default to text generation
+    return _generateStringValueFromColumnName(name, hashPasswords: hashPasswords);
+  }
+
+  /// Generate string value based on column name pattern recognition.
+  String _generateStringValueFromColumnName(String columnName, {bool hashPasswords = true}) {
+    // Email fields
+    if (columnName.contains('email')) {
+      return _faker.internet.email();
+    }
+
+    // Name fields
+    if (columnName == 'name' || columnName == 'fullname' || columnName == 'full_name') {
+      return _faker.person.name();
+    }
+    if (columnName == 'firstname' || columnName == 'first_name') {
+      return _faker.person.firstName();
+    }
+    if (columnName == 'lastname' || columnName == 'last_name') {
+      return _faker.person.lastName();
+    }
+
+    // Username
+    if (columnName.contains('username') || columnName.contains('user_name')) {
+      return _faker.internet.userName();
+    }
+
+    // Password - generate and optionally hash
+    if (columnName.contains('password')) {
+      final plainPassword = _generateSecurePassword();
+      if (hashPasswords) {
+        return PasswordUtils.hash(plainPassword);
+      }
+      return plainPassword;
+    }
+
+    // Title fields
+    if (columnName == 'title') {
+      return _faker.lorem.sentence();
+    }
+
+    // Slug fields
+    if (columnName == 'slug') {
+      return _faker.lorem.words(3).join('-').toLowerCase().replaceAll(RegExp(r'[^a-z0-9-]'), '');
+    }
+
+    // Content/body/description
+    if (columnName == 'content' || columnName == 'body' || columnName == 'text') {
+      return _faker.lorem.sentences(_random.nextInt(5) + 3).join(' ');
+    }
+    if (columnName == 'description' || columnName == 'summary' || columnName == 'excerpt') {
+      return _faker.lorem.sentence();
+    }
+
+    // URL fields
+    if (columnName.contains('url') || columnName.contains('link') || columnName.contains('website')) {
+      return _faker.internet.httpsUrl();
+    }
+
+    // Avatar/image fields
+    if (columnName.contains('avatar') || columnName.contains('image') || columnName.contains('photo')) {
+      return 'https://i.pravatar.cc/150?u=${_faker.internet.email()}';
+    }
+
+    // Phone fields
+    if (columnName.contains('phone') || columnName.contains('mobile') || columnName.contains('tel')) {
+      return _faker.phoneNumber.us();
+    }
+
+    // Address fields
+    if (columnName.contains('address')) {
+      return _faker.address.streetAddress();
+    }
+    if (columnName == 'city') {
+      return _faker.address.city();
+    }
+    if (columnName == 'country') {
+      return _faker.address.country();
+    }
+    if (columnName.contains('zip') || columnName.contains('postal')) {
+      return _faker.address.zipCode();
+    }
+
+    // Company fields
+    if (columnName.contains('company') || columnName.contains('organization')) {
+      return _faker.company.name();
+    }
+
+    // Color fields
+    if (columnName.contains('color')) {
+      return '#${_random.nextInt(0xFFFFFF).toRadixString(16).padLeft(6, '0')}';
+    }
+
+    // IP address
+    if (columnName.contains('ip')) {
+      return '${_random.nextInt(256)}.${_random.nextInt(256)}.${_random.nextInt(256)}.${_random.nextInt(256)}';
+    }
+
+    // Role/permission fields
+    if (columnName == 'role') {
+      return ['admin', 'user', 'moderator', 'guest'][_random.nextInt(4)];
+    }
+
+    // Default: lorem words
+    return _faker.lorem.words(_random.nextInt(3) + 1).join(' ');
+  }
+
   bool _generateBoolValue(String fieldName) {
     // Handle common boolean patterns
     if (fieldName.contains('active') || fieldName.contains('enabled') || fieldName.contains('published')) {
@@ -109,6 +349,9 @@ class FieldGenerator {
     }
     if (fieldName.contains('deleted') || fieldName.contains('archived') || fieldName.contains('hidden')) {
       return _random.nextDouble() < 0.1; // 10% true
+    }
+    if (fieldName.contains('default')) {
+      return _random.nextDouble() < 0.2; // 20% true (for is_default)
     }
     return _random.nextBool();
   }
@@ -280,4 +523,7 @@ class FieldGenerator {
         return input;
     }
   }
+
+  /// Check if a column name looks like a foreign key.
+  bool isForeignKeyColumn(String columnName) => _isForeignKeyColumn(columnName);
 }

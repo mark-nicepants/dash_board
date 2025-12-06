@@ -52,9 +52,10 @@ abstract class BaseCommand extends Command<int> with CompletionConfigurable {
   /// Load all schema files from the schemas directory.
   ///
   /// [schemasPath] - Override the configured schemas path
+  /// [recursive] - Whether to search subdirectories (default: true)
   ///
   /// Returns a map of lowercase model name to parsed schema.
-  Map<String, ParsedSchema> loadSchemas({String? schemasPath}) {
+  Map<String, ParsedSchema> loadSchemas({String? schemasPath, bool recursive = true}) {
     final effectivePath = schemasPath ?? config.schemasPath;
     final dir = Directory(effectivePath);
 
@@ -65,16 +66,16 @@ abstract class BaseCommand extends Command<int> with CompletionConfigurable {
     final parser = SchemaParser();
     final schemas = <String, ParsedSchema>{};
 
-    final schemaFiles = dir.listSync().whereType<File>().where(
-      (f) => f.path.endsWith('.yaml') || f.path.endsWith('.yml'),
-    );
+    // Get all schema files, recursively if requested
+    final entities = recursive ? dir.listSync(recursive: true) : dir.listSync();
+    final schemaFiles = entities.whereType<File>().where((f) => f.path.endsWith('.yaml') || f.path.endsWith('.yml'));
 
     for (final file in schemaFiles) {
       try {
         final schema = parser.parseFile(file.path);
         schemas[schema.modelName.toLowerCase()] = schema;
       } catch (_) {
-        // Skip files that fail to parse
+        // Skip files that fail to parse (e.g., panel.yaml, non-schema files)
       }
     }
 

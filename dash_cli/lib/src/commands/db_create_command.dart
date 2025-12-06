@@ -4,25 +4,23 @@ import 'package:dash/dash.dart';
 import 'package:dash_cli/src/commands/base_command.dart';
 import 'package:dash_cli/src/commands/completion_configuration.dart';
 import 'package:dash_cli/src/commands/dcli_argument.dart';
-import 'package:dash_cli/src/generators/schema_parser.dart';
 import 'package:dash_cli/src/utils/console_utils.dart';
 import 'package:dash_cli/src/utils/field_generator.dart';
 
-/// Interactively create a single model record.
+/// Interactively create a single database record.
 ///
 /// Usage:
-///   dcli db:create [model] [options]
+///   dcli db:create [table] [options]
 ///
 /// Examples:
-///   dcli db:create User
-///   dcli db:create Post --non-interactive
+///   dcli db:create users
+///   dcli db:create posts --non-interactive
 ///
 /// Options:
 ///   -d, --database         Path to database file
-///   -s, --schemas          Path to schema YAML files
 ///   --non-interactive      Use generated values without prompting
-///   -l, --list             List available models
-class DbCreateCommand extends BaseCommand with DatabaseCommandMixin, SchemaCommandMixin {
+///   -l, --list             List available tables
+class DbCreateCommand extends BaseCommand with DatabaseCommandMixin {
   DbCreateCommand() {
     DcliArgument.addToParser(argParser, _arguments);
   }
@@ -31,9 +29,9 @@ class DbCreateCommand extends BaseCommand with DatabaseCommandMixin, SchemaComma
   static final _arguments = [
     // Positional
     DcliArgument.positional(
-      name: 'model',
-      help: 'The model to create a record for',
-      completionType: CompletionType.model,
+      name: 'table',
+      help: 'The table to create a record in',
+      completionType: CompletionType.table,
     ),
     // Options
     DcliArgument.option(
@@ -43,15 +41,9 @@ class DbCreateCommand extends BaseCommand with DatabaseCommandMixin, SchemaComma
       completionType: CompletionType.file,
       filePattern: '*.db',
     ),
-    DcliArgument.option(
-      name: 'schemas',
-      abbr: 's',
-      help: 'Path to schema directory',
-      completionType: CompletionType.directory,
-    ),
     // Flags
     DcliArgument.flag(name: 'non-interactive', abbr: 'n', help: 'Use generated values without prompting'),
-    DcliArgument.flag(name: 'list', abbr: 'l', help: 'List available models'),
+    DcliArgument.flag(name: 'list', abbr: 'l', help: 'List available tables'),
     DcliArgument.flag(name: 'verbose', abbr: 'v', help: 'Show detailed output'),
   ];
 
@@ -59,87 +51,91 @@ class DbCreateCommand extends BaseCommand with DatabaseCommandMixin, SchemaComma
   final String name = 'db:create';
 
   @override
-  final String description = 'Interactively create a single model record';
+  final String description = 'Interactively create a single database record';
 
   @override
   final List<String> aliases = ['create'];
 
   @override
-  final String invocation = 'dcli db:create <model>';
+  final String invocation = 'dcli db:create <table>';
 
   final FieldGenerator _fieldGenerator = FieldGenerator();
 
   @override
   Future<int> run() async {
-    final listModels = argResults!['list'] as bool;
+    final listTables = argResults!['list'] as bool;
     final nonInteractive = argResults!['non-interactive'] as bool;
     final verbose = argResults!['verbose'] as bool;
     final rest = argResults!.rest;
 
     ConsoleUtils.header('✨ Create Record');
 
-    // Load schemas
-    Map<String, ParsedSchema> schemas;
-    try {
-      schemas = loadSchemas(schemasPath: effectiveSchemasPath);
-    } catch (e) {
-      ConsoleUtils.error('Failed to load schemas: $e');
-      return 1;
-    }
-
-    if (schemas.isEmpty) {
-      ConsoleUtils.error('No schema files found in $effectiveSchemasPath');
-      return 1;
-    }
-
-    // List models mode
-    if (listModels) {
-      _printAvailableModels(schemas);
-      return 0;
-    }
-
-    // Validate model argument
-    if (rest.isEmpty) {
-      ConsoleUtils.error('Please specify a model to create');
+    // Check database exists
+    if (!File(effectiveDatabasePath).existsSync()) {
+      ConsoleUtils.error('Database not found: $effectiveDatabasePath');
       print('');
-      _printAvailableModels(schemas);
+      print('Make sure the database file exists. Run your Dash server first to create it.');
       return 1;
     }
 
-    final modelName = rest[0].toLowerCase();
-    final schema = schemas[modelName];
-
-    if (schema == null) {
-      ConsoleUtils.error('Model not found: ${rest[0]}');
-      print('');
-      _printAvailableModels(schemas);
-      return 1;
-    }
-
-    ConsoleUtils.info('Model: ${schema.modelName}');
-    ConsoleUtils.info('Table: ${schema.config.table}');
-    print('');
-
-    // Connect to database
     try {
       final db = await getDatabase(databasePath: effectiveDatabasePath);
 
-      // Verify table exists
-      if (!await db.tableExists(schema.config.table)) {
-        ConsoleUtils.error('Table "${schema.config.table}" not found in database');
+      // Get list of tables
+      final tables = await db.getTables();
+
+      if (tables.isEmpty) {
+        ConsoleUtils.warning('No tables found in database');
+        await db.close();
+        return 0;
+      }
+
+      // List tables mode
+      if (listTables) {
+        await _printAvailableTables(db, tables);
+        await db.close();
+        return 0;
+      }
+
+      // Validate table argument
+      if (rest.isEmpty) {
+        ConsoleUtils.error('Please specify a table to create a record in');
+        print('');
+        await _printAvailableTables(db, tables);
         await db.close();
         return 1;
       }
 
-      // Load foreign key values for relationships
-      final foreignKeyValues = await _loadForeignKeyValues(db, schema);
+      final tableName = rest[0].toLowerCase();
+
+      // Check if table exists (case-insensitive match)
+      final matchedTable = tables.firstWhere((t) => t.toLowerCase() == tableName, orElse: () => '');
+
+      if (matchedTable.isEmpty) {
+        ConsoleUtils.error('Table not found: ${rest[0]}');
+        print('');
+        await _printAvailableTables(db, tables);
+        await db.close();
+        return 1;
+      }
+
+      // Get table columns
+      final columns = await db.getTableInfo(matchedTable);
+      final foreignKeys = await db.getForeignKeys(matchedTable);
+
+      ConsoleUtils.info('Table: $matchedTable');
+      ConsoleUtils.info('Database: $effectiveDatabasePath');
+      print('');
+
+      // Load foreign key values for FK columns
+      final foreignKeyValues = await _loadForeignKeyValues(db, foreignKeys);
 
       // Collect field values
       Map<String, dynamic> data;
       if (nonInteractive) {
-        data = _generateAllValues(schema, foreignKeyValues);
+        data = await _generateAllValues(columns, foreignKeys, foreignKeyValues, matchedTable);
       } else {
-        data = await _promptForValues(schema, foreignKeyValues, verbose);
+        data = await _promptForValues(db, columns, foreignKeys, foreignKeyValues, matchedTable, verbose);
         if (data.isEmpty) {
           ConsoleUtils.info('Operation cancelled');
           await db.close();
@@ -163,17 +159,17 @@ class DbCreateCommand extends BaseCommand with DatabaseCommandMixin, SchemaComma
         }
       }
 
-      final insertedId = await db.insert(schema.config.table, data);
+      final insertedId = await db.insert(matchedTable, data);
       await db.close();
 
       print('');
       ConsoleUtils.line();
-      ConsoleUtils.success('Created ${schema.modelName} #$insertedId');
+      ConsoleUtils.success('Created record #$insertedId in $matchedTable');
       print('');
 
       // Show the created record
       if (!nonInteractive || verbose) {
-        _printCreatedRecord(data, insertedId, schema);
+        _printCreatedRecord(data, insertedId, matchedTable);
       }
 
       return 0;
@@ -183,76 +179,78 @@ class DbCreateCommand extends BaseCommand with DatabaseCommandMixin, SchemaComma
     }
   }
 
-  void _printAvailableModels(Map<String, ParsedSchema> schemas) {
-    ConsoleUtils.info('Available models:');
+  Future<void> _printAvailableTables(DatabaseConnector db, List<String> tables) async {
+    ConsoleUtils.info('Available tables:');
     print('');
-    for (final schema in schemas.values) {
-      final fields = schema.fields.where((f) => !f.isPrimaryKey).length;
+    for (final tableName in tables) {
+      final rowCount = await db.getRowCount(tableName);
+      final columns = await db.getTableInfo(tableName);
+      final columnCount = columns.where((c) => c['primaryKey'] != true).length;
       print(
-        '  ${ConsoleUtils.cyan}${schema.modelName}${ConsoleUtils.reset} '
-        '${ConsoleUtils.gray}($fields fields, table: ${schema.config.table})${ConsoleUtils.reset}',
+        '  ${ConsoleUtils.cyan}$tableName${ConsoleUtils.reset} '
+        '${ConsoleUtils.gray}($columnCount columns, $rowCount rows)${ConsoleUtils.reset}',
       );
     }
     print('');
-    print('Usage: dcli db:create <model>');
+    print('Usage: dcli db:create <table>');
   }
 
-  Future<Map<String, List<dynamic>>> _loadForeignKeyValues(DatabaseConnector db, ParsedSchema schema) async {
+  Future<Map<String, List<dynamic>>> _loadForeignKeyValues(
+    DatabaseConnector db,
+    List<Map<String, dynamic>> foreignKeys,
+  ) async {
     final foreignKeyValues = <String, List<dynamic>>{};
 
-    for (final field in schema.fields) {
-      if (field.relation?.type == 'belongsTo') {
-        final relatedTable = toSnakeCase(field.relation!.model);
-        // Try plural table name
-        final pluralTable = '${relatedTable}s';
+    for (final fk in foreignKeys) {
+      final fromColumn = fk['from'] as String;
+      final toTable = fk['table'] as String;
+      final toColumn = fk['to'] as String;
 
-        try {
-          final values = await db.getColumnValues(pluralTable, 'id');
-          if (values.isNotEmpty) {
-            foreignKeyValues[field.columnName] = values;
-          }
-        } catch (_) {
-          // Table might not exist
+      try {
+        final values = await db.getColumnValues(toTable, toColumn);
+        if (values.isNotEmpty) {
+          foreignKeyValues[fromColumn] = values;
         }
+      } catch (_) {
+        // Table might not exist
       }
     }
 
     return foreignKeyValues;
   }
 
-  Map<String, dynamic> _generateAllValues(ParsedSchema schema, Map<String, List<dynamic>> foreignKeyValues) {
+  Future<Map<String, dynamic>> _generateAllValues(
+    List<Map<String, dynamic>> columns,
+    List<Map<String, dynamic>> foreignKeys,
+    Map<String, List<dynamic>> foreignKeyValues,
+    String tableName,
+  ) async {
     final data = <String, dynamic>{};
+    final fkColumns = foreignKeys.map((fk) => fk['from'] as String).toSet();
 
-    for (final field in schema.fields) {
+    for (final column in columns) {
+      final columnName = column['name'] as String;
+      final isPrimaryKey = column['primaryKey'] as bool? ?? false;
+
       // Skip primary keys
-      if (field.isPrimaryKey) continue;
+      if (isPrimaryKey) continue;
 
       // Skip timestamp fields
-      if (_isTimestampField(field.name)) continue;
+      if (_isTimestampColumn(columnName)) continue;
 
       // Handle foreign keys
-      if (field.relation?.type == 'belongsTo') {
-        final fkValues = foreignKeyValues[field.columnName];
+      if (fkColumns.contains(columnName)) {
+        final fkValues = foreignKeyValues[columnName];
         if (fkValues != null && fkValues.isNotEmpty) {
-          data[field.columnName] = fkValues[0]; // Use first available
+          data[columnName] = fkValues[0]; // Use first available
         }
-        continue;
-      }
-
-      // Skip hasMany relations
-      if (field.relation?.type == 'hasMany' || field.relation?.type == 'hasOne') {
         continue;
       }
 
       // Generate value
-      final value = _fieldGenerator.generateValue(field, schema.modelName, hashPasswords: true);
+      final value = _fieldGenerator.generateValueForColumn(column, tableName, hashPasswords: true);
       if (value != null) {
-        // Convert booleans to SQLite integer format
-        if (field.dartType == 'bool' && value is bool) {
-          data[field.columnName] = value ? 1 : 0;
-        } else {
-          data[field.columnName] = value;
-        }
+        data[columnName] = value;
       }
     }
 
@@ -260,53 +258,55 @@ class DbCreateCommand extends BaseCommand with DatabaseCommandMixin, SchemaComma
   }
 
   Future<Map<String, dynamic>> _promptForValues(
-    ParsedSchema schema,
+    DatabaseConnector db,
+    List<Map<String, dynamic>> columns,
+    List<Map<String, dynamic>> foreignKeys,
     Map<String, List<dynamic>> foreignKeyValues,
+    String tableName,
     bool verbose,
   ) async {
     final data = <String, dynamic>{};
+    final fkColumns = foreignKeys.map((fk) => fk['from'] as String).toSet();
+    final fkInfo = {for (var fk in foreignKeys) fk['from'] as String: fk};
 
     print('${ConsoleUtils.gray}Enter values for each field (press Enter for generated default):${ConsoleUtils.reset}');
     print('${ConsoleUtils.gray}Type "cancel" to abort.${ConsoleUtils.reset}');
     print('');
 
-    for (final field in schema.fields) {
+    for (final column in columns) {
+      final columnName = column['name'] as String;
+      final isPrimaryKey = column['primaryKey'] as bool? ?? false;
+      final nullable = column['nullable'] as bool? ?? true;
+
       // Skip primary keys
-      if (field.isPrimaryKey) continue;
+      if (isPrimaryKey) continue;
 
       // Skip timestamp fields
-      if (_isTimestampField(field.name)) continue;
-
-      // Skip hasMany relations
-      if (field.relation?.type == 'hasMany' || field.relation?.type == 'hasOne') {
-        continue;
-      }
+      if (_isTimestampColumn(columnName)) continue;
 
       // Handle foreign keys
-      if (field.relation?.type == 'belongsTo') {
-        final fkValues = foreignKeyValues[field.columnName];
-        final value = await _promptForeignKey(field, fkValues);
+      if (fkColumns.contains(columnName)) {
+        final fkValues = foreignKeyValues[columnName];
+        final fk = fkInfo[columnName]!;
+        final refTable = fk['table'] as String;
+        final value = await _promptForeignKey(columnName, refTable, fkValues);
         if (value == 'cancel') return {};
         if (value != null) {
-          data[field.columnName] = value;
+          data[columnName] = value;
         }
         continue;
       }
 
       // Prompt for regular fields
-      final value = await _promptField(field, schema.modelName);
+      final value = await _promptColumn(column, tableName, nullable);
       if (value == 'cancel') return {};
       if (value != null) {
-        data[field.columnName] = value;
-      } else if (field.isRequired && field.defaultValue == null) {
+        data[columnName] = value;
+      } else if (!nullable && column['defaultValue'] == null) {
         // Required field with no value - generate one
-        final generated = _fieldGenerator.generateValue(field, schema.modelName, hashPasswords: true);
+        final generated = _fieldGenerator.generateValueForColumn(column, tableName, hashPasswords: true);
         if (generated != null) {
-          if (field.dartType == 'bool' && generated is bool) {
-            data[field.columnName] = generated ? 1 : 0;
-          } else {
-            data[field.columnName] = generated;
-          }
+          data[columnName] = generated;
         }
       }
     }
@@ -314,22 +314,22 @@ class DbCreateCommand extends BaseCommand with DatabaseCommandMixin, SchemaComma
     return data;
   }
 
-  Future<dynamic> _promptField(SchemaField field, String modelName) async {
-    final isPassword = field.name.toLowerCase().contains('password');
-    final defaultValue = _fieldGenerator.generateDefaultForPrompt(field, modelName);
+  Future<dynamic> _promptColumn(Map<String, dynamic> column, String tableName, bool nullable) async {
+    final columnName = column['name'] as String;
+    final columnType = column['type'] as String? ?? 'TEXT';
+    final isPassword = columnName.toLowerCase().contains('password');
+    final defaultValue = _fieldGenerator.generateDefaultForColumnPrompt(column);
 
     // Build prompt string
     final buffer = StringBuffer();
-    buffer.write('${ConsoleUtils.cyan}${field.name}${ConsoleUtils.reset}');
-    buffer.write(' ${ConsoleUtils.gray}(${field.dartType}');
-    if (field.isRequired) buffer.write(', required');
-    if (field.enumValues != null) {
-      buffer.write(', options: ${field.enumValues!.join('|')}');
-    }
+    buffer.write('${ConsoleUtils.cyan}$columnName${ConsoleUtils.reset}');
+    buffer.write(' ${ConsoleUtils.gray}($columnType');
+    if (!nullable) buffer.write(', required');
     buffer.write(')${ConsoleUtils.reset}');
 
     if (defaultValue.isNotEmpty && !isPassword) {
-      buffer.write(' [${ConsoleUtils.gray}$defaultValue${ConsoleUtils.reset}]');
+      final displayDefault = defaultValue.length > 30 ? '${defaultValue.substring(0, 27)}...' : defaultValue;
+      buffer.write(' [${ConsoleUtils.gray}$displayDefault${ConsoleUtils.reset}]');
     }
     buffer.write(': ');
 
@@ -342,21 +342,17 @@ class DbCreateCommand extends BaseCommand with DatabaseCommandMixin, SchemaComma
 
     if (input.isEmpty) {
       // Use generated value
-      final generated = _fieldGenerator.generateValue(field, modelName, hashPasswords: true);
-      if (generated is bool) {
-        return generated ? 1 : 0;
-      }
-      return generated;
+      return _fieldGenerator.generateValueForColumn(column, tableName, hashPasswords: true);
     }
 
     // Parse the input
-    return _fieldGenerator.parseInput(input, field, hashPasswords: true);
+    return _fieldGenerator.parseInputForColumn(input, column, hashPasswords: true);
   }
 
-  Future<dynamic> _promptForeignKey(SchemaField field, List<dynamic>? availableValues) async {
+  Future<dynamic> _promptForeignKey(String columnName, String refTable, List<dynamic>? availableValues) async {
     final buffer = StringBuffer();
-    buffer.write('${ConsoleUtils.cyan}${field.columnName}${ConsoleUtils.reset}');
-    buffer.write(' ${ConsoleUtils.gray}(foreign key to ${field.relation!.model})${ConsoleUtils.reset}');
+    buffer.write('${ConsoleUtils.cyan}$columnName${ConsoleUtils.reset}');
+    buffer.write(' ${ConsoleUtils.gray}(foreign key to $refTable)${ConsoleUtils.reset}');
 
     if (availableValues != null && availableValues.isNotEmpty) {
       buffer.write(' ${ConsoleUtils.gray}[available: ${availableValues.take(5).join(', ')}');
@@ -382,13 +378,14 @@ class DbCreateCommand extends BaseCommand with DatabaseCommandMixin, SchemaComma
     return int.tryParse(input) ?? input;
   }
 
-  bool _isTimestampField(String name) {
-    return name == 'createdAt' || name == 'updatedAt' || name == 'deletedAt';
+  bool _isTimestampColumn(String name) {
+    final lower = name.toLowerCase();
+    return lower == 'created_at' || lower == 'updated_at' || lower == 'deleted_at';
   }
 
-  void _printCreatedRecord(Map<String, dynamic> data, int id, ParsedSchema schema) {
+  void _printCreatedRecord(Map<String, dynamic> data, int id, String tableName) {
     print('');
-    print('${ConsoleUtils.bold}Created Record:${ConsoleUtils.reset}');
+    print('${ConsoleUtils.bold}Created Record in $tableName:${ConsoleUtils.reset}');
     print('  id: $id');
     for (final entry in data.entries) {
       final displayValue = entry.key.toLowerCase().contains('password') ? '********' : entry.value.toString();

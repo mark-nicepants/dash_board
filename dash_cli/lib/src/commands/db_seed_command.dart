@@ -5,23 +5,20 @@ import 'package:dash/dash.dart';
 import 'package:dash_cli/src/commands/base_command.dart';
 import 'package:dash_cli/src/commands/completion_configuration.dart';
 import 'package:dash_cli/src/commands/dcli_argument.dart';
-import 'package:dash_cli/src/generators/schema_parser.dart';
 import 'package:dash_cli/src/utils/console_utils.dart';
 import 'package:dash_cli/src/utils/field_generator.dart';
-import 'package:path/path.dart' as path;
 
 /// Seed the database with fake data.
 ///
 /// Usage:
-///   dcli db:seed model [count] [options]
+///   dcli db:seed table [count] [options]
 ///
 /// Examples:
-///   dcli db:seed User 100
-///   dcli db:seed Post 50 --database storage/app.db
+///   dcli db:seed users 100
+///   dcli db:seed posts 50 --database storage/app.db
 ///
 /// Options:
 ///   -d, --database    Path to database file
-///   -s, --schemas     Path to schema YAML files
 class DbSeedCommand extends BaseCommand with DatabaseCommandMixin {
   DbSeedCommand() {
     DcliArgument.addToParser(argParser, _arguments);
@@ -31,9 +28,9 @@ class DbSeedCommand extends BaseCommand with DatabaseCommandMixin {
   static final _arguments = [
     // Positional arguments
     DcliArgument.positional(
-      name: 'model',
-      help: 'Model name to seed (e.g., User, Post)',
-      completionType: CompletionType.model,
+      name: 'table',
+      help: 'Table name to seed (e.g., users, posts)',
+      completionType: CompletionType.table,
     ),
     DcliArgument.positional(
       name: 'count',
@@ -48,118 +45,35 @@ class DbSeedCommand extends BaseCommand with DatabaseCommandMixin {
       completionType: CompletionType.file,
       filePattern: '*.db',
     ),
-    DcliArgument.option(
-      name: 'schemas',
-      abbr: 's',
-      help: 'Path to directory containing schema YAML files',
-      defaultsTo: 'schemas/models',
-      completionType: CompletionType.directory,
-    ),
     // Flags
     DcliArgument.flag(name: 'verbose', abbr: 'v', help: 'Show detailed output'),
-    DcliArgument.flag(name: 'list', abbr: 'l', help: 'List available models to seed'),
+    DcliArgument.flag(name: 'list', abbr: 'l', help: 'List available tables to seed'),
   ];
 
   @override
   final String name = 'db:seed';
 
   @override
-  final String description = 'Seed the database with fake data based on model schema';
+  final String description = 'Seed the database with fake data';
 
   @override
   final List<String> aliases = ['seed'];
 
   @override
-  final String invocation = 'dcli db:seed <model> [count]';
+  final String invocation = 'dcli db:seed <table> [count]';
 
   final _fieldGenerator = FieldGenerator();
   final _random = Random();
 
   @override
   Future<int> run() async {
-    final schemasPath = argResults!['schemas'] as String;
     final verbose = argResults!['verbose'] as bool;
-    final listModels = argResults!['list'] as bool;
+    final listTables = argResults!['list'] as bool;
 
     // Parse positional arguments
     final rest = argResults!.rest;
 
     ConsoleUtils.header('🌱 Database Seeder');
-
-    // Check schemas directory exists
-    if (!Directory(schemasPath).existsSync()) {
-      ConsoleUtils.error('Schemas directory not found: $schemasPath');
-      return 1;
-    }
-
-    // Find all schema files
-    final schemaFiles = Directory(
-      schemasPath,
-    ).listSync().whereType<File>().where((f) => f.path.endsWith('.yaml') || f.path.endsWith('.yml')).toList();
-
-    if (schemaFiles.isEmpty) {
-      ConsoleUtils.error('No schema files found in $schemasPath');
-      return 1;
-    }
-
-    // Parse all schemas
-    final parser = SchemaParser();
-    final schemas = <String, ParsedSchema>{};
-
-    for (final file in schemaFiles) {
-      try {
-        final schema = parser.parseFile(file.path);
-        schemas[schema.modelName.toLowerCase()] = schema;
-      } catch (e) {
-        if (verbose) {
-          ConsoleUtils.warning('Failed to parse ${path.basename(file.path)}: $e');
-        }
-      }
-    }
-
-    // List models mode
-    if (listModels) {
-      ConsoleUtils.info('Available models:');
-      print('');
-      for (final schema in schemas.values) {
-        final fields = schema.fields.where((f) => !f.isPrimaryKey).length;
-        print(
-          '  ${ConsoleUtils.cyan}${schema.modelName}${ConsoleUtils.reset} '
-          '${ConsoleUtils.gray}($fields fields, table: ${schema.config.table})${ConsoleUtils.reset}',
-        );
-      }
-      print('');
-      print('Usage: dcli db:seed <model> [count]');
-      return 0;
-    }
-
-    // Validate arguments
-    if (rest.isEmpty) {
-      ConsoleUtils.error('Please specify a model to seed');
-      print('');
-      print('Usage: dcli db:seed <model> [count]');
-      print('');
-      print('Available models:');
-      for (final name in schemas.keys) {
-        print('  • ${schemas[name]!.modelName}');
-      }
-      return 1;
-    }
-
-    final modelName = rest[0].toLowerCase();
-    final count = rest.length > 1 ? int.tryParse(rest[1]) ?? 10 : 10;
-
-    // Find schema
-    final schema = schemas[modelName];
-    if (schema == null) {
-      ConsoleUtils.error('Model not found: ${rest[0]}');
-      print('');
-      print('Available models:');
-      for (final name in schemas.keys) {
-        print('  • ${schemas[name]!.modelName}');
-      }
-      return 1;
-    }
 
     // Check database exists
     if (!File(effectiveDatabasePath).existsSync()) {
@@ -169,40 +83,59 @@ class DbSeedCommand extends BaseCommand with DatabaseCommandMixin {
       return 1;
     }
 
-    ConsoleUtils.info('Model: ${schema.modelName}');
-    ConsoleUtils.info('Table: ${schema.config.table}');
-    ConsoleUtils.info('Database: $effectiveDatabasePath (${config.databaseDriver})');
-    ConsoleUtils.info('Count: $count');
-    print('');
-
     try {
       final db = await getDatabase(databasePath: effectiveDatabasePath);
 
-      // Verify table exists
-      if (!await db.tableExists(schema.config.table)) {
-        ConsoleUtils.error('Table "${schema.config.table}" not found in database');
+      // Get list of tables
+      final tables = await db.getTables();
+
+      if (tables.isEmpty) {
+        ConsoleUtils.warning('No tables found in database');
+        await db.close();
+        return 0;
+      }
+
+      // List tables mode
+      if (listTables) {
+        await _printAvailableTables(db, tables);
+        await db.close();
+        return 0;
+      }
+
+      // Validate arguments
+      if (rest.isEmpty) {
+        ConsoleUtils.error('Please specify a table to seed');
+        print('');
+        await _printAvailableTables(db, tables);
         await db.close();
         return 1;
       }
 
-      // Get existing foreign key values for belongsTo relationships
-      final foreignKeyValues = <String, List<int>>{};
-      for (final field in schema.fields) {
-        if (field.relation?.type == 'belongsTo') {
-          final relatedTable = _toSnakeCase(field.relation!.model);
-          // Try plural table name
-          final pluralTable = '${relatedTable}s';
+      final tableName = rest[0].toLowerCase();
+      final count = rest.length > 1 ? int.tryParse(rest[1]) ?? 10 : 10;
 
-          try {
-            final rows = await db.query('SELECT id FROM "$pluralTable" LIMIT 1000');
-            if (rows.isNotEmpty) {
-              foreignKeyValues[field.columnName] = rows.map((r) => r['id'] as int).toList();
-            }
-          } catch (_) {
-            // Table might not exist or have different structure
-          }
-        }
+      // Check if table exists (case-insensitive match)
+      final matchedTable = tables.firstWhere((t) => t.toLowerCase() == tableName, orElse: () => '');
+
+      if (matchedTable.isEmpty) {
+        ConsoleUtils.error('Table not found: ${rest[0]}');
+        print('');
+        await _printAvailableTables(db, tables);
+        await db.close();
+        return 1;
       }
+
+      // Get table info
+      final columns = await db.getTableInfo(matchedTable);
+      final foreignKeys = await db.getForeignKeys(matchedTable);
+
+      ConsoleUtils.info('Table: $matchedTable');
+      ConsoleUtils.info('Database: $effectiveDatabasePath (${config.databaseDriver})');
+      ConsoleUtils.info('Count: $count');
+      print('');
+
+      // Get existing foreign key values
+      final foreignKeyValues = await _loadForeignKeyValues(db, foreignKeys);
 
       // Disable foreign key checks during bulk insert
       await db.disableForeignKeys();
@@ -210,18 +143,19 @@ class DbSeedCommand extends BaseCommand with DatabaseCommandMixin {
       // Generate and insert records
       var inserted = 0;
       final startTime = DateTime.now();
+      final fkColumns = foreignKeys.map((fk) => fk['from'] as String).toSet();
 
       for (var i = 0; i < count; i++) {
-        final data = _generateFakeData(schema, foreignKeyValues);
+        final data = _generateFakeData(columns, fkColumns, foreignKeyValues, matchedTable);
 
         if (data.isEmpty) continue;
 
         try {
-          final lastId = await db.insert(schema.config.table, data);
+          final lastId = await db.insert(matchedTable, data);
           inserted++;
 
           if (verbose) {
-            ConsoleUtils.success('Created ${schema.modelName} #$lastId');
+            ConsoleUtils.success('Created record #$lastId');
           } else {
             ConsoleUtils.progressBar(i + 1, count, prefix: 'Seeding');
           }
@@ -241,7 +175,7 @@ class DbSeedCommand extends BaseCommand with DatabaseCommandMixin {
       print('');
       ConsoleUtils.line();
       ConsoleUtils.success(
-        'Inserted $inserted ${schema.modelName} record(s) in ${ConsoleUtils.formatDuration(duration)}',
+        'Inserted $inserted record(s) into $matchedTable in ${ConsoleUtils.formatDuration(duration)}',
       );
       print('');
 
@@ -252,59 +186,95 @@ class DbSeedCommand extends BaseCommand with DatabaseCommandMixin {
     }
   }
 
-  Map<String, dynamic> _generateFakeData(ParsedSchema schema, Map<String, List<int>> foreignKeyValues) {
+  Future<void> _printAvailableTables(DatabaseConnector db, List<String> tables) async {
+    ConsoleUtils.info('Available tables:');
+    print('');
+    for (final tableName in tables) {
+      final rowCount = await db.getRowCount(tableName);
+      final columns = await db.getTableInfo(tableName);
+      final columnCount = columns.where((c) => c['primaryKey'] != true).length;
+      print(
+        '  ${ConsoleUtils.cyan}$tableName${ConsoleUtils.reset} '
+        '${ConsoleUtils.gray}($columnCount columns, $rowCount rows)${ConsoleUtils.reset}',
+      );
+    }
+    print('');
+    print('Usage: dcli db:seed <table> [count]');
+  }
+
+  Future<Map<String, List<int>>> _loadForeignKeyValues(
+    DatabaseConnector db,
+    List<Map<String, dynamic>> foreignKeys,
+  ) async {
+    final foreignKeyValues = <String, List<int>>{};
+
+    for (final fk in foreignKeys) {
+      final fromColumn = fk['from'] as String;
+      final toTable = fk['table'] as String;
+      final toColumn = fk['to'] as String;
+
+      try {
+        final rows = await db.query('SELECT "$toColumn" FROM "$toTable" LIMIT 1000');
+        if (rows.isNotEmpty) {
+          foreignKeyValues[fromColumn] = rows.map((r) => r[toColumn] as int).toList();
+        }
+      } catch (_) {
+        // Table might not exist or have different structure
+      }
+    }
+
+    return foreignKeyValues;
+  }
+
+  Map<String, dynamic> _generateFakeData(
+    List<Map<String, dynamic>> columns,
+    Set<String> fkColumns,
+    Map<String, List<int>> foreignKeyValues,
+    String tableName,
+  ) {
     final data = <String, dynamic>{};
 
-    for (final field in schema.fields) {
+    for (final column in columns) {
+      final columnName = column['name'] as String;
+      final isPrimaryKey = column['primaryKey'] as bool? ?? false;
+      final nullable = column['nullable'] as bool? ?? true;
+
       // Skip primary keys (auto-increment)
-      if (field.isPrimaryKey) continue;
+      if (isPrimaryKey) continue;
 
       // Skip timestamp fields (let DB handle them)
-      if (field.name == 'createdAt' || field.name == 'updatedAt' || field.name == 'deletedAt') {
-        continue;
-      }
+      if (_isTimestampColumn(columnName)) continue;
 
       // Handle foreign keys
-      if (field.relation?.type == 'belongsTo') {
-        final fkValues = foreignKeyValues[field.columnName];
+      if (fkColumns.contains(columnName)) {
+        final fkValues = foreignKeyValues[columnName];
         if (fkValues != null && fkValues.isNotEmpty) {
-          data[field.columnName] = fkValues[_random.nextInt(fkValues.length)];
-        } else if (field.isRequired) {
-          // Skip required FK if no values available
+          data[columnName] = fkValues[_random.nextInt(fkValues.length)];
+        } else if (!nullable) {
+          // Skip record if required FK has no values
           return {};
         }
         continue;
       }
 
-      // Skip hasMany relations (handled separately)
-      if (field.relation?.type == 'hasMany' || field.relation?.type == 'hasOne') {
-        continue;
-      }
-
       // Handle nullable fields - sometimes generate null
-      if (field.isNullable && _random.nextDouble() < 0.1) {
+      if (nullable && _random.nextDouble() < 0.1) {
         continue; // Skip (will be null)
       }
 
-      // Generate value using FieldGenerator
-      final value = _fieldGenerator.generateValue(field, schema.modelName, hashPasswords: true);
+      // Generate value
+      final value = _fieldGenerator.generateValueForColumn(column, tableName, hashPasswords: true);
       if (value != null) {
-        // Convert booleans to SQLite integers
-        if (value is bool) {
-          data[field.columnName] = value ? 1 : 0;
-        } else {
-          data[field.columnName] = value;
-        }
+        data[columnName] = value;
       }
     }
 
     return data;
   }
 
-  String _toSnakeCase(String input) {
-    return input
-        .replaceAllMapped(RegExp(r'[A-Z]'), (match) => '_${match.group(0)!.toLowerCase()}')
-        .replaceFirst(RegExp(r'^_'), '');
+  bool _isTimestampColumn(String name) {
+    final lower = name.toLowerCase();
+    return lower == 'created_at' || lower == 'updated_at' || lower == 'deleted_at';
   }
 
   @override

@@ -8,6 +8,9 @@ import Alpine from 'alpinejs';
 // Import DashWire interactive component system (must be first - provides utilities)
 import { initDashWire } from './dash-wire.js';
 
+// Form field interactivity dispatcher
+import { initFormInteractivity } from './form-interactivity.js';
+
 // Import column toggle functionality (uses DashWire storage)
 import { initColumnToggle } from './column-toggle.js';
 
@@ -20,6 +23,7 @@ window.Alpine = Alpine;
 // Initialize all features BEFORE Alpine.start()
 // These register alpine:init listeners that must be in place before Alpine starts
 initDashWire();
+initFormInteractivity();
 initColumnToggle();
 initFileUpload();
 

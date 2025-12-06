@@ -38,7 +38,8 @@ class FormRenderer extends StatelessComponent {
 
   @override
   Component build(BuildContext context) {
-    final content = _buildFormContent(context);
+    final formState = _buildInitialState();
+    final content = _buildFormContent(context, formState);
 
     if (partial) {
       return content;
@@ -70,7 +71,7 @@ class FormRenderer extends StatelessComponent {
     return input(type: InputType.hidden, name: CsrfProtection.tokenFieldName, value: token);
   }
 
-  Component _buildFormContent(BuildContext context) {
+  Component _buildFormContent(BuildContext context, Map<String, dynamic> formState) {
     final columns = schema.getColumns();
     final gap = schema.getGap();
     final components = schema.getComponents();
@@ -91,11 +92,11 @@ class FormRenderer extends StatelessComponent {
       return div(classes: 'space-y-6', [
         for (final component in components)
           if (component is Section)
-            _buildSection(component, context)
+            _buildSection(component, context, formState)
           else if (component is Grid)
-            _buildGrid(component, context)
+            _buildGrid(component, context, formState)
           else if (component is FormField && !component.isHidden())
-            _buildFieldWrapper(component, context, columns),
+            _buildFieldWrapper(component, context, columns, formState),
         // Form actions
         _buildFormActions(),
       ]);
@@ -105,7 +106,8 @@ class FormRenderer extends StatelessComponent {
       // Form fields grid
       div(classes: 'grid grid-cols-1 ${columns > 1 ? 'md:grid-cols-$columns' : ''} gap-$gap', [
         for (final component in components)
-          if (component is FormField && !component.isHidden()) _buildFieldWrapper(component, context, columns),
+          if (component is FormField && !component.isHidden())
+            _buildFieldWrapper(component, context, columns, formState),
       ]),
 
       // Form actions
@@ -141,24 +143,22 @@ class FormRenderer extends StatelessComponent {
     ]);
   }
 
-  Component _buildSection(Section section, BuildContext context) {
+  Component _buildSection(Section section, BuildContext context, Map<String, dynamic> formState) {
     final sectionColumns = section.getColumns();
     final sectionGap = section.getGap();
 
     // Build the field grid for this section
-    final fieldGrid = div(
-      classes: 'grid grid-cols-1 ${sectionColumns > 1 ? 'md:grid-cols-$sectionColumns' : ''} gap-$sectionGap',
-      [
-        for (final field in section.getFields())
-          if (!field.isHidden()) _buildFieldWrapper(field, context, sectionColumns),
-      ],
-    );
+    final fieldGrid =
+        div(classes: 'grid grid-cols-1 ${sectionColumns > 1 ? 'md:grid-cols-$sectionColumns' : ''} gap-$sectionGap', [
+          for (final field in section.getFields())
+            if (!field.isHidden()) _buildFieldWrapper(field, context, sectionColumns, formState),
+        ]);
 
     return FormSection(section: section, children: [fieldGrid]);
   }
 
   /// Builds a Grid layout component.
-  Component _buildGrid(Grid grid, BuildContext context) {
+  Component _buildGrid(Grid grid, BuildContext context, Map<String, dynamic> formState) {
     if (grid.isHidden()) {
       return div([]);
     }
@@ -169,28 +169,31 @@ class FormRenderer extends StatelessComponent {
     return div(classes: gridClasses, [
       for (final component in grid.getComponents())
         if (component is Section && !component.isHidden())
-          _buildSectionInGrid(component, context, defaultColumns)
+          _buildSectionInGrid(component, context, defaultColumns, formState)
         else if (component is Grid && !component.isHidden())
-          _buildNestedGrid(component, context, defaultColumns)
+          _buildNestedGrid(component, context, defaultColumns, formState)
         else if (component is FormField && !component.isHidden())
-          _buildFieldWrapper(component, context, defaultColumns),
+          _buildFieldWrapper(component, context, defaultColumns, formState),
     ]);
   }
 
   /// Builds a section inside a grid, applying column span.
-  Component _buildSectionInGrid(Section section, BuildContext context, int totalColumns) {
+  Component _buildSectionInGrid(
+    Section section,
+    BuildContext context,
+    int totalColumns,
+    Map<String, dynamic> formState,
+  ) {
     final spanClasses = section.getColumnSpanClasses(totalColumns);
     final sectionColumns = section.getColumns();
     final sectionGap = section.getGap();
 
     // Build the field grid for this section
-    final fieldGrid = div(
-      classes: 'grid grid-cols-1 ${sectionColumns > 1 ? 'md:grid-cols-$sectionColumns' : ''} gap-$sectionGap',
-      [
-        for (final field in section.getFields())
-          if (!field.isHidden()) _buildFieldWrapper(field, context, sectionColumns),
-      ],
-    );
+    final fieldGrid =
+        div(classes: 'grid grid-cols-1 ${sectionColumns > 1 ? 'md:grid-cols-$sectionColumns' : ''} gap-$sectionGap', [
+          for (final field in section.getFields())
+            if (!field.isHidden()) _buildFieldWrapper(field, context, sectionColumns, formState),
+        ]);
 
     return div(classes: spanClasses, [
       FormSection(section: section, children: [fieldGrid]),
@@ -198,7 +201,7 @@ class FormRenderer extends StatelessComponent {
   }
 
   /// Builds a nested grid inside a parent grid, applying column span.
-  Component _buildNestedGrid(Grid grid, BuildContext context, int totalColumns) {
+  Component _buildNestedGrid(Grid grid, BuildContext context, int totalColumns, Map<String, dynamic> formState) {
     final spanClasses = grid.getColumnSpanClasses(totalColumns);
     final gridClasses = grid.getGridClasses();
     final defaultColumns = grid.getDefaultColumns();
@@ -207,23 +210,39 @@ class FormRenderer extends StatelessComponent {
       div(classes: gridClasses, [
         for (final component in grid.getComponents())
           if (component is Section && !component.isHidden())
-            _buildSectionInGrid(component, context, defaultColumns)
+            _buildSectionInGrid(component, context, defaultColumns, formState)
           else if (component is Grid && !component.isHidden())
-            _buildNestedGrid(component, context, defaultColumns)
+            _buildNestedGrid(component, context, defaultColumns, formState)
           else if (component is FormField && !component.isHidden())
-            _buildFieldWrapper(component, context, defaultColumns),
+            _buildFieldWrapper(component, context, defaultColumns, formState),
       ]),
     ]);
   }
 
-  Component _buildFieldWrapper(FormField field, BuildContext context, int totalColumns) {
+  Component _buildFieldWrapper(
+    FormField field,
+    BuildContext context,
+    int totalColumns,
+    Map<String, dynamic> formState,
+  ) {
     final fieldErrors = errors?[field.getName()];
     final spanClasses = field.getColumnSpanClasses(totalColumns);
+    final isVisible = field.shouldShow(formState);
+    final wrapperAttributes = field.buildWrapperAttributes(isVisible: isVisible);
+    final wrapperClasses = isVisible ? spanClasses : '$spanClasses hidden';
 
-    return div(classes: spanClasses, [
+    return div(classes: wrapperClasses, attributes: wrapperAttributes, [
       field.build(context),
       // Field errors
       if (fieldErrors != null && fieldErrors.isNotEmpty) FormFieldErrors(errors: fieldErrors),
     ]);
+  }
+
+  Map<String, dynamic> _buildInitialState() {
+    final state = <String, dynamic>{};
+    for (final field in schema.getFields()) {
+      state[field.getName()] = field.getDefaultValue();
+    }
+    return state;
   }
 }

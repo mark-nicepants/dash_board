@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:dash/dash.dart';
 import 'package:jaspr/jaspr.dart';
 
@@ -39,6 +41,15 @@ export 'package:dash/src/validation/validation.dart'
 abstract class FormField {
   /// The name of the field (corresponds to model attribute).
   final String _name;
+
+  /// Whether this field should emit change events for interactivity.
+  bool _live = true;
+
+  /// Optional visibility condition that controls client-side display.
+  VisibilityCondition? _visibilityCondition;
+
+  /// Other fields this field listens to for reactive behaviors.
+  final List<String> _listensTo = [];
 
   /// The field ID (defaults to name if not set).
   String? _id;
@@ -143,6 +154,15 @@ abstract class FormField {
     return words.map((word) => word[0].toUpperCase() + word.substring(1).toLowerCase()).join(' ');
   }
 
+  /// Enables live change broadcasting for this field.
+  FormField live([bool live = true]) {
+    _live = live;
+    return this;
+  }
+
+  /// Whether this field should broadcast change events.
+  bool isLive() => _live;
+
   /// Sets the placeholder text.
   FormField placeholder(String placeholder) {
     _placeholder = placeholder;
@@ -217,6 +237,31 @@ abstract class FormField {
 
   /// Checks if the field is hidden.
   bool isHidden() => _hidden;
+
+  /// Sets a visibility condition that depends on another field's value.
+  FormField visibleWhen(String field, {dynamic equals = true, VisibilityComparator comparator = VisibilityComparator.equals}) {
+    _visibilityCondition = VisibilityCondition(field: field, comparator: comparator, value: equals);
+    if (!_listensTo.contains(field)) {
+      _listensTo.add(field);
+    }
+    return this;
+  }
+
+  /// Gets the visibility condition, if any.
+  VisibilityCondition? getVisibilityCondition() => _visibilityCondition;
+
+  /// Registers dependencies on other fields for reactive behaviors.
+  FormField listensTo(List<String> fields) {
+    for (final field in fields) {
+      if (!_listensTo.contains(field)) {
+        _listensTo.add(field);
+      }
+    }
+    return this;
+  }
+
+  /// Gets the list of reactive dependencies.
+  List<String> getListensTo() => List.unmodifiable(_listensTo);
 
   /// Marks the field as nullable (allows empty values).
   /// Nullable fields will not show validation errors for empty values
@@ -410,5 +455,99 @@ abstract class FormField {
       return 'col-span-full';
     }
     return 'col-span-$_columnSpan';
+  }
+
+  /// Evaluates whether this field should be shown based on current form state.
+  bool shouldShow(Map<String, dynamic> state) {
+    if (_hidden) return false;
+    if (_visibilityCondition == null) return true;
+    return _visibilityCondition!.evaluate(state);
+  }
+
+  /// Builds data attributes for client-side interactivity.
+  Map<String, String> buildWrapperAttributes({required bool isVisible}) {
+    final attrs = <String, String>{
+      'data-field-name': getName(),
+      'data-field-live': _live ? 'true' : 'false',
+    };
+
+    if (!isVisible) {
+      attrs['data-field-hidden'] = 'true';
+    }
+
+    if (_visibilityCondition != null) {
+      attrs['data-visible-when'] = jsonEncode(_visibilityCondition!.toJson());
+    }
+
+    if (_listensTo.isNotEmpty) {
+      attrs['data-field-listens'] = _listensTo.join(',');
+    }
+
+    return attrs;
+  }
+}
+
+/// Supported comparators for client-side visibility conditions.
+enum VisibilityComparator { equals, notEquals, inList, notInList, truthy, falsy }
+
+/// A serializable visibility condition for a field.
+class VisibilityCondition {
+  final String field;
+  final VisibilityComparator comparator;
+  final dynamic value;
+  final List<dynamic>? values;
+
+  VisibilityCondition({required this.field, required this.comparator, this.value, this.values});
+
+  /// Evaluates the condition using the provided state map.
+  bool evaluate(Map<String, dynamic> state) {
+    final current = _normalize(state[field]);
+
+    switch (comparator) {
+      case VisibilityComparator.equals:
+        return current == _normalize(value);
+      case VisibilityComparator.notEquals:
+        return current != _normalize(value);
+      case VisibilityComparator.inList:
+        return values?.map(_normalize).contains(current) ?? false;
+      case VisibilityComparator.notInList:
+        return !(values?.map(_normalize).contains(current) ?? false);
+      case VisibilityComparator.truthy:
+        return _isTruthy(current);
+      case VisibilityComparator.falsy:
+        return !_isTruthy(current);
+    }
+  }
+
+  /// Converts this condition to a JSON-friendly map for the frontend.
+  Map<String, dynamic> toJson() => {
+        'field': field,
+        'comparator': comparator.name,
+        if (value != null) 'value': value,
+        if (values != null) 'values': values,
+      };
+
+  static dynamic _normalize(dynamic input) {
+    if (input == null) return null;
+    // Keep booleans and numbers intact but normalize strings for comparison.
+    if (input is String) {
+      final lower = input.toLowerCase();
+      if (lower == 'true') return true;
+      if (lower == 'false') return false;
+    }
+    return input;
+  }
+
+  static bool _isTruthy(dynamic value) {
+    if (value == null) return false;
+    if (value is bool) return value;
+    if (value is num) return value != 0;
+    if (value is String) {
+      if (value.isEmpty) return false;
+      final lower = value.toLowerCase();
+      if (lower == 'false') return false;
+      if (lower == '0') return false;
+    }
+    return true;
   }
 }

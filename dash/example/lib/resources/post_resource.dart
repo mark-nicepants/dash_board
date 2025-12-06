@@ -106,11 +106,13 @@ class PostResource extends Resource<Post> {
 
               Toggle.make('is_published') //
                   .label('Published')
+                  .live()
                   .helperText('When enabled, this post will be visible to the public')
                   .defaultValue(false),
 
               DatePicker.make('published_at') //
                   .withTime()
+                  .visibleWhen('is_published', equals: '1')
                   .label('Publish Date'),
             ]),
       ]),

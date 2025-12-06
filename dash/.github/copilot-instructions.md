@@ -44,41 +44,47 @@ note: Sessions are saved between server restarts. So a simple refresh of the pag
 7. **Test the fix** - Use Playwright to verify, then write unit tests
 8. **Clean up debug output** - Remove print statements before committing
 
-### Reading Application Logs
+# Use the Dash MCP (Model context protocol)
 
-Dash writes logs to log files per server run in `storage/logs/`. Always check these logs when debugging:
+The Dash MCP server provides tools to interact with a running Dash admin panel server. These tools allow querying logs, checking status, and managing resources. The server must be running for tools to work.
 
-```bash
-# Read today's logs
-cat storage/logs/dash_$(date +%Y%m%d_%H%M%S).log
+## Available Tools
 
-# Tail the logs for real-time monitoring
-tail -f storage/logs/dash_$(date +%Y%m%d_%H%M).log
+### Server Status & Resources
+- **mcp_dash_cli_get_server_status**: Get server status, uptime, registered resources, DB connection, and memory usage. No parameters required.
+- **mcp_dash_cli_get_registered_resources**: List all registered resources with name and slug. No parameters required.
 
-# Search for errors
-grep -i error storage/logs/dash_*.log
+### Log Queries
+- **mcp_dash_cli_get_all_logs**: Query all logs (requests, SQL, errors). Parameters: `level` (optional filter), `lines` (default 50, max 200), `since` (ISO timestamp).
+- **mcp_dash_cli_get_request_logs**: Query HTTP request logs. Parameters: `lines` (default 50, max 200), `since` (ISO timestamp).
+- **mcp_dash_cli_get_sql_logs**: Query SQL execution logs with parameters, time, row counts. Parameters: `lines` (default 50, max 200), `since` (ISO timestamp).
+- **mcp_dash_cli_get_exceptions**: Query error and exception logs with stack traces. Parameters: `lines` (default 50, max 200), `since` (ISO timestamp).
 
-# Show last 50 lines of today's log
-tail -50 storage/logs/dash_$(date +%Y%m%d_%H%M%S).log
-```
+### Performance Monitoring
+- **mcp_dash_cli_get_slow_requests**: Find HTTP requests exceeding threshold. Parameters: `lines` (default 20), `threshold_ms` (default 100).
+- **mcp_dash_cli_get_slow_queries**: Find SQL queries exceeding threshold. Parameters: `lines` (default 20), `threshold_ms` (default 10).
 
-**Log format:** `[YYYY-MM-DD HH:MM:SS] [LEVEL  ] message`
+### Code Generation
+- **mcp_dash_cli_generate_models**: Generate Dart model and resource classes from YAML schemas. Parameters: `force` (overwrite, default false), `output_path` (default 'lib'), `schemas_path` (default 'schemas/models').
 
-**Log levels:** `debug`, `info`, `warning`, `error`, `request`, `query`
-
-The logs contain:
-- HTTP request/response info (method, path, status code, duration)
-- Database queries (when query logging is enabled)
-- Errors and exceptions
-- Application events
+## Usage Tips
+- Use status tools first to verify server health.
+- For debugging, start with all logs, then drill into specific types.
+- Performance tools help identify bottlenecks.
+- Generate models after updating schemas.
+- All tools return data in JSON format for easy parsing.
 
 ## Tech Stack
 
-- **Dart** - Primary language
-- **Jaspr** - HTML/SSR component rendering framework
-- **Alpine.js** - Client-side state management (toggles, collapsibles, modals)
-- **Tailwind CSS** - Utility-first styling
-- **Shelf** - HTTP server
+- **Language**: Dart 3.x+
+- **Web Framework**: Jaspr (server-side rendering)
+- **Client-side**: Alpine.js for interactivity
+- **Styling**: Tailwind CSS
+- **HTTP Server**: Shelf
+- **Testing**: Dart test (unit), Playwright (integration)
+- **ORM**: Custom Active Record pattern (in `lib/src/models/`)
+- **Database**: SQLite (example), supports PostgreSQL/MySQL
+- **Icons**: Heroicons SVG library
 
 ## Core Principles
 
@@ -108,59 +114,14 @@ Build complex UIs by composing smaller components:
 
 ---
 
-## Code Patterns
+### DRY (Don't Repeat Yourself)
+Extract common patterns into reusable components. Code should be written once, used many times.
 
-### 1. Fluent Builder API
-
-All configurable classes use method chaining. Configure tables and forms by chaining methods like `columns()`, `searchable()`, `sortable()`, `required()`, and `defaultSort()`.
-
-### 2. Static Factory Methods
-
-Always provide a `make()` factory method for configurable classes. This is the primary way to create instances and enables the fluent API pattern.
-
-### 3. Generic Typing for Fluent Methods
-
-Use generic type parameters in base class methods to preserve the concrete type through method chaining. Return `this as T` to maintain type safety.
-
-### 4. Jaspr Components
-
-Extend `StatelessComponent` and implement `build()`. Use `const` constructors, pass children as list arguments, and apply Tailwind classes via the `classes` parameter.
-
-**Component Rules:**
-- Use `const` constructors where possible
-- Children go in a list as the last positional argument
-- Use `classes` for Tailwind CSS classes
-- Use `attributes` map for custom HTML attributes (`x-*`, `data-*`)
-
-### 5. Resource Pattern
-
-Resources bridge models to the admin UI:
-- Override `table()` to configure list view columns, sorting, and actions
-- Override `form()` to configure create/edit fields and validation
-- Override action hooks (`indexHeaderActions`, `formActions`) for custom behaviors
-- Resources own CRUD operations (`getRecords`, `createRecord`, `updateRecord`, `deleteRecord`)
-
-### 6. Model Pattern (Active Record)
-
-Models represent database entities:
-- Extend `Model` base class
-- Implement `table`, `toMap()`, `fromMap()`, `getKey()`, `setKey()`
-- Use static `query()` method for fluent query building
-- Support timestamps, soft deletes, and relationships via mixins
-
-### 7. Validation Pattern
-
-Validation rules are composable classes:
-- Each rule extends `ValidationRule` with `name` and `validate()`
-- Fields collect rules via `.rule()` method or convenience methods (`.required()`, `.email()`)
-- Validation runs through `FormSchema.validate()` returning field → error maps
-
-### 8. Query Builder Pattern
-
-Fluent interface for database operations:
-- Chain methods: `where()`, `orderBy()`, `limit()`, `offset()`
-- Execute with: `get()`, `first()`, `count()`, `insert()`, `update()`, `delete()`
-- `ModelQueryBuilder` wraps base builder to return typed model instances
+#### When to Extract
+- Code appears **3+ times** → Extract to method or class
+- Duplication across **multiple files** → Create shared utility/mixin
+- **Repeated parameter patterns** → Create builder or factory class
+- **Repeated validation logic** → Create reusable validator rule
 
 ## Do's and Don'ts
 

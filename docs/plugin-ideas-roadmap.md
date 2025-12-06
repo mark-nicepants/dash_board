@@ -43,7 +43,7 @@ Before building many of these plugins, the following core features need to be ad
 | ~~**Event System**~~ | ~~Named events with listener registration beyond model hooks~~ | ~~Audit Log, Notifications, Webhooks, Activity~~ | ✅ Complete |
 | **API Route Generation** | Automatic REST/GraphQL API generation from resources | API Plugin, Mobile SDKs, Headless CMS | ❌ Not Started |
 | **Background Jobs** | Queue system for deferred processing | Email, Backup, Import/Export, Media Processing | ❌ Not Started |
-| **Role/Permission System** | Fine-grained RBAC beyond simple auth | Most plugins need permission checks | ❌ Not Started |
+| **Role/Permission System** | Fine-grained RBAC beyond simple auth | Most plugins need permission checks | ⚠️ Partially Complete |
 | ~~**Settings Storage**~~ | ~~Key-value store for plugin configuration~~ | ~~All plugins need configuration persistence~~ | ✅ Complete |
 
 ### Already Available Core Features
@@ -60,6 +60,11 @@ Before building many of these plugins, the following core features need to be ad
 ✅ File storage abstraction  
 ✅ Settings storage (key-value store with type-safe access)  
 ✅ Custom pages with form data handling  
+✅ Role/Permission models and CRUD resources  
+✅ Permission service with caching  
+✅ Authorizable mixin for user models  
+✅ Policy system for model authorization  
+✅ Event dispatcher for custom events  
 
 ---
 
@@ -69,49 +74,26 @@ These plugins establish core functionality that other plugins depend on and are 
 
 ### 1. **dash-settings** - Global Settings Management
 
+**Status:** ⚠️ Core Storage Available - SettingsService implemented, UI plugin needed
+
 **Value Proposition:** Every admin panel needs a way to configure global settings. This is foundational infrastructure that other plugins depend on.
 
-**Features:**
-- Key-value settings storage with type support (string, int, bool, json)
-- Settings pages with grouped fields
-- Environment-aware settings (dev/staging/prod)
-- Settings cache for performance
-- API for plugins to register their own settings
-
-**Implementation:**
-```dart
-class SettingsPlugin implements Plugin {
-  @override
-  void register(Panel panel) {
-    panel.registerSchemas([Setting.schema]);
-    panel.registerCustomRoute('/settings', settingsPageHandler);
-    panel.registerCustomRoute('/settings/:group', settingsGroupHandler);
-    panel.navigationItems([
-      NavigationItem.make('Settings')
-        .url('/settings')
-        .icon(HeroIcons.cog6Tooth)
-        .group('System')
-    ]);
-  }
-}
-
-// Usage by other plugins:
-panel.plugin(SettingsPlugin.make()
-  .addGroup('General', [
-    SettingField.text('site_name').label('Site Name'),
-    SettingField.email('admin_email').label('Admin Email'),
-    SettingField.toggle('maintenance_mode').label('Maintenance Mode'),
-  ])
-  .addGroup('Analytics', [
-    SettingField.text('ga_tracking_id').label('Google Analytics ID'),
-  ])
-);
-```
+**Current Implementation:**
+- ✅ Key-value settings storage with type support - **IMPLEMENTED** (`SettingsService`)
+- ✅ Settings cache for performance - **IMPLEMENTED**
+- ✅ API for plugins to register their own settings - **IMPLEMENTED**
+- ❌ Settings pages with grouped fields - **MISSING**
+- ❌ Environment-aware settings - **MISSING**
 
 **Core Dependencies:**
-- ❌ Custom Pages system (needed for settings pages)
+- ✅ Custom Pages system (available)
 - ✅ Custom routes (available)
 - ✅ Database schema registration (available)
+
+**Remaining Work:**
+- Settings UI pages with grouped fields
+- Environment-specific settings
+- Plugin integration for registering settings
 
 **Challenges:**
 - Need to implement a custom page rendering system outside of Resource pattern
@@ -127,95 +109,96 @@ panel.plugin(SettingsPlugin.make()
 
 **Value Proposition:** Fine-grained access control is essential for enterprise use. Every multi-user admin panel needs roles and permissions.
 
+**Status:** ⚠️ Partially Implemented - Core models and service exist, missing middleware and UI guards
+
 **Features:**
-- Role management (CRUD for roles)
-- Permission management (resource-level and action-level)
-- Permission checking middleware
-- UI guards for showing/hiding elements
-- Super admin bypass
-- Permission caching
+- ✅ Role management (CRUD for roles) - **IMPLEMENTED**
+- ✅ Permission management (resource-level and action-level) - **IMPLEMENTED**
+- ❌ Permission checking middleware - **MISSING**
+- ❌ UI guards for showing/hiding elements - **MISSING**
+- ✅ Permission caching - **IMPLEMENTED**
 
-**Implementation:**
+**Current Implementation:**
+- `Role` and `Permission` models with full CRUD resources
+- `PermissionService` with caching for performance
+- `Authorizable` mixin for user models
+- `Policy` system for model-level authorization
+- Database relationships: `user_role`, `user_permission`, `role_permission`
+
+**Missing Components:**
+- Permission checking middleware for request-level access control
+- UI guards for conditional rendering based on permissions
+- Integration with example User model (needs `with Authorizable`)
+- Resource-level permission checks
+- Action-level permission checks
+
+**Implementation Status:**
 ```dart
-class RolesAndPermissionsPlugin implements Plugin {
-  @override
-  void register(Panel panel) {
-    panel.registerResources([RoleResource(), PermissionResource()]);
-    panel.registerSchemas([Role.schema, Permission.schema, RolePermission.schema]);
-  }
-  
-  @override
-  void boot(Panel panel) {
-    // Register permission checking
-    panel.onRequest((request) async {
-      final user = await authService.getUser(request.session);
-      if (!await canAccess(user, request.path)) {
-        return Response.forbidden('Access denied');
-      }
-    });
-  }
+// ✅ IMPLEMENTED: Core models and service
+class Role extends Model { /* Full implementation available */ }
+class Permission extends Model { /* Full implementation available */ }
+class PermissionService { /* Caching permission checks */ }
+
+// ✅ IMPLEMENTED: User authorization mixin
+mixin Authorizable on Model {
+  Future<bool> can(String permission) => PermissionService.hasPermission(this, permission);
 }
 
-// Usage in resources:
-class PostResource extends Resource<Post> {
-  @override
-  List<Action<Post>> indexHeaderActions() {
-    return [
-      CreateAction.make<Post>('New Post')
-        .visible((record) => can('posts.create')),
-    ];
-  }
+// ❌ MISSING: Permission middleware
+class PermissionMiddleware implements Middleware {
+  // Not yet implemented
 }
+
+// ❌ MISSING: UI guards
+Action.visible((record) => user.can('posts.edit'))
 ```
 
 **Core Dependencies:**
-- ❌ Middleware system enhancement (for request-level permission checks)
 - ✅ Model relationships (available)
 - ✅ Auth service (available)
+- ❌ Middleware system enhancement (for request-level permission checks) - **NEEDED**
 
 **Challenges:**
 - Performance optimization for permission checks on every request
 - UI integration for conditional rendering
 - Syncing permissions with resource definitions
 
-**Estimated Effort:** 3-4 weeks  
+**Estimated Effort Remaining:** 1-2 weeks  
 **Strategic Value:** CRITICAL - Required for enterprise adoption
 
 ---
 
 ### 3. **dash-activity-log** - Audit Trail & Activity Logging
 
+**Status:** ✅ **IMPLEMENTED** - Available as plugin at `/plugins/dash-activity-log/`
+
 **Value Proposition:** Compliance requirement for many industries. Tracks all changes to data for accountability and debugging.
 
 **Features:**
-- Automatic logging of all model CRUD operations
-- User attribution (who made the change)
-- Before/after value snapshots
-- Filterable activity timeline
-- Resource-level and record-level activity views
-- Configurable retention policies
-- Export capabilities
+- ✅ Automatic logging of all model CRUD operations - **IMPLEMENTED**
+- ✅ User attribution (who made the change) - **IMPLEMENTED**
+- ❌ Before/after value snapshots - **MISSING**
+- ✅ Filterable activity timeline - **IMPLEMENTED**
+- ✅ Resource-level and record-level activity views - **IMPLEMENTED**
+- ✅ Configurable retention policies - **IMPLEMENTED**
+- ❌ Export capabilities - **MISSING**
 
-**Implementation:**
+**Current Implementation:**
 ```dart
 class ActivityLogPlugin implements Plugin {
   @override
   void register(Panel panel) {
     panel.registerResources([ActivityResource()]);
     panel.registerSchemas([Activity.schema]);
-    
-    // Add render hook to show activity on resource pages
-    panel.renderHook(RenderHook.resourceFormAfter, (context) {
-      final recordId = context['recordId'];
-      return ActivityTimeline(recordId: recordId);
-    });
   }
   
   @override
   void boot(Panel panel) {
-    panel.onModelCreated((model) => logActivity('created', model));
-    panel.onModelUpdated((model) => logActivity('updated', model));
-    panel.onModelDeleted((model) => logActivity('deleted', model));
+    // Uses EventDispatcher for model events
+    final dispatcher = EventDispatcher.instance;
+    dispatcher.listen<ModelCreatedEvent>((event) => logActivity('created', event.model));
+    dispatcher.listen<ModelUpdatedEvent>((event) => logActivity('updated', event.model));
+    dispatcher.listen<ModelDeletedEvent>((event) => logActivity('deleted', event.model));
   }
 }
 ```
@@ -223,14 +206,14 @@ class ActivityLogPlugin implements Plugin {
 **Core Dependencies:**
 - ✅ Model event hooks (available)
 - ✅ Render hooks (available)
-- ❌ Event system for custom activities beyond CRUD
+- ✅ Event system for custom activities beyond CRUD - **AVAILABLE**
 
 **Challenges:**
 - Capturing "before" state for updates (need to store snapshot before change)
 - Performance at scale with millions of activity records
 - Privacy considerations for sensitive data in snapshots
 
-**Estimated Effort:** 2 weeks  
+**Estimated Effort Remaining:** 1 week (for snapshots and export)  
 **Strategic Value:** HIGH - Compliance requirement
 
 ---
@@ -1108,7 +1091,7 @@ class FormBuilderPlugin implements Plugin {
 ### Monetization Options
 
 1. **Free Core Plugins** - Build community, drive adoption
-   - dash-activity-log
+   - ✅ dash-activity-log (COMPLETED)
    - dash-import-export
    - dash-backup
 
@@ -1149,16 +1132,16 @@ Before any plugins, enhance the core:
    - ~~Type-safe setting access~~
    - ~~Cache layer~~
 
-3. **Enhanced Event System**
-   - Named events beyond model hooks
-   - Listener registration
-   - Event payload typing
+3. ✅ ~~**Enhanced Event System**~~
+   - ~~Named events beyond model hooks~~
+   - ~~Listener registration~~
+   - ~~Event payload typing~~
 
 ### Phase 2: Foundation Plugins (8-10 weeks)
 
-1. **dash-settings** - Global settings (2 weeks)
-2. **dash-rbac** - Roles & permissions (3-4 weeks)
-3. **dash-activity-log** - Audit trail (2 weeks)
+1. ⚠️ **dash-settings** - Global settings (1-2 weeks remaining - core storage implemented)
+2. ⚠️ **dash-roles-and-permissions** - Roles & permissions (1-2 weeks remaining - core implemented)
+3. ✅ **dash-activity-log** - Audit trail (COMPLETED)
 
 ### Phase 3: Content Plugins (8-10 weeks)
 
@@ -1185,19 +1168,40 @@ Before any plugins, enhance the core:
 
 ## Conclusion
 
-The Dash framework has a solid foundation for plugin development, but several core features are needed before the most valuable plugins can be built. The recommended approach is:
+The Dash framework has made significant progress on core features and plugins. As of December 2025:
 
-1. **Prioritize core framework enhancements** that unblock multiple plugins
+**✅ Completed Core Features:**
+- Custom Pages System
+- Settings Storage (key-value store with type-safe access)
+- Event System (named events with listener registration)
+- Middleware Stack (ordered, configurable middleware)
+
+**⚠️ Partially Complete:**
+- Role/Permission System (core models and service implemented, missing middleware and UI guards)
+
+**✅ Implemented Plugins:**
+- dash-activity-log (audit trail and activity logging)
+- dash-analytics (internal analytics and metrics)
+
+**❌ Still Needed:**
+- Email Service (for notifications, auth, etc.)
+- API Route Generation (for headless CMS)
+- Background Jobs (for async processing)
+- Permission middleware and UI guards
+
+The recommended approach moving forward:
+
+1. **Complete the Role/Permission System** - Add middleware and UI guards (1-2 weeks)
 2. **Build foundation plugins** that other plugins depend on (settings, RBAC)
 3. **Create showcase plugins** that demonstrate framework capabilities (blog, media)
 4. **Develop revenue-generating plugins** (e-commerce, subscriptions)
 
 The plugin store should launch with 5-10 high-quality plugins before opening to community submissions. This establishes quality standards and provides examples for plugin developers.
 
-**Total estimated effort for recommended plugins:** 60-80 developer-weeks
+**Total estimated effort remaining for recommended plugins:** 50-70 developer-weeks
 
 **Potential for community contribution:** HIGH - Many plugins have clear, isolated scope
 
 ---
 
-*Last Updated: December 2025*
+*Last Updated: December 6, 2025*

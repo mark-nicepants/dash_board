@@ -129,7 +129,7 @@ void main() {
               isA<StateError>().having(
                 (e) => e.message,
                 'message',
-                contains('Could not find dash resources directory'),
+                contains('Could not find dash_panel resources directory'),
               ),
             ),
           );

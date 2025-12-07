@@ -239,7 +239,11 @@ abstract class FormField {
   bool isHidden() => _hidden;
 
   /// Sets a visibility condition that depends on another field's value.
-  FormField visibleWhen(String field, {dynamic equals = true, VisibilityComparator comparator = VisibilityComparator.equals}) {
+  FormField visibleWhen(
+    String field, {
+    dynamic equals = true,
+    VisibilityComparator comparator = VisibilityComparator.equals,
+  }) {
     _visibilityCondition = VisibilityCondition(field: field, comparator: comparator, value: equals);
     if (!_listensTo.contains(field)) {
       _listensTo.add(field);
@@ -466,10 +470,7 @@ abstract class FormField {
 
   /// Builds data attributes for client-side interactivity.
   Map<String, String> buildWrapperAttributes({required bool isVisible}) {
-    final attrs = <String, String>{
-      'data-field-name': getName(),
-      'data-field-live': _live ? 'true' : 'false',
-    };
+    final attrs = <String, String>{'data-field-name': getName(), 'data-field-live': _live ? 'true' : 'false'};
 
     if (!isVisible) {
       attrs['data-field-hidden'] = 'true';
@@ -521,11 +522,11 @@ class VisibilityCondition {
 
   /// Converts this condition to a JSON-friendly map for the frontend.
   Map<String, dynamic> toJson() => {
-        'field': field,
-        'comparator': comparator.name,
-        if (value != null) 'value': value,
-        if (values != null) 'values': values,
-      };
+    'field': field,
+    'comparator': comparator.name,
+    if (value != null) 'value': value,
+    if (values != null) 'values': values,
+  };
 
   static dynamic _normalize(dynamic input) {
     if (input == null) return null;

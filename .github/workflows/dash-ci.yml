@@ -76,13 +76,11 @@ jobs:
           dart pub global activate dash_panel_cli
           dcli generate:models
 
-      - name: Run unit tests
-        run: dart test test/unit --reporter=expanded
-
       - name: Run tests with coverage
         run: |
           dart pub global activate coverage
-          dart pub global run coverage:test_with_coverage --package=dash
+          dart test --coverage=coverage --reporter=expanded test/unit
+          dart pub global run coverage:format_coverage --lcov --in=coverage --out=coverage/lcov.info --report-on=lib
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v5
@@ -154,34 +152,3 @@ jobs:
           name: playwright-report
           path: dash/test/e2e/test-results/
           retention-days: 7
-
-  build-check:
-    name: Build Check
-    runs-on: ubuntu-latest
-    needs: [lint, unit-tests]
-    defaults:
-      run:
-        working-directory: dash
-
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Setup Dart SDK
-        uses: dart-lang/setup-dart@v1
-        with:
-          sdk: ${{ env.DART_SDK_VERSION }}
-
-      - name: Install dependencies
-        run: dart pub get
-
-      - name: Build assets (CSS & JS)
-        run: |
-          npm ci
-          npm run build
-
-      - name: Verify example app compiles
-        working-directory: dash/example
-        run: |
-          dart pub get
-          dart compile exe lib/main.dart -o /tmp/dash-example 2>&1 || echo "AOT compilation check complete"

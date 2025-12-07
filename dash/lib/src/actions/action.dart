@@ -2,10 +2,12 @@ import 'package:dash/src/actions/action_color.dart';
 import 'package:dash/src/actions/action_size.dart';
 import 'package:dash/src/actions/handler/action_handler.dart';
 import 'package:dash/src/actions/handler/action_handler_registry.dart';
+import 'package:dash/src/auth/csrf_protection.dart';
 import 'package:dash/src/components/partials/button.dart';
 import 'package:dash/src/components/partials/heroicon.dart';
 import 'package:dash/src/components/partials/modal/modal.dart';
 import 'package:dash/src/components/partials/modal/modal_size.dart';
+import 'package:dash/src/context/request_context.dart';
 import 'package:dash/src/form/fields/field.dart';
 import 'package:dash/src/model/model.dart';
 import 'package:jaspr/jaspr.dart';
@@ -841,6 +843,8 @@ class Action<T extends Model> {
     }
 
     return form(action: url, method: FormMethod.post, id: formId, [
+      // CSRF token for protection against cross-site request forgery
+      _buildCsrfTokenField(),
       // Method spoofing for DELETE/PUT/PATCH
       if (_actionMethod != 'POST') input(type: InputType.hidden, name: '_method', value: _actionMethod),
 
@@ -848,6 +852,13 @@ class Action<T extends Model> {
       if (fieldComponents.isNotEmpty)
         div(classes: 'grid grid-cols-1 ${_formColumns > 1 ? 'md:grid-cols-$_formColumns' : ''} gap-4', fieldComponents),
     ]);
+  }
+
+  /// Builds the hidden CSRF token field for action forms.
+  Component _buildCsrfTokenField() {
+    final sessionId = RequestContext.sessionId;
+    final token = CsrfProtection.generateToken(sessionId ?? 'no-session');
+    return input(type: InputType.hidden, name: CsrfProtection.tokenFieldName, value: token);
   }
 
   /// Gets the default icon for confirmation based on the action color/type.

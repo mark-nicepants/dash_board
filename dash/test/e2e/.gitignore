@@ -1,0 +1,21 @@
+# Dependencies
+node_modules/
+
+# Test results and artifacts
+test-results/
+playwright-report/
+
+# Build output
+dist/
+
+# IDE
+.vscode/
+.idea/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Debug logs
+*.log
+npm-debug.log*

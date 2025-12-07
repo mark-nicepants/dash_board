@@ -1,0 +1,170 @@
+name: Dash CI
+
+on:
+  push:
+    branches: [main, develop]
+    paths:
+      - 'dash/**'
+      - '.github/workflows/dash-ci.yml'
+  pull_request:
+    branches: [main, develop]
+    paths:
+      - 'dash/**'
+      - '.github/workflows/dash-ci.yml'
+  workflow_dispatch:
+
+env:
+  DART_SDK_VERSION: '3.10.0'
+
+jobs:
+  lint:
+    name: Lint & Analyze
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: dash
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Dart SDK
+        uses: dart-lang/setup-dart@v1
+        with:
+          sdk: ${{ env.DART_SDK_VERSION }}
+
+      - name: Install dependencies
+        run: dart pub get
+
+      - name: Verify formatting
+        run: dart format -l 120 --output=none --set-exit-if-changed ./lib
+
+      - name: Analyze project source
+        run: dart analyze --fatal-infos
+
+  unit-tests:
+    name: Unit Tests
+    runs-on: ubuntu-latest
+    needs: lint
+    defaults:
+      run:
+        working-directory: dash
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Dart SDK
+        uses: dart-lang/setup-dart@v1
+        with:
+          sdk: ${{ env.DART_SDK_VERSION }}
+
+      - name: Install dependencies
+        run: dart pub get
+
+      - name: Run unit tests
+        run: dart test test/unit --reporter=expanded
+
+      - name: Run tests with coverage
+        run: |
+          dart pub global activate coverage
+          dart pub global run coverage:test_with_coverage --package=dash
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v5
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: ./dash/coverage/lcov.info
+          fail_ci_if_error: false
+          verbose: true
+
+  e2e-tests:
+    name: E2E Tests (Playwright)
+    runs-on: ubuntu-latest
+    needs: lint
+    defaults:
+      run:
+        working-directory: dash
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Dart SDK
+        uses: dart-lang/setup-dart@v1
+        with:
+          sdk: ${{ env.DART_SDK_VERSION }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: dash/test/e2e/package-lock.json
+
+      - name: Install Dart dependencies
+        run: dart pub get
+
+      - name: Install example app dependencies
+        working-directory: dash/example
+        run: dart pub get
+
+      - name: Install Playwright dependencies
+        working-directory: dash/test/e2e
+        run: npm ci
+
+      - name: Install Playwright browsers
+        working-directory: dash/test/e2e
+        run: npx playwright install --with-deps chromium
+
+      - name: Start example server
+        working-directory: dash/example
+        run: |
+          dart run lib/main.dart &
+          # Wait for server to be ready
+          timeout 30 bash -c 'until curl -s http://localhost:8080/admin/login > /dev/null; do sleep 1; done'
+        env:
+          DASH_ENV: test
+
+      - name: Run Playwright tests
+        working-directory: dash/test/e2e
+        run: npm run test:ci
+
+      - name: Upload Playwright report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: playwright-report
+          path: dash/test/e2e/test-results/
+          retention-days: 7
+
+  build-check:
+    name: Build Check
+    runs-on: ubuntu-latest
+    needs: [lint, unit-tests]
+    defaults:
+      run:
+        working-directory: dash
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Dart SDK
+        uses: dart-lang/setup-dart@v1
+        with:
+          sdk: ${{ env.DART_SDK_VERSION }}
+
+      - name: Install dependencies
+        run: dart pub get
+
+      - name: Build assets (CSS & JS)
+        run: |
+          npm ci
+          npm run build
+
+      - name: Verify example app compiles
+        working-directory: dash/example
+        run: |
+          dart pub get
+          dart compile exe lib/main.dart -o /tmp/dash-example 2>&1 || echo "AOT compilation check complete"

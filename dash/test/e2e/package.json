@@ -1,0 +1,23 @@
+{
+  "name": "dash-e2e-tests",
+  "version": "1.0.0",
+  "description": "End-to-end tests for Dash admin panel using Playwright",
+  "private": true,
+  "scripts": {
+    "test": "playwright test",
+    "test:chromium": "playwright test --project=chromium",
+    "test:firefox": "playwright test --project=firefox",
+    "test:webkit": "playwright test --project=webkit",
+    "test:ui": "playwright test --ui",
+    "test:debug": "playwright test --debug",
+    "test:headed": "playwright test --headed",
+    "test:report": "playwright show-report test-results/html",
+    "test:ci": "CI=true playwright test --project=chromium",
+    "install-browsers": "playwright install --with-deps"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.49.0",
+    "@types/node": "^22.10.0",
+    "typescript": "^5.7.0"
+  }
+}

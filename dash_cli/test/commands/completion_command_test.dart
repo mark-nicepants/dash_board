@@ -1,4 +1,4 @@
-import 'package:dash_cli/src/commands/completion_command.dart';
+import 'package:dash_panel_cli/src/commands/completion_command.dart';
 import 'package:test/test.dart';
 
 void main() {

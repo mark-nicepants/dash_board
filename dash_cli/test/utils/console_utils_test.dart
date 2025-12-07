@@ -1,4 +1,4 @@
-import 'package:dash_cli/src/utils/console_utils.dart';
+import 'package:dash_panel_cli/src/utils/console_utils.dart';
 import 'package:test/test.dart';
 
 void main() {

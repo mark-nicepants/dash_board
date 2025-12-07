@@ -1,7 +1,7 @@
 import 'dart:math';
 
-import 'package:dash_cli/src/generators/schema_parser.dart';
-import 'package:dash_cli/src/utils/password_utils.dart';
+import 'package:dash_panel_cli/src/generators/schema_parser.dart';
+import 'package:dash_panel_cli/src/utils/password_utils.dart';
 import 'package:faker/faker.dart';
 
 /// Generates fake/default values for schema fields.

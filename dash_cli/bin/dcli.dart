@@ -1,7 +1,7 @@
 import 'dart:io';
 
 import 'package:args/command_runner.dart';
-import 'package:dash_cli/dash_cli.dart';
+import 'package:dash_panel_cli/dash_panel_cli.dart';
 
 /// Main entry point for the Dash CLI.
 ///

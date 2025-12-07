@@ -1,6 +1,6 @@
 import 'dart:io';
 
-import 'package:dash_cli/src/utils/config_loader.dart';
+import 'package:dash_panel_cli/src/utils/config_loader.dart';
 import 'package:test/test.dart';
 
 void main() {

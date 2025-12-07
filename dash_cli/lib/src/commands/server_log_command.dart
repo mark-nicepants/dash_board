@@ -2,10 +2,10 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:dash_cli/src/commands/base_command.dart';
-import 'package:dash_cli/src/commands/completion_configuration.dart';
-import 'package:dash_cli/src/commands/dcli_argument.dart';
-import 'package:dash_cli/src/utils/console_utils.dart';
+import 'package:dash_panel_cli/src/commands/base_command.dart';
+import 'package:dash_panel_cli/src/commands/completion_configuration.dart';
+import 'package:dash_panel_cli/src/commands/dcli_argument.dart';
+import 'package:dash_panel_cli/src/utils/console_utils.dart';
 import 'package:http/http.dart' as http;
 
 /// Stream server logs to the console.

@@ -1,13 +1,13 @@
 import 'dart:io';
 
-import 'package:dash_cli/src/commands/base_command.dart';
-import 'package:dash_cli/src/commands/completion_configuration.dart';
-import 'package:dash_cli/src/commands/dcli_argument.dart';
-import 'package:dash_cli/src/generators/models_barrel_generator.dart';
-import 'package:dash_cli/src/generators/resource_generator.dart';
-import 'package:dash_cli/src/generators/schema_model_generator.dart';
-import 'package:dash_cli/src/generators/schema_parser.dart';
-import 'package:dash_cli/src/utils/console_utils.dart';
+import 'package:dash_panel_cli/src/commands/base_command.dart';
+import 'package:dash_panel_cli/src/commands/completion_configuration.dart';
+import 'package:dash_panel_cli/src/commands/dcli_argument.dart';
+import 'package:dash_panel_cli/src/generators/models_barrel_generator.dart';
+import 'package:dash_panel_cli/src/generators/resource_generator.dart';
+import 'package:dash_panel_cli/src/generators/schema_model_generator.dart';
+import 'package:dash_panel_cli/src/generators/schema_parser.dart';
+import 'package:dash_panel_cli/src/utils/console_utils.dart';
 import 'package:path/path.dart' as path;
 import 'package:yaml/yaml.dart';
 

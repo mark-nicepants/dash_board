@@ -1,9 +1,9 @@
 import 'dart:io';
 
 import 'package:args/command_runner.dart';
-import 'package:dash_cli/src/commands/completion_configuration.dart';
-import 'package:dash_cli/src/commands/dcli_argument.dart';
-import 'package:dash_cli/src/utils/console_utils.dart';
+import 'package:dash_panel_cli/src/commands/completion_configuration.dart';
+import 'package:dash_panel_cli/src/commands/dcli_argument.dart';
+import 'package:dash_panel_cli/src/utils/console_utils.dart';
 
 /// Generate shell completion scripts.
 ///

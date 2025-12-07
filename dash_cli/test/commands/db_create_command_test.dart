@@ -1,6 +1,6 @@
 import 'dart:io';
 
-import 'package:dash_cli/src/utils/field_generator.dart';
+import 'package:dash_panel_cli/src/utils/field_generator.dart';
 import 'package:sqlite3/sqlite3.dart';
 import 'package:test/test.dart';
 

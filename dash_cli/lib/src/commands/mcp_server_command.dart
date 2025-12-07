@@ -1,7 +1,7 @@
 import 'dart:io';
 
 import 'package:args/command_runner.dart';
-import 'package:dash_cli/src/mcp/dash_mcp_server.dart';
+import 'package:dash_panel_cli/src/mcp/dash_mcp_server.dart';
 
 /// Start an MCP server for LLM integration.
 ///

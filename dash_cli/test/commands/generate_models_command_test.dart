@@ -1,6 +1,6 @@
 import 'dart:io';
 
-import 'package:dash_cli/src/generators/schema_parser.dart';
+import 'package:dash_panel_cli/src/generators/schema_parser.dart';
 import 'package:test/test.dart';
 
 void main() {

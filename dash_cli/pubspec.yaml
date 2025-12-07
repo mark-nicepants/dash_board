@@ -2,6 +2,7 @@ name: dash_panel_cli
 description: Command-line interface for Dash admin panel framework. Provides model generation, database seeding, server monitoring, and more.
 version: 0.1.0
 homepage: https://github.com/mark-nicepants/dash_panel
+repository: https://github.com/mark-nicepants/dash_panel/tree/main/dash_cli
 
 environment:
   sdk: ^3.10.0

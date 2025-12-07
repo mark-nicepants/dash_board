@@ -1,14 +1,14 @@
 name: dash_activity_log
 description: Activity logging plugin for Dash admin panel. Tracks model changes and user actions.
 version: 0.1.0
-publish_to: none
+homepage: https://github.com/mark-nicepants/dash_panel
+repository: https://github.com/mark-nicepants/dash_panel/tree/main/plugins/dash-activity-log
 
 environment:
   sdk: ^3.7.0
 
 dependencies:
-  dash_panel:
-    path: ../../dash
+  dash_panel: ^0.1.0
 
 dev_dependencies:
   test: ^1.24.0

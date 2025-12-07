@@ -16,10 +16,7 @@ Add to your `pubspec.yaml`:
 
 ```yaml
 dependencies:
-  dash_analytics:
-    path: path/to/dash-analytics
-    # or when published:
-    # dash_analytics: ^0.1.0
+  dash_analytics: ^0.1.0
 ```
 
 ## Usage
@@ -32,7 +29,6 @@ void main() async {
   final panel = Panel()
     ..plugins([
       AnalyticsPlugin.make()
-        .trackingId('UA-12345678')
         .enableDashboardWidget(true)
         .showSidebarBadge(true),
     ]);
@@ -45,7 +41,6 @@ void main() async {
 
 | Method | Description | Default |
 |--------|-------------|---------|
-| `trackingId(String)` | Set analytics tracking ID | `null` |
 | `enableDashboardWidget(bool)` | Show widgets on dashboard | `false` |
 | `showSidebarBadge(bool)` | Show version badge in sidebar | `true` |
 

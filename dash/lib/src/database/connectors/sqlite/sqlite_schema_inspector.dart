@@ -1,5 +1,5 @@
-import 'package:dash/src/database/migrations/schema_definition.dart';
-import 'package:dash/src/database/migrations/schema_inspector.dart';
+import 'package:dash_board/src/database/migrations/schema_definition.dart';
+import 'package:dash_board/src/database/migrations/schema_inspector.dart';
 import 'package:sqlite3/sqlite3.dart';
 
 /// SQLite-specific implementation of SchemaInspector.

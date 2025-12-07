@@ -1,7 +1,7 @@
-import 'package:dash/src/components/partials/table/cells/table_cell_factory.dart';
-import 'package:dash/src/components/partials/table/checkbox_column.dart';
-import 'package:dash/src/model/model.dart';
-import 'package:dash/src/table/columns/column.dart';
+import 'package:dash_board/src/components/partials/table/cells/table_cell_factory.dart';
+import 'package:dash_board/src/components/partials/table/checkbox_column.dart';
+import 'package:dash_board/src/model/model.dart';
+import 'package:dash_board/src/table/columns/column.dart';
 import 'package:jaspr/jaspr.dart';
 
 /// Table row component that renders a single data row.

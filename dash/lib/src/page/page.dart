@@ -1,8 +1,8 @@
 import 'dart:async';
 
-import 'package:dash/src/components/partials/breadcrumbs.dart';
-import 'package:dash/src/components/partials/heroicon.dart';
-import 'package:dash/src/plugin/asset.dart';
+import 'package:dash_board/src/components/partials/breadcrumbs.dart';
+import 'package:dash_board/src/components/partials/heroicon.dart';
+import 'package:dash_board/src/plugin/asset.dart';
 import 'package:jaspr/jaspr.dart';
 import 'package:shelf/shelf.dart';
 

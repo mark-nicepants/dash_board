@@ -1,4 +1,4 @@
-import 'package:dash/src/form/fields/field.dart';
+import 'package:dash_board/src/form/fields/field.dart';
 
 /// A form section that groups related fields together.
 ///

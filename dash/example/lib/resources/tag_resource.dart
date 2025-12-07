@@ -1,7 +1,7 @@
 // GENERATED CODE - Customize as needed
 // Resource for Tag
 
-import 'package:dash/dash.dart';
+import 'package:dash_board/dash_board.dart';
 import 'package:dash_example/models/tag.dart';
 
 /// Resource for managing Tags in the admin panel.

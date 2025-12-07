@@ -9,7 +9,7 @@
 /// ## Quick Start
 ///
 /// ```dart
-/// import 'package:dash/src/events/events.dart';
+/// import 'package:dash_board/src/events/events.dart';
 ///
 /// // Get the dispatcher
 /// final dispatcher = EventDispatcher.instance;

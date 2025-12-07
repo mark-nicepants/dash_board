@@ -169,13 +169,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "3.1.3"
-  dash:
-    dependency: "direct main"
-    description:
-      path: ".."
-      relative: true
-    source: path
-    version: "0.1.0"
   dash_activity_log:
     dependency: "direct main"
     description:
@@ -187,6 +180,13 @@ packages:
     dependency: "direct main"
     description:
       path: "../../plugins/dash-analytics"
+      relative: true
+    source: path
+    version: "0.1.0"
+  dash_board:
+    dependency: "direct main"
+    description:
+      path: ".."
       relative: true
     source: path
     version: "0.1.0"
@@ -607,4 +607,4 @@ packages:
     source: hosted
     version: "3.1.3"
 sdks:
-  dart: ">=3.10.0 <4.0.0"
+  dart: ">=3.10.1 <4.0.0"

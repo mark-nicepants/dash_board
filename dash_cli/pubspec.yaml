@@ -18,7 +18,7 @@ dependencies:
   sqlite3: ^3.1.0
   
   # Local dependency for schema parsing
-  dash:
+  dash_board:
     path: ../dash
 
 dev_dependencies:

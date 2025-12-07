@@ -1,9 +1,9 @@
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:dash/dash.dart';
-import 'package:dash/src/cli/cli_logger.dart';
-import 'package:dash/src/utils/resource_loader.dart';
+import 'package:dash_board/dash_board.dart';
+import 'package:dash_board/src/cli/cli_logger.dart';
+import 'package:dash_board/src/utils/resource_loader.dart';
 import 'package:jaspr/server.dart';
 
 /// Combines a page component with optional page-specific assets.

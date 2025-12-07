@@ -7,7 +7,7 @@ environment:
   sdk: ^3.7.0
 
 dependencies:
-  dash:
+  dash_board:
     path: ../../dash
 
 dev_dependencies:

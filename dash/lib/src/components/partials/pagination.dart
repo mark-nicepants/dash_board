@@ -1,4 +1,4 @@
-import 'package:dash/src/components/partials/heroicon.dart';
+import 'package:dash_board/src/components/partials/heroicon.dart';
 import 'package:jaspr/jaspr.dart';
 
 /// A reusable pagination component for displaying page navigation controls.

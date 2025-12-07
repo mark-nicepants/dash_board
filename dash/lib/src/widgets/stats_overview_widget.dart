@@ -1,5 +1,5 @@
-import 'package:dash/src/widgets/stat.dart';
-import 'package:dash/src/widgets/widget.dart';
+import 'package:dash_board/src/widgets/stat.dart';
+import 'package:dash_board/src/widgets/widget.dart';
 import 'package:jaspr/jaspr.dart';
 
 /// A widget that displays multiple stats in a grid layout.

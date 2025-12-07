@@ -1,6 +1,6 @@
-import 'package:dash/src/panel/panel_server.dart';
-import 'package:dash/src/service_locator.dart';
-import 'package:dash/src/storage/storage.dart';
+import 'package:dash_board/src/panel/panel_server.dart';
+import 'package:dash_board/src/service_locator.dart';
+import 'package:dash_board/src/storage/storage.dart';
 
 /// Encapsulates storage configuration and registration for a panel.
 class PanelStorageManager {

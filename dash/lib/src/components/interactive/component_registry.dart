@@ -1,6 +1,6 @@
 import 'dart:async';
 
-import 'package:dash/src/components/interactive/interactive_component.dart';
+import 'package:dash_board/src/components/interactive/interactive_component.dart';
 
 /// Factory function type for creating interactive components.
 typedef InteractiveComponentFactory = InteractiveComponent Function();

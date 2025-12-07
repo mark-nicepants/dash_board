@@ -1,4 +1,4 @@
-import 'package:dash/dash.dart';
+import 'package:dash_board/dash_board.dart';
 import 'package:dash_example/models/post.dart';
 
 /// Resource for managing blog posts in the admin panel.

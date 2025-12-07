@@ -1,4 +1,4 @@
-import 'package:dash/src/actions/handler/action_handler.dart';
+import 'package:dash_board/src/actions/handler/action_handler.dart';
 
 /// Registration info for an action handler.
 class ActionHandlerRegistration {

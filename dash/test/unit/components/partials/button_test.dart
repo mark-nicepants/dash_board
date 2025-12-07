@@ -1,7 +1,7 @@
 @TestOn('vm')
 library;
 
-import 'package:dash/src/components/partials/button.dart';
+import 'package:dash_board/src/components/partials/button.dart';
 import 'package:jaspr/jaspr.dart';
 import 'package:jaspr_test/jaspr_test.dart';
 

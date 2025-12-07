@@ -1,6 +1,6 @@
-import 'package:dash/dash.dart';
-import 'package:dash/src/cli/cli_logger.dart';
-import 'package:dash/src/utils/resource_loader.dart';
+import 'package:dash_board/dash_board.dart';
+import 'package:dash_board/src/cli/cli_logger.dart';
+import 'package:dash_board/src/utils/resource_loader.dart';
 import 'package:get_it/get_it.dart';
 
 /// Global service locator instance.

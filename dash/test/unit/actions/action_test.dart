@@ -1,4 +1,4 @@
-import 'package:dash/dash.dart';
+import 'package:dash_board/dash_board.dart';
 import 'package:test/test.dart';
 
 /// Test model for action tests
@@ -8,15 +8,11 @@ class TestModel extends Model {
   final bool _isActive;
   final DateTime? _deletedAt;
 
-  TestModel({
-    int? id,
-    required String name,
-    bool isActive = true,
-    DateTime? deletedAt,
-  })  : _id = id,
-        _name = name,
-        _isActive = isActive,
-        _deletedAt = deletedAt;
+  TestModel({int? id, required String name, bool isActive = true, DateTime? deletedAt})
+    : _id = id,
+      _name = name,
+      _isActive = isActive,
+      _deletedAt = deletedAt;
 
   @override
   String get table => 'test_models';
@@ -40,11 +36,11 @@ class TestModel extends Model {
 
   @override
   Map<String, dynamic> toMap() => {
-        'id': _id,
-        'name': _name,
-        'is_active': _isActive,
-        'deleted_at': _deletedAt?.toIso8601String(),
-      };
+    'id': _id,
+    'name': _name,
+    'is_active': _isActive,
+    'deleted_at': _deletedAt?.toIso8601String(),
+  };
 
   @override
   TestModel fromMap(Map<String, dynamic> map) {
@@ -243,8 +239,7 @@ void main() {
       });
 
       test('confirmationHeading() sets dialog heading', () {
-        final action =
-            Action.make<TestModel>('delete').requiresConfirmation().confirmationHeading('Delete this user?');
+        final action = Action.make<TestModel>('delete').requiresConfirmation().confirmationHeading('Delete this user?');
         expect(action.getConfirmationHeading(), equals('Delete this user?'));
       });
 
@@ -254,8 +249,9 @@ void main() {
       });
 
       test('confirmationDescription() sets dialog description', () {
-        final action =
-            Action.make<TestModel>('delete').requiresConfirmation().confirmationDescription('This cannot be undone.');
+        final action = Action.make<TestModel>(
+          'delete',
+        ).requiresConfirmation().confirmationDescription('This cannot be undone.');
         expect(action.getConfirmationDescription(), equals('This cannot be undone.'));
       });
 
@@ -282,7 +278,9 @@ void main() {
 
     group('POST Actions', () {
       test('actionUrl() sets POST action URL', () {
-        final action = Action.make<TestModel>('delete').actionUrl((record, basePath) => '$basePath/${record.id}/delete');
+        final action = Action.make<TestModel>(
+          'delete',
+        ).actionUrl((record, basePath) => '$basePath/${record.id}/delete');
 
         final record = TestModel(id: 42, name: 'Test');
         expect(action.getActionUrl(record, '/users'), equals('/users/42/delete'));
@@ -321,10 +319,9 @@ void main() {
       });
 
       test('extraAttributes() sets additional HTML attributes', () {
-        final action = Action.make<TestModel>('edit').extraAttributes({
-          'data-testid': 'edit-button',
-          'aria-label': 'Edit record',
-        });
+        final action = Action.make<TestModel>(
+          'edit',
+        ).extraAttributes({'data-testid': 'edit-button', 'aria-label': 'Edit record'});
         final attrs = action.getExtraAttributes();
         expect(attrs, isNotNull);
         expect(attrs!['data-testid'], equals('edit-button'));

@@ -1,4 +1,4 @@
-import 'package:dash/dash.dart';
+import 'package:dash_board/dash_board.dart';
 import 'package:test/test.dart';
 
 void main() {
@@ -477,10 +477,7 @@ void main() {
     });
 
     test('uses custom message when provided', () {
-      final customRule = Pattern(
-        RegExp(r'^\d+$'),
-        message: 'Please enter numbers only.',
-      );
+      final customRule = Pattern(RegExp(r'^\d+$'), message: 'Please enter numbers only.');
       final error = customRule.validate('field', 'abc');
       expect(error, equals('Please enter numbers only.'));
     });

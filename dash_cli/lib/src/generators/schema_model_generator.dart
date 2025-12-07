@@ -25,7 +25,7 @@ class SchemaModelGenerator {
     buffer.writeln('// GENERATED CODE - DO NOT MODIFY BY HAND');
     buffer.writeln('// Generated from schema: ${schema.modelName.toLowerCase()}');
     buffer.writeln();
-    buffer.writeln("import 'package:dash/dash.dart';");
+    buffer.writeln("import 'package:dash_board/dash_board.dart';");
     final modelFileName = _toSnakeCase(schema.modelName);
     buffer.writeln("import 'package:$packageName/${importPathPrefix}resources/${modelFileName}_resource.dart';");
     buffer.writeln();

@@ -1,6 +1,6 @@
 // Resource for Permission
 
-import 'package:dash/dash.dart';
+import 'package:dash_board/dash_board.dart';
 
 /// Resource for managing Permissions in the admin panel.
 class PermissionResource extends Resource<Permission> {

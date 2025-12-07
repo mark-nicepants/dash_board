@@ -1,4 +1,4 @@
-import 'package:dash/src/model/model.dart';
+import 'package:dash_board/src/model/model.dart';
 
 /// Base class for all table columns.
 ///

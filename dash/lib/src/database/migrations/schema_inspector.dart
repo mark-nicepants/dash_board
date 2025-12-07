@@ -1,4 +1,4 @@
-import 'package:dash/src/database/migrations/schema_definition.dart';
+import 'package:dash_board/src/database/migrations/schema_definition.dart';
 
 /// Abstract interface for inspecting database schema.
 ///

@@ -1,6 +1,6 @@
-import 'package:dash/src/model/model.dart';
-import 'package:dash/src/permissions/models/permission.dart';
-import 'package:dash/src/permissions/models/role.dart';
+import 'package:dash_board/src/model/model.dart';
+import 'package:dash_board/src/permissions/models/permission.dart';
+import 'package:dash_board/src/permissions/models/role.dart';
 
 /// Service for checking and caching user permissions.
 ///

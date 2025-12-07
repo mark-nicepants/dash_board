@@ -1,4 +1,4 @@
-import 'package:dash/src/actions/handler/action_context.dart';
+import 'package:dash_board/src/actions/handler/action_context.dart';
 
 /// Result of an action handler execution.
 ///

@@ -1,4 +1,4 @@
-import 'package:dash/src/model/model.dart';
+import 'package:dash_board/src/model/model.dart';
 
 /// Context provided to action handlers when executing.
 ///

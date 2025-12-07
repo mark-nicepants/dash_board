@@ -1,7 +1,7 @@
 import 'dart:io';
 
-import 'package:dash/src/panel/panel.dart';
-import 'package:dash/src/panel/panel_config_loader.dart';
+import 'package:dash_board/src/panel/panel.dart';
+import 'package:dash_board/src/panel/panel_config_loader.dart';
 import 'package:test/test.dart';
 
 void main() {

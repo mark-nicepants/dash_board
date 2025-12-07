@@ -1,8 +1,8 @@
-import 'package:dash/src/actions/action.dart';
-import 'package:dash/src/actions/action_color.dart';
-import 'package:dash/src/components/partials/button.dart';
-import 'package:dash/src/components/partials/heroicon.dart';
-import 'package:dash/src/model/model.dart';
+import 'package:dash_board/src/actions/action.dart';
+import 'package:dash_board/src/actions/action_color.dart';
+import 'package:dash_board/src/components/partials/button.dart';
+import 'package:dash_board/src/components/partials/heroicon.dart';
+import 'package:dash_board/src/model/model.dart';
 import 'package:jaspr/jaspr.dart';
 
 /// Toolbar that appears when records are selected in a table.

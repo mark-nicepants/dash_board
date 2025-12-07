@@ -1,6 +1,6 @@
 import 'dart:async';
 
-import 'package:dash/src/events/events.dart';
+import 'package:dash_board/src/events/events.dart';
 import 'package:test/test.dart';
 
 /// Custom test event for testing the event system.

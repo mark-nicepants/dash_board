@@ -1,15 +1,15 @@
-import 'package:dash/src/actions/action_color.dart';
-import 'package:dash/src/actions/action_size.dart';
-import 'package:dash/src/actions/handler/action_handler.dart';
-import 'package:dash/src/actions/handler/action_handler_registry.dart';
-import 'package:dash/src/auth/csrf_protection.dart';
-import 'package:dash/src/components/partials/button.dart';
-import 'package:dash/src/components/partials/heroicon.dart';
-import 'package:dash/src/components/partials/modal/modal.dart';
-import 'package:dash/src/components/partials/modal/modal_size.dart';
-import 'package:dash/src/context/request_context.dart';
-import 'package:dash/src/form/fields/field.dart';
-import 'package:dash/src/model/model.dart';
+import 'package:dash_board/src/actions/action_color.dart';
+import 'package:dash_board/src/actions/action_size.dart';
+import 'package:dash_board/src/actions/handler/action_handler.dart';
+import 'package:dash_board/src/actions/handler/action_handler_registry.dart';
+import 'package:dash_board/src/auth/csrf_protection.dart';
+import 'package:dash_board/src/components/partials/button.dart';
+import 'package:dash_board/src/components/partials/heroicon.dart';
+import 'package:dash_board/src/components/partials/modal/modal.dart';
+import 'package:dash_board/src/components/partials/modal/modal_size.dart';
+import 'package:dash_board/src/context/request_context.dart';
+import 'package:dash_board/src/form/fields/field.dart';
+import 'package:dash_board/src/model/model.dart';
 import 'package:jaspr/jaspr.dart';
 
 /// Base class for all Dash actions.

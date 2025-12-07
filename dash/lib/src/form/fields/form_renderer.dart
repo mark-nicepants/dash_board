@@ -1,11 +1,11 @@
-import 'package:dash/src/auth/csrf_protection.dart';
-import 'package:dash/src/components/partials/forms/form_components.dart';
-import 'package:dash/src/components/partials/forms/form_section.dart';
-import 'package:dash/src/context/request_context.dart';
-import 'package:dash/src/form/fields/field.dart';
-import 'package:dash/src/form/fields/grid.dart';
-import 'package:dash/src/form/fields/section.dart';
-import 'package:dash/src/form/form_schema.dart';
+import 'package:dash_board/src/auth/csrf_protection.dart';
+import 'package:dash_board/src/components/partials/forms/form_components.dart';
+import 'package:dash_board/src/components/partials/forms/form_section.dart';
+import 'package:dash_board/src/context/request_context.dart';
+import 'package:dash_board/src/form/fields/field.dart';
+import 'package:dash_board/src/form/fields/grid.dart';
+import 'package:dash_board/src/form/fields/section.dart';
+import 'package:dash_board/src/form/form_schema.dart';
 import 'package:jaspr/jaspr.dart';
 
 /// Renders a form schema to Jaspr components.

@@ -1,5 +1,5 @@
-import 'package:dash/src/panel/panel_config.dart';
-import 'package:dash/src/service_locator.dart';
+import 'package:dash_board/src/panel/panel_config.dart';
+import 'package:dash_board/src/service_locator.dart';
 import 'package:jaspr/jaspr.dart';
 
 /// A search input component for filtering table data.

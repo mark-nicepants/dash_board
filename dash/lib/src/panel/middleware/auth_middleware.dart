@@ -1,8 +1,8 @@
-import 'package:dash/src/auth/auth_service.dart';
-import 'package:dash/src/auth/session_helper.dart';
-import 'package:dash/src/context/request_context.dart';
-import 'package:dash/src/model/model.dart';
-import 'package:dash/src/panel/middleware_stack.dart';
+import 'package:dash_board/src/auth/auth_service.dart';
+import 'package:dash_board/src/auth/session_helper.dart';
+import 'package:dash_board/src/context/request_context.dart';
+import 'package:dash_board/src/model/model.dart';
+import 'package:dash_board/src/panel/middleware_stack.dart';
 import 'package:shelf/shelf.dart' hide Middleware;
 
 /// Middleware to protect routes that require authentication.

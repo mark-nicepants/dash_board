@@ -1,4 +1,4 @@
-import 'package:dash/src/components/partials/forms/form_styles.dart';
+import 'package:dash_board/src/components/partials/forms/form_styles.dart';
 import 'package:jaspr/jaspr.dart';
 
 /// A form label component with support for required indicator and hint text.

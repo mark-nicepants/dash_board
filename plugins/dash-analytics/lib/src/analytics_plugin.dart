@@ -1,8 +1,8 @@
-import 'package:dash/dash.dart';
 import 'package:dash_analytics/src/metrics_service.dart';
 import 'package:dash_analytics/src/widgets/analytics_stats_widget.dart';
 import 'package:dash_analytics/src/widgets/page_views_chart_widget.dart';
 import 'package:dash_analytics/src/widgets/traffic_sources_chart_widget.dart';
+import 'package:dash_board/dash_board.dart';
 
 export 'package:dash_analytics/src/metrics_service.dart';
 

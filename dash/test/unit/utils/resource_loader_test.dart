@@ -1,6 +1,6 @@
 import 'dart:io';
 
-import 'package:dash/src/utils/resource_loader.dart';
+import 'package:dash_board/src/utils/resource_loader.dart';
 import 'package:path/path.dart' as p;
 import 'package:test/test.dart';
 

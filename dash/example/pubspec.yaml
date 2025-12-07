@@ -7,7 +7,7 @@ environment:
   sdk: ^3.10.0
 
 dependencies:
-  dash:
+  dash_board:
     path: ../
   dash_analytics:
     path: ../../plugins/dash-analytics

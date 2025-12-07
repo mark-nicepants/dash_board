@@ -1,6 +1,6 @@
-import 'package:dash/src/components/partials/heroicon.dart';
-import 'package:dash/src/model/model.dart';
-import 'package:dash/src/table/columns/image_column.dart';
+import 'package:dash_board/src/components/partials/heroicon.dart';
+import 'package:dash_board/src/model/model.dart';
+import 'package:dash_board/src/table/columns/image_column.dart';
 import 'package:jaspr/jaspr.dart';
 
 /// Cell component for ImageColumn that displays an image.

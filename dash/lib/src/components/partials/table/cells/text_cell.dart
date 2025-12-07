@@ -1,5 +1,5 @@
-import 'package:dash/src/model/model.dart';
-import 'package:dash/src/table/columns/text_column.dart';
+import 'package:dash_board/src/model/model.dart';
+import 'package:dash_board/src/table/columns/text_column.dart';
 import 'package:jaspr/jaspr.dart';
 
 /// Badge variant mapping from color strings.

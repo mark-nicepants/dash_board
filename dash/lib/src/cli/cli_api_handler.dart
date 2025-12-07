@@ -2,8 +2,8 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:dash/src/cli/log_writer.dart';
-import 'package:dash/src/panel/panel_config.dart';
+import 'package:dash_board/src/cli/log_writer.dart';
+import 'package:dash_board/src/panel/panel_config.dart';
 import 'package:shelf/shelf.dart';
 
 /// HTTP API handler for CLI commands.

@@ -1,7 +1,7 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // Generated from schema: permission
 
-import 'package:dash/dash.dart';
+import 'package:dash_board/dash_board.dart';
 
 class Permission extends Model {
   @override

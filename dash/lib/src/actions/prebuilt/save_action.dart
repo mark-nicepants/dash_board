@@ -1,9 +1,9 @@
-import 'package:dash/src/actions/action.dart';
-import 'package:dash/src/actions/action_color.dart';
-import 'package:dash/src/components/partials/button.dart';
-import 'package:dash/src/components/partials/heroicon.dart';
-import 'package:dash/src/form/form_schema.dart';
-import 'package:dash/src/model/model.dart';
+import 'package:dash_board/src/actions/action.dart';
+import 'package:dash_board/src/actions/action_color.dart';
+import 'package:dash_board/src/components/partials/button.dart';
+import 'package:dash_board/src/components/partials/heroicon.dart';
+import 'package:dash_board/src/form/form_schema.dart';
+import 'package:dash_board/src/model/model.dart';
 import 'package:jaspr/jaspr.dart';
 
 /// Pre-configured action for saving/submitting forms.

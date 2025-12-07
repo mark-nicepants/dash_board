@@ -1,5 +1,5 @@
-import 'package:dash/src/events/events.dart';
-import 'package:dash/src/model/model.dart';
+import 'package:dash_board/src/events/events.dart';
+import 'package:dash_board/src/model/model.dart';
 import 'package:test/test.dart';
 
 /// Test model for model event tests.

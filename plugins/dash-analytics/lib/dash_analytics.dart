@@ -6,7 +6,7 @@
 /// ## Getting Started
 ///
 /// ```dart
-/// import 'package:dash/dash.dart';
+/// import 'package:dash_board/dash_board.dart';
 /// import 'package:dash_analytics/dash_analytics.dart';
 ///
 /// final panel = Panel()

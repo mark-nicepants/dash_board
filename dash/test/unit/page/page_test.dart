@@ -1,6 +1,6 @@
 import 'dart:async';
 
-import 'package:dash/dash.dart';
+import 'package:dash_board/dash_board.dart';
 import 'package:jaspr/jaspr.dart';
 import 'package:shelf/shelf.dart';
 import 'package:test/test.dart';

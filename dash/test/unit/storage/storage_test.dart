@@ -1,7 +1,7 @@
 import 'dart:io';
 import 'dart:typed_data';
 
-import 'package:dash/src/storage/storage.dart';
+import 'package:dash_board/src/storage/storage.dart';
 import 'package:path/path.dart' as p;
 import 'package:test/test.dart';
 

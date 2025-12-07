@@ -1,24 +1,24 @@
 import 'dart:async';
 
-import 'package:dash/src/actions/action.dart';
-import 'package:dash/src/actions/handler/action_context.dart';
-import 'package:dash/src/actions/handler/action_handler_registry.dart';
-import 'package:dash/src/actions/prebuilt/delete_action.dart';
-import 'package:dash/src/actions/prebuilt/edit_action.dart';
-import 'package:dash/src/actions/prebuilt/toggle_boolean_action.dart';
-import 'package:dash/src/cli/cli_logger.dart';
-import 'package:dash/src/components/interactive/interactive_component.dart';
-import 'package:dash/src/components/partials/breadcrumbs.dart';
-import 'package:dash/src/components/partials/page_scaffold.dart';
-import 'package:dash/src/components/partials/pagination.dart';
-import 'package:dash/src/components/partials/table/column_toggle.dart';
-import 'package:dash/src/components/partials/table/table_components.dart';
-import 'package:dash/src/components/partials/table/table_search_input.dart';
-import 'package:dash/src/model/model.dart';
-import 'package:dash/src/panel/panel_config.dart';
-import 'package:dash/src/resource.dart';
-import 'package:dash/src/service_locator.dart';
-import 'package:dash/src/table/table.dart';
+import 'package:dash_board/src/actions/action.dart';
+import 'package:dash_board/src/actions/handler/action_context.dart';
+import 'package:dash_board/src/actions/handler/action_handler_registry.dart';
+import 'package:dash_board/src/actions/prebuilt/delete_action.dart';
+import 'package:dash_board/src/actions/prebuilt/edit_action.dart';
+import 'package:dash_board/src/actions/prebuilt/toggle_boolean_action.dart';
+import 'package:dash_board/src/cli/cli_logger.dart';
+import 'package:dash_board/src/components/interactive/interactive_component.dart';
+import 'package:dash_board/src/components/partials/breadcrumbs.dart';
+import 'package:dash_board/src/components/partials/page_scaffold.dart';
+import 'package:dash_board/src/components/partials/pagination.dart';
+import 'package:dash_board/src/components/partials/table/column_toggle.dart';
+import 'package:dash_board/src/components/partials/table/table_components.dart';
+import 'package:dash_board/src/components/partials/table/table_search_input.dart';
+import 'package:dash_board/src/model/model.dart';
+import 'package:dash_board/src/panel/panel_config.dart';
+import 'package:dash_board/src/resource.dart';
+import 'package:dash_board/src/service_locator.dart';
+import 'package:dash_board/src/table/table.dart';
 import 'package:jaspr/jaspr.dart';
 
 /// Resource index page for listing records.

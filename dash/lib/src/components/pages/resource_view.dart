@@ -1,11 +1,11 @@
-import 'package:dash/src/components/partials/breadcrumbs.dart';
-import 'package:dash/src/components/partials/page_header.dart';
-import 'package:dash/src/form/fields/form_renderer.dart';
-import 'package:dash/src/form/form_schema.dart';
-import 'package:dash/src/model/model.dart';
-import 'package:dash/src/panel/panel_config.dart';
-import 'package:dash/src/resource.dart';
-import 'package:dash/src/service_locator.dart';
+import 'package:dash_board/src/components/partials/breadcrumbs.dart';
+import 'package:dash_board/src/components/partials/page_header.dart';
+import 'package:dash_board/src/form/fields/form_renderer.dart';
+import 'package:dash_board/src/form/form_schema.dart';
+import 'package:dash_board/src/model/model.dart';
+import 'package:dash_board/src/panel/panel_config.dart';
+import 'package:dash_board/src/resource.dart';
+import 'package:dash_board/src/service_locator.dart';
 import 'package:jaspr/jaspr.dart';
 
 /// Resource view page that renders a read-only display of a record.

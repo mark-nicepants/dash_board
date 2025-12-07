@@ -1,6 +1,6 @@
-import 'package:dash/src/model/model.dart';
-import 'package:dash/src/service_locator.dart';
-import 'package:dash/src/table/columns/column.dart';
+import 'package:dash_board/src/model/model.dart';
+import 'package:dash_board/src/service_locator.dart';
+import 'package:dash_board/src/table/columns/column.dart';
 
 /// A column that displays an image.
 ///

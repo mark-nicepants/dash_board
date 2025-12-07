@@ -1,4 +1,4 @@
-import 'package:dash/src/service_locator.dart';
+import 'package:dash_board/src/service_locator.dart';
 import 'package:jaspr/jaspr.dart';
 
 /// Input field component with consistent Tailwind styling.

@@ -1,5 +1,5 @@
-import 'package:dash/src/database/migrations/schema_definition.dart';
-import 'package:dash/src/panel/panel_config.dart';
+import 'package:dash_board/src/database/migrations/schema_definition.dart';
+import 'package:dash_board/src/panel/panel_config.dart';
 
 /// Configuration for automatic database migrations.
 ///

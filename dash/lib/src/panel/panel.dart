@@ -1,16 +1,16 @@
 import 'dart:async';
 
-import 'package:dash/dash.dart';
-import 'package:dash/src/auth/auth_service.dart';
-import 'package:dash/src/panel/panel_auth.dart';
-import 'package:dash/src/panel/panel_storage.dart';
-import 'package:dash/src/service_locator.dart';
-import 'package:dash/src/utils/resource_loader.dart';
-import 'package:dash/src/widgets/widget.dart' as dash;
+import 'package:dash_board/dash_board.dart';
+import 'package:dash_board/src/auth/auth_service.dart';
+import 'package:dash_board/src/panel/panel_auth.dart';
+import 'package:dash_board/src/panel/panel_storage.dart';
+import 'package:dash_board/src/service_locator.dart';
+import 'package:dash_board/src/utils/resource_loader.dart';
+import 'package:dash_board/src/widgets/widget.dart' as dash;
 import 'package:jaspr/jaspr.dart';
 
 // Re-export callback types from panel_config for external use
-export 'package:dash/src/panel/panel_config.dart' show RequestCallback, CustomRouteHandler;
+export 'package:dash_board/src/panel/panel_config.dart' show RequestCallback, CustomRouteHandler;
 
 /// The main entry point for a Dash admin panel.
 ///

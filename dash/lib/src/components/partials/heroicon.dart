@@ -1,4 +1,4 @@
-import 'package:dash/src/components/partials/styles/default_icon_style.dart';
+import 'package:dash_board/src/components/partials/styles/default_icon_style.dart';
 import 'package:jaspr/jaspr.dart';
 
 /// Heroicon component for rendering icons.

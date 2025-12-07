@@ -1,5 +1,5 @@
-import 'package:dash/src/panel/panel_storage.dart';
-import 'package:dash/src/storage/storage.dart';
+import 'package:dash_board/src/panel/panel_storage.dart';
+import 'package:dash_board/src/storage/storage.dart';
 import 'package:test/test.dart';
 
 void main() {

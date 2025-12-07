@@ -1,4 +1,4 @@
-import 'package:dash/dash.dart';
+import 'package:dash_board/dash_board.dart';
 import 'package:dash_activity_log/src/models/activity.dart';
 import 'package:dash_activity_log/src/resources/activity_resource.dart';
 

@@ -1,6 +1,6 @@
-import 'package:dash/src/panel/middleware_stack.dart';
-import 'package:dash/src/panel/panel_config.dart';
-import 'package:dash/src/utils/resource_loader.dart';
+import 'package:dash_board/src/panel/middleware_stack.dart';
+import 'package:dash_board/src/panel/panel_config.dart';
+import 'package:dash_board/src/utils/resource_loader.dart';
 import 'package:shelf/shelf.dart' hide Middleware;
 import 'package:shelf_static/shelf_static.dart';
 

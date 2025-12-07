@@ -1,5 +1,5 @@
-import 'package:dash/src/model/model.dart';
-import 'package:dash/src/permissions/policy.dart';
+import 'package:dash_board/src/model/model.dart';
+import 'package:dash_board/src/permissions/policy.dart';
 
 /// Registry for model policies with Laravel-style dynamic lookups.
 ///

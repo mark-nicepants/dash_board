@@ -1,8 +1,8 @@
-import 'package:dash/src/actions/action.dart';
-import 'package:dash/src/actions/action_color.dart';
-import 'package:dash/src/actions/action_size.dart';
-import 'package:dash/src/components/partials/heroicon.dart';
-import 'package:dash/src/model/model.dart';
+import 'package:dash_board/src/actions/action.dart';
+import 'package:dash_board/src/actions/action_color.dart';
+import 'package:dash_board/src/actions/action_size.dart';
+import 'package:dash_board/src/components/partials/heroicon.dart';
+import 'package:dash_board/src/model/model.dart';
 
 /// Pre-configured action for creating new records.
 ///

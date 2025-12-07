@@ -1,4 +1,4 @@
-import 'package:dash/src/service_locator.dart';
+import 'package:dash_board/src/service_locator.dart';
 
 /// Centralized Tailwind CSS class definitions for form components.
 ///

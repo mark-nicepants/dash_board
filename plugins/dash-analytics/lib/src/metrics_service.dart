@@ -1,7 +1,7 @@
-import 'package:dash/dash.dart';
 import 'package:dash_analytics/src/models/metric.dart';
 import 'package:dash_analytics/src/models/model_stats.dart';
 import 'package:dash_analytics/src/models/period.dart';
+import 'package:dash_board/dash_board.dart';
 
 export 'package:dash_analytics/src/models/metric.dart';
 export 'package:dash_analytics/src/models/model_stats.dart';

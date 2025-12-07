@@ -1,4 +1,4 @@
-import 'package:dash/dash.dart';
+import 'package:dash_board/dash_board.dart';
 import 'package:test/test.dart';
 
 /// Mock database connector for testing query builder

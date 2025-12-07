@@ -1,6 +1,6 @@
-import 'package:dash/src/components/partials/button.dart' show IconPosition;
-import 'package:dash/src/model/model.dart';
-import 'package:dash/src/table/columns/column.dart';
+import 'package:dash_board/src/components/partials/button.dart' show IconPosition;
+import 'package:dash_board/src/model/model.dart';
+import 'package:dash_board/src/table/columns/column.dart';
 import 'package:intl/intl.dart';
 
 /// A column that displays text.

@@ -1,4 +1,4 @@
-import 'package:dash/src/database/database_connector.dart';
+import 'package:dash_board/src/database/database_connector.dart';
 
 /// Extension providing CLI-specific utility methods for DatabaseConnector.
 ///

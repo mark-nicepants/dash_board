@@ -1,14 +1,14 @@
 import 'package:collection/collection.dart';
-import 'package:dash/src/context/request_context.dart';
-import 'package:dash/src/database/database_connector.dart';
-import 'package:dash/src/database/migrations/schema_definition.dart';
-import 'package:dash/src/events/events.dart';
-import 'package:dash/src/model/annotations.dart';
-import 'package:dash/src/model/model_query_builder.dart';
-import 'package:dash/src/model/soft_deletes.dart';
-import 'package:dash/src/resource.dart';
-import 'package:dash/src/service_locator.dart';
-import 'package:dash/src/validation/validation.dart';
+import 'package:dash_board/src/context/request_context.dart';
+import 'package:dash_board/src/database/database_connector.dart';
+import 'package:dash_board/src/database/migrations/schema_definition.dart';
+import 'package:dash_board/src/events/events.dart';
+import 'package:dash_board/src/model/annotations.dart';
+import 'package:dash_board/src/model/model_query_builder.dart';
+import 'package:dash_board/src/model/soft_deletes.dart';
+import 'package:dash_board/src/resource.dart';
+import 'package:dash_board/src/service_locator.dart';
+import 'package:dash_board/src/validation/validation.dart';
 
 /// Base class for all Dash models.
 ///

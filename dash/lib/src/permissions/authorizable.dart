@@ -1,7 +1,7 @@
-import 'package:dash/src/model/model.dart';
-import 'package:dash/src/permissions/models/permission.dart';
-import 'package:dash/src/permissions/models/role.dart';
-import 'package:dash/src/permissions/permission_service.dart';
+import 'package:dash_board/src/model/model.dart';
+import 'package:dash_board/src/permissions/models/permission.dart';
+import 'package:dash_board/src/permissions/models/role.dart';
+import 'package:dash_board/src/permissions/permission_service.dart';
 
 /// Mixin that adds authorization capabilities to User models.
 ///

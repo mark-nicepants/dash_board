@@ -1,9 +1,9 @@
-import 'package:dash/src/auth/auth_service.dart';
-import 'package:dash/src/auth/authenticatable.dart';
-import 'package:dash/src/auth/session_store.dart';
-import 'package:dash/src/model/model.dart';
-import 'package:dash/src/panel/panel_config.dart';
-import 'package:dash/src/service_locator.dart';
+import 'package:dash_board/src/auth/auth_service.dart';
+import 'package:dash_board/src/auth/authenticatable.dart';
+import 'package:dash_board/src/auth/session_store.dart';
+import 'package:dash_board/src/model/model.dart';
+import 'package:dash_board/src/panel/panel_config.dart';
+import 'package:dash_board/src/service_locator.dart';
 
 /// Manages authentication configuration for a panel.
 class PanelAuthManager {

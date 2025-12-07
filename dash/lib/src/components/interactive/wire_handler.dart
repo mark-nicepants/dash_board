@@ -1,8 +1,8 @@
 import 'dart:convert';
 
-import 'package:dash/src/cli/cli_logger.dart';
-import 'package:dash/src/components/interactive/component_registry.dart';
-import 'package:dash/src/components/interactive/interactive_component.dart';
+import 'package:dash_board/src/cli/cli_logger.dart';
+import 'package:dash_board/src/components/interactive/component_registry.dart';
+import 'package:dash_board/src/components/interactive/interactive_component.dart';
 import 'package:jaspr/server.dart';
 
 /// Handles wire requests for interactive components.

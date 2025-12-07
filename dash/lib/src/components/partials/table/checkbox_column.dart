@@ -1,5 +1,5 @@
-import 'package:dash/src/components/partials/forms/form_styles.dart';
-import 'package:dash/src/model/model.dart';
+import 'package:dash_board/src/components/partials/forms/form_styles.dart';
+import 'package:dash_board/src/model/model.dart';
 import 'package:jaspr/jaspr.dart';
 
 /// Checkbox cell component for row selection in tables.

@@ -1,10 +1,10 @@
 import 'dart:io';
 
-import 'package:dash/src/database/connectors/sqlite/sqlite_migration_builder.dart';
-import 'package:dash/src/database/connectors/sqlite/sqlite_schema_inspector.dart';
-import 'package:dash/src/database/database_connector.dart';
-import 'package:dash/src/database/migrations/migration_runner.dart';
-import 'package:dash/src/database/migrations/schema_definition.dart';
+import 'package:dash_board/src/database/connectors/sqlite/sqlite_migration_builder.dart';
+import 'package:dash_board/src/database/connectors/sqlite/sqlite_schema_inspector.dart';
+import 'package:dash_board/src/database/database_connector.dart';
+import 'package:dash_board/src/database/migrations/migration_runner.dart';
+import 'package:dash_board/src/database/migrations/schema_definition.dart';
 import 'package:sqlite3/sqlite3.dart';
 
 /// SQLite database connector implementation.

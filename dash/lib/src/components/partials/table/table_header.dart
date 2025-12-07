@@ -1,6 +1,6 @@
-import 'package:dash/src/components/partials/table/checkbox_column.dart';
-import 'package:dash/src/components/partials/table/sort_indicator.dart';
-import 'package:dash/src/table/columns/column.dart';
+import 'package:dash_board/src/components/partials/table/checkbox_column.dart';
+import 'package:dash_board/src/components/partials/table/sort_indicator.dart';
+import 'package:dash_board/src/table/columns/column.dart';
 import 'package:jaspr/jaspr.dart';
 
 /// Table header component that renders column headers with sorting support.

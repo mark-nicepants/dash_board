@@ -1,6 +1,6 @@
-import 'package:dash/src/database/connectors/sqlite/sqlite_connector.dart';
-import 'package:dash/src/database/database_connector.dart';
-import 'package:dash/src/settings/settings_service.dart';
+import 'package:dash_board/src/database/connectors/sqlite/sqlite_connector.dart';
+import 'package:dash_board/src/database/database_connector.dart';
+import 'package:dash_board/src/settings/settings_service.dart';
 import 'package:test/test.dart';
 
 void main() {

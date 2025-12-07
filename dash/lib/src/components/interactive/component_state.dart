@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'dart:math';
 
 import 'package:crypto/crypto.dart';
-import 'package:dash/src/cli/cli_logger.dart';
+import 'package:dash_board/src/cli/cli_logger.dart';
 
 /// Handles secure serialization and deserialization of component state.
 ///

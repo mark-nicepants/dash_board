@@ -1,6 +1,6 @@
 import 'dart:convert';
 
-import 'package:dash/dash.dart';
+import 'package:dash_board/dash_board.dart';
 
 /// Type of metric being recorded.
 enum MetricType {

@@ -1,7 +1,7 @@
-import 'package:dash/src/components/partials/forms/form_components.dart';
-import 'package:dash/src/components/partials/heroicon.dart';
-import 'package:dash/src/form/fields/field.dart';
-import 'package:dash/src/service_locator.dart';
+import 'package:dash_board/src/components/partials/forms/form_components.dart';
+import 'package:dash_board/src/components/partials/heroicon.dart';
+import 'package:dash_board/src/form/fields/field.dart';
+import 'package:dash_board/src/service_locator.dart';
 import 'package:jaspr/jaspr.dart';
 
 /// SVG icon for file document (HeroIcons.document).

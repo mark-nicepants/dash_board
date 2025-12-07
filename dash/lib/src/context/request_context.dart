@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'dart:math';
 
-import 'package:dash/src/model/model.dart';
+import 'package:dash_board/src/model/model.dart';
 
 /// Provides request-scoped context data via Dart zones.
 ///

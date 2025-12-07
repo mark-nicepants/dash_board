@@ -1,4 +1,4 @@
-import 'package:dash/src/components/partials/heroicon.dart';
+import 'package:dash_board/src/components/partials/heroicon.dart';
 
 /// A custom navigation item that can be added by plugins.
 ///

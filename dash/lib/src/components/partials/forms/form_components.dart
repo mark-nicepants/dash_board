@@ -7,7 +7,7 @@
 ///
 /// Use [FormStyles] for accessing consistent Tailwind CSS classes:
 /// ```dart
-/// import 'package:dash/src/components/partials/forms/form_components.dart';
+/// import 'package:dash_board/src/components/partials/forms/form_components.dart';
 ///
 /// input(classes: FormStyles.inputBase)
 /// ```

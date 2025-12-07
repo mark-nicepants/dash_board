@@ -1,6 +1,6 @@
-import 'package:dash/src/database/database_connector.dart';
-import 'package:dash/src/database/query_builder.dart';
-import 'package:dash/src/model/model.dart';
+import 'package:dash_board/src/database/database_connector.dart';
+import 'package:dash_board/src/database/query_builder.dart';
+import 'package:dash_board/src/model/model.dart';
 
 /// A query builder that returns typed model instances.
 ///

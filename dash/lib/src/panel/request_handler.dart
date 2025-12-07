@@ -3,13 +3,13 @@ import 'dart:convert';
 import 'dart:math';
 import 'dart:typed_data';
 
-import 'package:dash/src/auth/auth_service.dart';
-import 'package:dash/src/auth/session_helper.dart';
-import 'package:dash/src/cli/cli_logger.dart';
-import 'package:dash/src/model/model.dart';
-import 'package:dash/src/panel/panel_config.dart';
-import 'package:dash/src/storage/file_upload_validator.dart';
-import 'package:dash/src/storage/storage.dart';
+import 'package:dash_board/src/auth/auth_service.dart';
+import 'package:dash_board/src/auth/session_helper.dart';
+import 'package:dash_board/src/cli/cli_logger.dart';
+import 'package:dash_board/src/model/model.dart';
+import 'package:dash_board/src/panel/panel_config.dart';
+import 'package:dash_board/src/storage/file_upload_validator.dart';
+import 'package:dash_board/src/storage/storage.dart';
 import 'package:path/path.dart' as p;
 import 'package:shelf/shelf.dart';
 

@@ -1,7 +1,7 @@
 import 'dart:async';
 
-import 'package:dash/dash.dart';
-import 'package:dash/src/widgets/widget.dart' as dash;
+import 'package:dash_board/dash_board.dart';
+import 'package:dash_board/src/widgets/widget.dart' as dash;
 import 'package:jaspr/jaspr.dart';
 import 'package:test/test.dart';
 

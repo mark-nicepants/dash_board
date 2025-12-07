@@ -1,5 +1,5 @@
 import 'package:bcrypt/bcrypt.dart';
-import 'package:dash/src/model/model.dart';
+import 'package:dash_board/src/model/model.dart';
 
 /// Mixin that enables a [Model] to be used for authentication.
 ///

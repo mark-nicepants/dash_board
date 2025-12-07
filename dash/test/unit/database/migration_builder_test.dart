@@ -1,5 +1,5 @@
-import 'package:dash/dash.dart';
-import 'package:dash/src/database/connectors/sqlite/sqlite_migration_builder.dart';
+import 'package:dash_board/dash_board.dart';
+import 'package:dash_board/src/database/connectors/sqlite/sqlite_migration_builder.dart';
 import 'package:test/test.dart';
 
 void main() {

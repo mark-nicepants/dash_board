@@ -1,4 +1,4 @@
-import 'package:dash/dash.dart';
+import 'package:dash_board/dash_board.dart';
 import 'package:jaspr/jaspr.dart';
 
 /// Base layout component for authenticated pages in the admin panel.

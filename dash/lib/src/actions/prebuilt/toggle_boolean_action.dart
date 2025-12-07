@@ -1,8 +1,8 @@
-import 'package:dash/src/actions/handler/action_context.dart';
-import 'package:dash/src/actions/handler/action_handler.dart';
-import 'package:dash/src/cli/cli_logger.dart';
-import 'package:dash/src/model/model.dart';
-import 'package:dash/src/service_locator.dart';
+import 'package:dash_board/src/actions/handler/action_context.dart';
+import 'package:dash_board/src/actions/handler/action_handler.dart';
+import 'package:dash_board/src/cli/cli_logger.dart';
+import 'package:dash_board/src/model/model.dart';
+import 'package:dash_board/src/service_locator.dart';
 
 /// Pre-configured action handler for toggling boolean column values.
 ///

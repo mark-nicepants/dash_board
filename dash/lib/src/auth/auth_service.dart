@@ -2,9 +2,9 @@ import 'dart:convert';
 import 'dart:math';
 
 import 'package:bcrypt/bcrypt.dart';
-import 'package:dash/src/auth/authenticatable.dart';
-import 'package:dash/src/auth/session_store.dart';
-import 'package:dash/src/model/model.dart';
+import 'package:dash_board/src/auth/authenticatable.dart';
+import 'package:dash_board/src/auth/session_store.dart';
+import 'package:dash_board/src/model/model.dart';
 
 /// Function type for resolving users from a data source.
 ///

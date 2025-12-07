@@ -1,4 +1,4 @@
-import 'package:dash/dash.dart';
+import 'package:dash_board/dash_board.dart';
 import 'package:dash_example/actions/deactivate_user_handler.dart';
 import 'package:dash_example/models/user.dart';
 

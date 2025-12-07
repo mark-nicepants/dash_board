@@ -18,7 +18,7 @@ class ResourceGenerator {
     buffer.writeln('// GENERATED CODE - Customize as needed');
     buffer.writeln('// Resource for $modelName');
     buffer.writeln();
-    buffer.writeln("import 'package:dash/dash.dart';");
+    buffer.writeln("import 'package:dash_board/dash_board.dart';");
     buffer.writeln("import 'package:$packageName/${importPathPrefix}models/$modelFileName.dart';");
     buffer.writeln();
 

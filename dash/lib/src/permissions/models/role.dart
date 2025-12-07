@@ -1,7 +1,7 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // Generated from schema: role
 
-import 'package:dash/dash.dart';
+import 'package:dash_board/dash_board.dart';
 
 class Role extends Model {
   @override

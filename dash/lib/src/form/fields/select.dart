@@ -1,5 +1,5 @@
-import 'package:dash/src/components/partials/forms/form_components.dart';
-import 'package:dash/src/form/fields/field.dart';
+import 'package:dash_board/src/components/partials/forms/form_components.dart';
+import 'package:dash_board/src/form/fields/field.dart';
 import 'package:jaspr/jaspr.dart';
 
 /// A select/dropdown field.

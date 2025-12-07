@@ -1,4 +1,4 @@
-import 'package:dash/src/plugin/asset.dart';
+import 'package:dash_board/src/plugin/asset.dart';
 import 'package:jaspr/jaspr.dart';
 
 /// Base class for dashboard widgets.

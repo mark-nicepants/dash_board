@@ -1,5 +1,5 @@
-import 'package:dash/src/components/partials/breadcrumbs.dart';
-import 'package:dash/src/components/partials/page_header.dart';
+import 'package:dash_board/src/components/partials/breadcrumbs.dart';
+import 'package:dash_board/src/components/partials/page_header.dart';
 import 'package:jaspr/jaspr.dart';
 
 /// Shared scaffold for resource pages that need a header and body stack.

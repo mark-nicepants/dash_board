@@ -1,5 +1,5 @@
-import 'package:dash/src/components/partials/heroicon.dart';
-import 'package:dash/src/service_locator.dart';
+import 'package:dash_board/src/components/partials/heroicon.dart';
+import 'package:dash_board/src/service_locator.dart';
 import 'package:jaspr/jaspr.dart';
 
 /// Button variants matching ActionColor options

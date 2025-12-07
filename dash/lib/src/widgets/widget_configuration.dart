@@ -1,4 +1,4 @@
-import 'package:dash/src/widgets/widget.dart';
+import 'package:dash_board/src/widgets/widget.dart';
 
 /// Configuration wrapper for a widget with additional properties.
 ///

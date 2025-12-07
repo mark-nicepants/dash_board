@@ -1,4 +1,4 @@
-import 'package:dash/src/components/partials/forms/form_styles.dart';
+import 'package:dash_board/src/components/partials/forms/form_styles.dart';
 import 'package:jaspr/jaspr.dart';
 
 /// A styled text input component.

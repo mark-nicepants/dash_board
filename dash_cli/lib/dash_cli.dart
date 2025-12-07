@@ -8,7 +8,7 @@
 library;
 
 // Re-export database connector from Dash
-export 'package:dash/dash.dart' show DatabaseConnector, DatabaseConnectorCli, DatabaseConnectorType, SqliteConnector;
+export 'package:dash_board/dash_board.dart' show DatabaseConnector, DatabaseConnectorCli, DatabaseConnectorType, SqliteConnector;
 
 // Base command infrastructure
 export 'src/commands/base_command.dart';

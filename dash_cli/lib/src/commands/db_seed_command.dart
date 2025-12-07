@@ -1,7 +1,7 @@
 import 'dart:io';
 import 'dart:math';
 
-import 'package:dash/dash.dart';
+import 'package:dash_board/dash_board.dart';
 import 'package:dash_cli/src/commands/base_command.dart';
 import 'package:dash_cli/src/commands/completion_configuration.dart';
 import 'package:dash_cli/src/commands/dcli_argument.dart';

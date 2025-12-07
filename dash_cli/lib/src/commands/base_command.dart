@@ -1,7 +1,7 @@
 import 'dart:io';
 
 import 'package:args/command_runner.dart';
-import 'package:dash/dash.dart';
+import 'package:dash_board/dash_board.dart';
 import 'package:dash_cli/src/commands/completion_configuration.dart';
 import 'package:dash_cli/src/generators/schema_parser.dart';
 import 'package:dash_cli/src/utils/config_loader.dart';

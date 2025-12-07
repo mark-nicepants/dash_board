@@ -1,4 +1,4 @@
-import 'package:dash/dash.dart';
+import 'package:dash_board/dash_board.dart';
 import 'package:dash_example/models/user.dart';
 
 /// Handler for deactivating a user account.

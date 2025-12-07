@@ -1,7 +1,7 @@
-import 'package:dash/src/cli/cli_logger.dart';
-import 'package:dash/src/panel/middleware_stack.dart';
-import 'package:dash/src/panel/panel_config.dart';
-import 'package:dash/src/storage/storage.dart';
+import 'package:dash_board/src/cli/cli_logger.dart';
+import 'package:dash_board/src/panel/middleware_stack.dart';
+import 'package:dash_board/src/panel/panel_config.dart';
+import 'package:dash_board/src/storage/storage.dart';
 import 'package:shelf/shelf.dart' hide Middleware;
 
 /// Creates middleware to serve files from storage.

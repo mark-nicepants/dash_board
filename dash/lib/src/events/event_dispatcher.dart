@@ -1,6 +1,6 @@
 import 'dart:async';
 
-import 'package:dash/src/events/event.dart';
+import 'package:dash_board/src/events/event.dart';
 
 /// Type for event listener callbacks with typed events.
 typedef EventListener<T extends Event> = FutureOr<void> Function(T event);

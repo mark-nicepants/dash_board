@@ -1,5 +1,5 @@
-import 'package:dash/src/cli/cli_api_handler.dart';
-import 'package:dash/src/service_locator.dart';
+import 'package:dash_board/src/cli/cli_api_handler.dart';
+import 'package:dash_board/src/service_locator.dart';
 
 /// Log levels for CLI logging.
 enum LogLevel { debug, info, warning, error }

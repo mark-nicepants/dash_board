@@ -40,7 +40,7 @@ jobs:
         working-directory: dash/example
         run: |
           dart pub get
-          dart pub global activate dart_panel_cli
+          dart pub global activate dash_panel_cli
           dcli generate:models
 
       - name: Verify formatting
@@ -73,7 +73,7 @@ jobs:
         working-directory: dash/example
         run: |
           dart pub get
-          dart pub global activate dart_panel_cli
+          dart pub global activate dash_panel_cli
           dcli generate:models
 
       - name: Run unit tests
@@ -123,7 +123,7 @@ jobs:
         working-directory: dash/example
         run: |
           dart pub get
-          dart pub global activate dart_panel_cli
+          dart pub global activate dash_panel_cli
           dcli generate:models
 
       - name: Install Playwright dependencies

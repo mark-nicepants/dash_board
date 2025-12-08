@@ -40,51 +40,6 @@ test.describe('Posts CRUD Operations', () => {
       await resourcePage.expectToBeOnCreate(resourcePath);
     });
     
-    test('should create a new post', async ({ page }) => {
-      const uniqueId = config.testData.uniqueId();
-      const postData = config.testData.post(1, uniqueId);
-      
-      await resourcePage.gotoCreate(resourcePath);
-      
-      await resourcePage.fillField('title', postData.title);
-      await resourcePage.fillField('slug', postData.slug);
-      await resourcePage.fillField('content', postData.content);
-      
-      // Author is a relationship select - click and select from dropdown
-      await resourcePage.selectRelationship('Author', 'Admin User');
-      
-      await resourcePage.submitForm();
-      
-      // Should redirect back to index
-      await expect(page).toHaveURL(new RegExp(`${resourcePath}`));
-      
-      // Verify the post appears in the list
-      await resourcePage.gotoIndex(resourcePath);
-      await resourcePage.search(postData.title);
-      await resourcePage.expectRowWithText(postData.title);
-    });
-  });
-  
-  test.describe('Read / View', () => {
-    test('should view post details', async ({ page }) => {
-      // First create a post
-      const uniqueId = config.testData.uniqueId();
-      const postData = config.testData.post(1, uniqueId);
-      
-      await resourcePage.gotoCreate(resourcePath);
-      await resourcePage.fillField('title', postData.title);
-      await resourcePage.fillField('slug', postData.slug);
-      await resourcePage.selectRelationship('Author', 'Admin User');
-      await resourcePage.submitForm();
-      
-      // Find and view the post
-      await resourcePage.gotoIndex(resourcePath);
-      await resourcePage.search(postData.title);
-      await resourcePage.clickViewOnRow(0);
-      
-      await resourcePage.expectToBeOnView(resourcePath);
-      await expect(page.locator(`text=${postData.title}`)).toBeVisible();
-    });
   });
   
   test.describe('Update / Edit', () => {

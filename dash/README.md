@@ -20,7 +20,7 @@ Add Dash to your `pubspec.yaml`:
 
 ```yaml
 dependencies:
-  dash: ^0.1.0
+  dash_panel: ^0.1.0
 ```
 
 Then run:
@@ -32,22 +32,33 @@ dart pub get
 ## Quick Start
 
 ```dart
-import 'package:dash/dash.dart';
+import 'package:dash_panel/dash_panel.dart';
 
 void main() {
-  final panel = Panel()
-    ..id('admin')
-    ..path('/admin')
-    ..registerResources([
-      UserResource(),
-      PostResource(),
-    ])
-    ..boot();
-  
+  print('🚀 Dash Example Admin Panel\n');
+
+  // Register all generated models and resources
+  registerAllModels();
+
+  // Create and configure the admin panel
+  await Panel()
+      .applyConfig()
+      .authModel<User>()
+      .registerPages([
+        // Register your custom pages
+      ])
+      .plugins([
+        // Add plugins here
+      ])
+      .serve(host: 'localhost', port: 8080);
   // Integrate with your server
   // More documentation coming soon!
 }
 ```
+
+## Model generation 
+
+
 
 ## Documentation
 

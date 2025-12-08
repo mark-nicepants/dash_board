@@ -43,6 +43,7 @@ class Panel {
   PanelServer? _server;
   final PanelAuthManager _authManager = PanelAuthManager();
   final PanelStorageManager _storageManager = PanelStorageManager();
+  bool _isBooted = false;
 
   Panel() {
     _config = PanelConfig();
@@ -549,6 +550,9 @@ class Panel {
   ///
   /// This initializes the panel configuration and connects to the database.
   Future<Panel> boot() async {
+    if (_isBooted) return this;
+    _isBooted = true;
+
     // Register
     Role.register();
     Permission.register();

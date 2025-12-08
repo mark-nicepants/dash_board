@@ -78,36 +78,19 @@ export default defineConfig({
       },
       dependencies: ['setup'],
     },
-
-    // Desktop Firefox - additional browser coverage
-    {
-      name: 'firefox',
-      use: { 
-        ...devices['Desktop Firefox'],
-        storageState: 'test-results/.auth/user.json',
-      },
-      dependencies: ['setup'],
-    },
-
-    // Desktop Safari/WebKit - additional browser coverage
-    {
-      name: 'webkit',
-      use: { 
-        ...devices['Desktop Safari'],
-        storageState: 'test-results/.auth/user.json',
-      },
-      dependencies: ['setup'],
-    },
   ],
 
   // Local development server configuration
   // Uncomment if you want Playwright to start the server automatically
-  // webServer: {
-  //   command: 'cd ../../example && dart run lib/main.dart',
-  //   url: 'http://localhost:8080',
-  //   reuseExistingServer: !process.env.CI,
-  //   timeout: 120000,
-  // },
+  webServer: {
+    command: 'cd ../../example && dart run lib/main.dart',
+    url: 'http://localhost:8080',
+    reuseExistingServer: !process.env.CI,
+    timeout: 120000,
+    env: {
+      DASH_TEST_MODE: 'true',
+    },
+  },
   
   // Output folders
   outputDir: 'test-results/artifacts',

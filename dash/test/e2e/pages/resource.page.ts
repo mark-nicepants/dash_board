@@ -13,7 +13,7 @@ export class ResourcePage extends BasePage {
   readonly emptyState = () => this.page.locator('[data-empty-state], .empty-state, .no-results');
   
   // Action button locators
-  readonly createButton = () => this.page.locator('a:has-text("Create"), a:has-text("New"), button:has-text("Create"), button:has-text("New"), [data-create-button]');
+  readonly createButton = () => this.page.locator('a:has-text("Create"), a:has-text("New"), [data-create-button]');
   readonly searchInput = () => this.page.locator('input[type="search"], input[placeholder*="Search"], [data-search]');
   
   // Pagination locators
@@ -23,7 +23,7 @@ export class ResourcePage extends BasePage {
   
   // Form locators
   readonly form = () => this.page.locator('form');
-  readonly submitButton = () => this.page.locator('button:has-text("Save"), button:has-text("Create"), button:has-text("Update"), button[type="submit"]').first();
+  readonly submitButton = () => this.page.locator('button[type="submit"]').first();
   readonly cancelButton = () => this.page.locator('button:has-text("Cancel"), a:has-text("Cancel")').first();
   
   // Delete confirmation modal - using role=dialog for Alpine.js modals

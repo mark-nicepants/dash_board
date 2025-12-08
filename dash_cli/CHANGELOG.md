@@ -1,3 +1,7 @@
+## 0.1.1
+
+- Fix dart_panel import in generated model files to use correct package name.
+
 ## 0.1.0
 
 - Initial release.
